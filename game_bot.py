@@ -1,13 +1,14 @@
 ﻿import asyncio
 import logging
 import random
+from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
 
+import game_db
 from settings import BOT_TOKEN, ADMIN_IDS
-from game_db import init_db, register_user, get_user, update_user, add_exp, get_market_offers, generate_market, earn_achievement
 
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не задан в переменных окружения")
@@ -15,14 +16,16 @@ if not BOT_TOKEN:
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-init_db()
+game_db.init_db()
 
-# --- Клавиатуры ---
+# ---------- КЛАВИАТУРЫ ----------
 def main_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📈 Купить товар", callback_data="buy_menu")],
-        [InlineKeyboardButton(text="💰 Мой бизнес", callback_data="my_business")],
-        [InlineKeyboardButton(text="📊 Лидеры", callback_data="leaders")]
+        [InlineKeyboardButton(text="📦 Мой инвентарь", callback_data="my_inventory")],
+        [InlineKeyboardButton(text="💰 Продать товар", callback_data="sell_menu")],
+        [InlineKeyboardButton(text="🏆 Лидеры", callback_data="leaders")],
+        [InlineKeyboardButton(text="📊 Мой бизнес", callback_data="my_business")]
     ])
 
 def back_keyboard():
@@ -30,35 +33,32 @@ def back_keyboard():
         [InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_main")]
     ])
 
-# --- Хендлеры ---
+# ---------- СТАРТ ----------
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    register_user(message.from_user.id, message.from_user.username)
+    game_db.register_user(message.from_user.id, message.from_user.username)
     await message.answer(
         "🧑‍💼 *Добро пожаловать в товарный бизнес!*\n\n"
-        "Покупай товар по выгодной цене 🔥\n"
-        "Продавай дороже 💰\n"
-        "Прокачивай навыки 📈\n"
-        "Стань лучшим предпринимателем!\n\n"
+        "📈 Покупай товары по выгодной цене\n"
+        "💰 Продавай, когда цена вырастет\n"
+        "📊 Прокачивай навыки и становись лидером\n\n"
         "👇 *Выбери действие:*",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_keyboard()
     )
 
+# ---------- КУПИТЬ ТОВАР ----------
 @dp.callback_query(F.data == "buy_menu")
 async def buy_menu(callback: types.CallbackQuery):
-    offers = get_market_offers()
+    offers = game_db.get_market_offers()
     if not offers:
-        await callback.message.edit_text("⚠️ Рынок пуст. Попробуй позже.")
+        await callback.message.edit_text("⚠️ Рынок пуст. Попробуйте позже.")
         await callback.answer()
         return
     text = "🛒 *Доступные товары для покупки:*\n\n"
     for o in offers:
-        exp_date = o['expires_at'].strftime("%d.%m %H:%M")
-        text += f"📦 *{o['product']}*\n"
-        text += f"💰 Цена: {o['price']}$\n"
-        text += f"📊 Спрос: {o['demand']}\n"
-        text += f"⏳ До {exp_date}\n\n"
+        exp_date = datetime.strptime(o['expires_at'], "%Y-%m-%d %H:%M:%S.%f")
+        text += f"📦 *{o['product']}*\n💰 {o['price']} 💎\n📊 Спрос: {o['demand']}\n⏳ До {exp_date.strftime('%d.%m %H:%M')}\n\n"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔄 Обновить рынок (10 💎)", callback_data="refresh_market")],
         [InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_main")]
@@ -68,18 +68,80 @@ async def buy_menu(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "refresh_market")
 async def refresh_market(callback: types.CallbackQuery):
-    user = get_user(callback.from_user.id)
+    user = game_db.get_user(callback.from_user.id)
     if not user or user['balance'] < 10:
         await callback.answer("❌ Не хватает 10 💎 для обновления!", show_alert=True)
         return
-    update_user(callback.from_user.id, balance=user['balance']-10)
-    generate_market()
+    game_db.update_user(callback.from_user.id, balance=user['balance'] - 10)
+    game_db.generate_market()
     await callback.answer("✅ Рынок обновлён!", show_alert=True)
     await buy_menu(callback)
 
+# ---------- ИНВЕНТАРЬ ----------
+@dp.callback_query(F.data == "my_inventory")
+async def my_inventory(callback: types.CallbackQuery):
+    inv = game_db.get_inventory(callback.from_user.id)
+    if not inv:
+        await callback.message.edit_text("📭 *Ваш инвентарь пуст.*\nКупите товары в разделе «Купить товар».", parse_mode=ParseMode.MARKDOWN, reply_markup=back_keyboard())
+        await callback.answer()
+        return
+    text = "📦 *Ваш инвентарь:*\n\n"
+    for item in inv:
+        text += f"• {item['product']} — {item['quantity']} шт.\n"
+    await callback.message.edit_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=back_keyboard())
+    await callback.answer()
+
+# ---------- ПРОДАЖА ТОВАРА ----------
+@dp.callback_query(F.data == "sell_menu")
+async def sell_menu(callback: types.CallbackQuery):
+    inv = game_db.get_inventory(callback.from_user.id)
+    if not inv:
+        await callback.message.edit_text("📭 *Нет товаров для продажи.*", parse_mode=ParseMode.MARKDOWN, reply_markup=back_keyboard())
+        await callback.answer()
+        return
+    keyboard = []
+    for item in inv:
+        keyboard.append([InlineKeyboardButton(text=f"Продать {item['product']} (x{item['quantity']})", callback_data=f"sell_{item['product']}")])
+    keyboard.append([InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_main")])
+    await callback.message.edit_text("💰 *Выберите товар для продажи:*", parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("sell_"))
+async def sell_item(callback: types.CallbackQuery):
+    product = callback.data.split("_", 1)[1]
+    user = game_db.get_user(callback.from_user.id)
+    if not user:
+        await callback.answer("Ошибка данных")
+        return
+    # находим рыночную цену
+    offers = game_db.get_market_offers()
+    market = next((o for o in offers if o['product'] == product), None)
+    if not market:
+        await callback.answer("❌ Этот товар сейчас не продаётся на рынке", show_alert=True)
+        return
+    # расчет цены с учётом навыка продаж
+    skill = user['sell_skill']
+    price = int(market['price'] * (1 + skill * 0.1))
+    # удаляем 1 единицу из инвентаря
+    if not game_db.remove_from_inventory(callback.from_user.id, product):
+        await callback.answer("❌ Недостаточно товара для продажи", show_alert=True)
+        return
+    # начисляем деньги и опыт
+    new_balance = user['balance'] + price
+    game_db.update_user(callback.from_user.id, balance=new_balance)
+    level_up = game_db.add_exp(callback.from_user.id, 20)
+    # достижение за первую продажу
+    game_db.earn_achievement(callback.from_user.id, "Первая продажа")
+    msg = f"✅ Продано: {product}\n💰 Выручка: +{price} 💎\n📈 Опыт: +20"
+    if level_up:
+        msg += f"\n🎉 *Уровень повышен до {level_up}!*"
+    await callback.answer(msg, show_alert=True)
+    await my_inventory(callback)
+
+# ---------- БИЗНЕС-СТАТИСТИКА ----------
 @dp.callback_query(F.data == "my_business")
 async def my_business(callback: types.CallbackQuery):
-    user = get_user(callback.from_user.id)
+    user = game_db.get_user(callback.from_user.id)
     if not user:
         await callback.answer("Ошибка данных")
         return
@@ -103,12 +165,15 @@ async def my_business(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "up_sell")
 async def upgrade_sell(callback: types.CallbackQuery):
-    user = get_user(callback.from_user.id)
+    user = game_db.get_user(callback.from_user.id)
+    if not user:
+        await callback.answer("Ошибка")
+        return
     cost = user['sell_skill'] * 100
     if user['balance'] >= cost:
         new_skill = user['sell_skill'] + 1
         new_balance = user['balance'] - cost
-        update_user(callback.from_user.id, balance=new_balance, sell_skill=new_skill)
+        game_db.update_user(callback.from_user.id, balance=new_balance, sell_skill=new_skill)
         await callback.answer(f"✅ Навык продаж повышен до {new_skill}!", show_alert=True)
         await my_business(callback)
     else:
@@ -116,17 +181,21 @@ async def upgrade_sell(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data == "up_buy")
 async def upgrade_buy(callback: types.CallbackQuery):
-    user = get_user(callback.from_user.id)
+    user = game_db.get_user(callback.from_user.id)
+    if not user:
+        await callback.answer("Ошибка")
+        return
     cost = user['buy_skill'] * 100
     if user['balance'] >= cost:
         new_skill = user['buy_skill'] + 1
         new_balance = user['balance'] - cost
-        update_user(callback.from_user.id, balance=new_balance, buy_skill=new_skill)
+        game_db.update_user(callback.from_user.id, balance=new_balance, buy_skill=new_skill)
         await callback.answer(f"✅ Навык закупок повышен до {new_skill}!", show_alert=True)
         await my_business(callback)
     else:
         await callback.answer(f"❌ Не хватает {cost} 💎", show_alert=True)
 
+# ---------- ЛИДЕРЫ ----------
 @dp.callback_query(F.data == "leaders")
 async def leaders(callback: types.CallbackQuery):
     conn = game_db.sqlite3.connect(game_db.DB_NAME)
@@ -140,6 +209,7 @@ async def leaders(callback: types.CallbackQuery):
     await callback.message.edit_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=back_keyboard())
     await callback.answer()
 
+# ---------- НАЗАД ----------
 @dp.callback_query(F.data == "back_to_main")
 async def back_to_main(callback: types.CallbackQuery):
     await callback.message.edit_text(
@@ -149,23 +219,7 @@ async def back_to_main(callback: types.CallbackQuery):
     )
     await callback.answer()
 
-# --- Случайное событие (шанс 10% при любой команде) ---
-@dp.callback_query()
-async def random_event_handler(callback: types.CallbackQuery):
-    if random.random() < 0.1:
-        user = get_user(callback.from_user.id)
-        if user:
-            event_type = random.choice(['profit', 'loss'])
-            if event_type == 'profit':
-                bonus = random.randint(50, 200)
-                update_user(callback.from_user.id, balance=user['balance'] + bonus)
-                await callback.answer(f"🎉 Удачная сделка! +{bonus} 💎", show_alert=True)
-            else:
-                penalty = random.randint(30, 150)
-                new_balance = max(user['balance'] - penalty, 0)
-                update_user(callback.from_user.id, balance=new_balance)
-                await callback.answer(f"⚠️ Штраф от налоговой! -{penalty} 💎", show_alert=True)
-
+# ---------- ЗАПУСК ----------
 async def main():
     print("🚀 Товарный бизнес-бот запущен!")
     await dp.start_polling(bot)
