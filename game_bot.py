@@ -9,13 +9,13 @@ from aiogram.enums import ParseMode
 
 from settings import BOT_TOKEN, ADMIN_IDS
 
-# Имитация базы данных (для простоты — в памяти)
-# В реальном проекте используйте SQLite, как в предыдущих версиях
+# ---------- БАЗА ДАННЫХ В ПАМЯТИ ----------
 users = {}
 inventory = {}
 market = []
+temp_offers = {}  # user_id -> {'product': ..., 'price': ..., 'customer': ...}
 
-# Генерация товаров с брендами и сезонами
+# ---------- ГЕНЕРАЦИЯ ТОВАРОВ ----------
 def generate_products():
     seasons = ["весна", "лето", "осень", "зима", "всесезон"]
     products = []
@@ -48,12 +48,7 @@ def generate_market():
     products = generate_products()
     for prod, brand, price, season in products[:30]:
         final_price = int(price * random.uniform(0.8, 1.5))
-        market.append({
-            'product': f"{brand} {prod}",
-            'price': final_price,
-            'season': season,
-            'base_price': price
-        })
+        market.append({'product': f"{brand} {prod}", 'price': final_price, 'season': season, 'base_price': price})
 
 def init_user(user_id, username):
     if user_id not in users:
@@ -69,7 +64,7 @@ def init_user(user_id, username):
             'referrals': 0
         }
         inventory[user_id] = {}
-        # Стартовый инвентарь (2 товара)
+        # Стартовый инвентарь (2 случайных товара)
         for _ in range(2):
             prod = random.choice(generate_products())
             inv_name = f"{prod[1]} {prod[0]}"
@@ -128,8 +123,9 @@ async def cmd_start(message: types.Message):
     init_user(message.from_user.id, message.from_user.username)
     await message.answer(
         "🧑‍💼 *Торговый симулятор*\n\n"
-        "Покупай товары у поставщиков, продавай клиентам с наценкой.\n"
-        "Прокачивай навыки и стань лидером!\n\n"
+        "🛒 Покупай товары у поставщиков\n"
+        "💰 Продавай клиентам в 1 клик\n"
+        "📈 Прокачивай навыки и становись лидером!\n\n"
         "👇 *Выбери действие:*",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_keyboard()
@@ -173,8 +169,7 @@ async def buy_product(callback: types.CallbackQuery):
     product = market[idx]['product']
     price = market[idx]['price']
     user = get_user(callback.from_user.id)
-    buy_skill = user['buy_skill']
-    discount = min(buy_skill * 0.02, 0.3)
+    discount = min(user['buy_skill'] * 0.02, 0.3)
     final_price = int(price * (1 - discount))
 
     await callback.message.answer(
@@ -183,8 +178,9 @@ async def buy_product(callback: types.CallbackQuery):
         f"Введите количество (1-99):",
         parse_mode=ParseMode.MARKDOWN
     )
-    # Сохраняем выбранный товар
-    callback.bot.data = {'temp_product': product, 'temp_price': final_price}
+    # Сохраняем временные данные
+    callback.bot.data['temp_product'] = product
+    callback.bot.data['temp_price'] = final_price
     await callback.answer()
 
 @dp.message(lambda msg: msg.text and msg.text.isdigit() and 1 <= int(msg.text) <= 99)
@@ -204,22 +200,19 @@ async def process_quantity(message: types.Message):
         await message.answer(f"❌ Не хватает {total_cost} 💎")
         return
 
-    # Покупка
     update_user(user_id, balance=user['balance'] - total_cost)
-    if user_id not in inventory:
-        inventory[user_id] = {}
     inventory[user_id][product] = inventory[user_id].get(product, 0) + quantity
 
     await message.answer(f"✅ Куплено {product} x{quantity} за {total_cost} 💎\nВаш баланс: {user['balance'] - total_cost} 💎")
     del message.bot.data['temp_product']
     del message.bot.data['temp_price']
 
-# ---------- ПРОДАЖА С ИМЕНАМИ КЛИЕНТОВ ----------
+# ---------- ПРОДАЖА (С КНОПКОЙ ПОДТВЕРЖДЕНИЯ) ----------
 @dp.callback_query(F.data == "sell_menu")
 async def sell_menu(callback: types.CallbackQuery):
     user_inv = inventory.get(callback.from_user.id, {})
     if not user_inv:
-        await callback.message.edit_text("📭 *Инвентарь пуст.* Купите товары у поставщиков.", parse_mode=ParseMode.MARKDOWN, reply_markup=back_keyboard())
+        await callback.message.edit_text("📭 *Инвентарь пуст.* Купите товары.", parse_mode=ParseMode.MARKDOWN, reply_markup=back_keyboard())
         await callback.answer()
         return
 
@@ -227,18 +220,19 @@ async def sell_menu(callback: types.CallbackQuery):
     for product, qty in user_inv.items():
         text += f"• {product} — {qty} шт.\n"
 
-    keyboard = [[InlineKeyboardButton(text=f"Продать {product}", callback_data=f"sell_{product}")] for product in user_inv.keys()]
+    keyboard = [[InlineKeyboardButton(text=f"Продать {product}", callback_data=f"prepare_sell_{product}")] for product in user_inv.keys()]
     keyboard.append([InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_main")])
 
     await callback.message.edit_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
     await callback.answer()
 
-@dp.callback_query(F.data.startswith("sell_"))
+@dp.callback_query(F.data.startswith("prepare_sell_"))
 async def prepare_sale(callback: types.CallbackQuery):
-    product = callback.data[5:]
+    product = callback.data[13:]  # убираем "prepare_sell_"
     user = get_user(callback.from_user.id)
     sell_skill = user['sell_skill']
-    # Поиск базовой цены товара
+
+    # Поиск базовой цены
     base_price = 5000
     for item in market:
         if item['product'] == product:
@@ -253,28 +247,36 @@ async def prepare_sale(callback: types.CallbackQuery):
     customers = ["Анна", "Михаил", "Екатерина", "Дмитрий", "Ольга", "Сергей", "Татьяна", "Алексей"]
     customer = random.choice(customers)
 
-    # Сохраняем предложение (временно)
-    callback.bot.data['temp_offer'] = {'user_id': callback.from_user.id, 'product': product, 'price': offer_price, 'customer': customer}
-    await callback.answer(f"👤 {customer} предлагает {offer_price} 💎 за {product}!\nИспользуйте /sell_confirm для принятия.", show_alert=True)
+    # Сохраняем предложение
+    temp_offers[callback.from_user.id] = {'product': product, 'price': offer_price, 'customer': customer}
 
-@dp.message(Command("sell_confirm"))
-async def confirm_sale(message: types.Message):
-    user_id = message.from_user.id
-    if not hasattr(message.bot, 'data') or 'temp_offer' not in message.bot.data:
-        await message.answer("❌ Нет активного предложения. Сначала выберите товар для продажи.")
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Подтвердить продажу", callback_data="confirm_sale")],
+        [InlineKeyboardButton(text="🔙 Назад", callback_data="sell_menu")]
+    ])
+
+    await callback.message.answer(
+        f"👤 *{customer}* хочет купить {product} за {offer_price} 💎\n\nПодтверждаете сделку?",
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=keyboard
+    )
+    await callback.answer()
+
+@dp.callback_query(F.data == "confirm_sale")
+async def confirm_sale(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    if user_id not in temp_offers:
+        await callback.answer("❌ Нет активного предложения. Выберите товар для продажи заново.", show_alert=True)
         return
 
-    offer = message.bot.data['temp_offer']
-    if offer['user_id'] != user_id:
-        await message.answer("❌ Это предложение не для вас.")
-        return
-
+    offer = temp_offers[user_id]
     product = offer['product']
     price = offer['price']
     customer = offer['customer']
 
-    if user_id not in inventory or inventory[user_id].get(product, 0) < 1:
-        await message.answer("❌ Товар уже продан или его нет в инвентаре.")
+    if inventory[user_id].get(product, 0) < 1:
+        await callback.answer("❌ Товар уже продан или его нет в инвентаре.", show_alert=True)
+        del temp_offers[user_id]
         return
 
     # Продажа
@@ -289,8 +291,11 @@ async def confirm_sale(message: types.Message):
     msg = f"✅ Продажа {product} клиенту {customer} за {price} 💎 совершена!\n📈 Опыт +25"
     if level_up:
         msg += f"\n🎉 *Уровень повышен до {level_up}!*"
-    await message.answer(msg, parse_mode=ParseMode.MARKDOWN)
-    del message.bot.data['temp_offer']
+    await callback.message.edit_text(msg, parse_mode=ParseMode.MARKDOWN)
+    del temp_offers[user_id]
+
+    # Показываем инвентарь
+    await sell_menu(callback)
 
 # ---------- ПРОФИЛЬ ----------
 @dp.callback_query(F.data == "my_profile")
@@ -373,7 +378,7 @@ async def back_to_main(callback: types.CallbackQuery):
     await callback.answer()
 
 async def main():
-    print("🚀 Торговый симулятор с клиентами запущен!")
+    print("🚀 Торговый симулятор с кнопками для продажи запущен!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
