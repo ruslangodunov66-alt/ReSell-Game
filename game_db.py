@@ -7,7 +7,6 @@ DB_NAME = "trade_game.db"
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
-    # Включение WAL для производительности
     cur.execute('PRAGMA journal_mode=WAL;')
     cur.execute('PRAGMA cache_size=-20000;')
 
@@ -24,11 +23,10 @@ def init_db():
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
             referrals INTEGER DEFAULT 0,
-            last_play TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP
         )
     ''')
-    # Инвентарь пользователя
+    # Инвентарь
     cur.execute('''
         CREATE TABLE IF NOT EXISTS inventory (
             user_id INTEGER,
@@ -50,17 +48,7 @@ def init_db():
             expires_at TIMESTAMP
         )
     ''')
-    # Поставщики
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS suppliers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            rating INTEGER,
-            discount INTEGER,
-            risk INTEGER
-        )
-    ''')
-    # Клиенты (предложения)
+    # Клиентские предложения
     cur.execute('''
         CREATE TABLE IF NOT EXISTS offers (
             user_id INTEGER PRIMARY KEY,
@@ -79,21 +67,6 @@ def init_db():
             PRIMARY KEY (user_id, name)
         )
     ''')
-
-    # Заполняем поставщиков, если пусто
-    cur.execute('SELECT COUNT(*) FROM suppliers')
-    if cur.fetchone()[0] == 0:
-        suppliers = [
-            ("Маркет-Импорт", 5, 15, 30),   # высокий риск, большая скидка
-            ("Мега-Сток", 8, 8, 15),
-            ("Китай-Трейд", 3, 25, 50),      # низкий рейтинг, большая скидка, высокий риск
-            ("Евро-Логистик", 9, 5, 10),
-            ("Альфа-Опт", 7, 10, 15),
-            ("Супер-Вэй", 2, 30, 60)         # очень низкий рейтинг
-        ]
-        for name, rating, discount, risk in suppliers:
-            cur.execute('INSERT INTO suppliers (name, rating, discount, risk) VALUES (?, ?, ?, ?)', (name, rating, discount, risk))
-
     conn.commit()
     conn.close()
 
@@ -106,11 +79,15 @@ def register_user(user_id, username):
             INSERT INTO users (user_id, username, balance, level, exp, sell_skill, buy_skill, referrals, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (user_id, username, 1000, 1, 0, 1, 1, 0, datetime.now()))
-        # Выдаём стартовый инвентарь (10 случайных товаров)
+        # Стартовый инвентарь
         products = generate_products()
-        chosen = random.sample(products, min(10, len(products)))
+        chosen = random.sample(products, min(5, len(products)))
         for prod, brand, price, season in chosen:
-            cur.execute('INSERT INTO inventory (user_id, product, quantity) VALUES (?, ?, ?) ON CONFLICT(user_id, product) DO UPDATE SET quantity = quantity + 1', (user_id, f"{brand} {prod}", 1))
+            cur.execute('''
+                INSERT INTO inventory (user_id, product, quantity)
+                VALUES (?, ?, ?)
+                ON CONFLICT(user_id, product) DO UPDATE SET quantity = quantity + 1
+            ''', (user_id, f"{brand} {prod}", 1))
     conn.commit()
     conn.close()
 
@@ -121,7 +98,16 @@ def get_user(user_id):
     row = cur.fetchone()
     conn.close()
     if row:
-        return {'balance': row[0], 'level': row[1], 'exp': row[2], 'sell_skill': row[3], 'buy_skill': row[4], 'wins': row[5], 'losses': row[6], 'referrals': row[7]}
+        return {
+            'balance': row[0],
+            'level': row[1],
+            'exp': row[2],
+            'sell_skill': row[3],
+            'buy_skill': row[4],
+            'wins': row[5] if row[5] is not None else 0,
+            'losses': row[6] if row[6] is not None else 0,
+            'referrals': row[7] if row[7] is not None else 0
+        }
     return None
 
 def update_user(user_id, balance=None, sell_skill=None, buy_skill=None, exp=None, wins=None, losses=None):
@@ -174,26 +160,25 @@ def add_exp(user_id, amount):
         return None
 
 def generate_products():
-    """Генерирует товары с брендами и сезонами"""
     seasons = ["весна", "лето", "осень", "зима", "всесезон"]
     data = []
     # Куртки
-    brands_coats = ["Canada Goose", "The North Face", "Moncler", "Patagonia", "Columbia", "Fjällräven", "Helly Hansen", "Marmot"]
+    brands_coats = ["Canada Goose", "The North Face", "Moncler", "Patagonia"]
     for brand in brands_coats:
         data.append((f"{brand} пуховик", brand, random.randint(8000, 30000), random.choice(["осень", "зима"])))
         data.append((f"{brand} ветровка", brand, random.randint(3000, 12000), random.choice(["весна", "лето", "осень"])))
     # Электроника
-    brands_elec = ["Apple", "Samsung", "Sony", "Xiaomi", "Huawei", "OnePlus", "LG", "Bose"]
+    brands_elec = ["Apple", "Samsung", "Xiaomi", "Sony"]
     for brand in brands_elec:
         data.append((f"{brand} наушники", brand, random.randint(2000, 15000), "всесезон"))
         data.append((f"{brand} смартфон", brand, random.randint(15000, 80000), "всесезон"))
         data.append((f"{brand} часы", brand, random.randint(5000, 25000), "всесезон"))
-    # Отдельно часы (люксовые)
-    brands_watch = ["Rolex", "Omega", "Casio", "Seiko", "Tissot", "Citizen", "G-Shock", "Apple"]
+    # Часы
+    brands_watch = ["Rolex", "Casio", "Seiko", "Tissot"]
     for brand in brands_watch:
         data.append((f"{brand} часы", brand, random.randint(3000, 150000), "всесезон"))
-    # Одежда (вещи)
-    brands_cloth = ["Nike", "Adidas", "Puma", "Reebok", "Under Armour", "Zara", "H&M", "Uniqlo"]
+    # Вещи
+    brands_cloth = ["Nike", "Adidas", "Puma", "Zara"]
     for brand in brands_cloth:
         data.append((f"{brand} футболка", brand, random.randint(1500, 6000), "лето"))
         data.append((f"{brand} джинсы", brand, random.randint(2000, 10000), "всесезон"))
@@ -201,18 +186,13 @@ def generate_products():
     return data
 
 def generate_market():
-    """Создаёт рыночные предложения от поставщиков"""
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
     cur.execute('DELETE FROM market')
     products = generate_products()
-    suppliers = cur.execute('SELECT id, name, rating, discount, risk FROM suppliers').fetchall()
-    for prod, brand, price, season in random.sample(products, min(50, len(products))):
-        supplier = random.choice(suppliers)
-        sup_id, sup_name, rating, discount, risk = supplier
-        # Цена зависит от рейтинга поставщика: чем ниже рейтинг, тем дешевле
-        final_price = int(price * (1 - discount / 100))
-        final_price = max(final_price, 200)  # не ниже 200
+    for prod, brand, price, season in products[:30]:
+        # Случайная цена с наценкой
+        final_price = int(price * random.uniform(0.8, 1.5))
         expires_at = datetime.now() + timedelta(hours=random.randint(2, 12))
         cur.execute('''
             INSERT INTO market (product, brand, base_price, current_price, season, demand, expires_at)
@@ -222,14 +202,12 @@ def generate_market():
     conn.close()
 
 def get_market_offers(user_id):
-    """Возвращает рыночные предложения (от поставщиков)"""
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
     user = get_user(user_id)
     buy_skill = user['buy_skill'] if user else 1
-    # Скидка от навыка закупок
-    skill_discount = min(buy_skill * 0.02, 0.3)  # до 30% скидки
-    cur.execute('SELECT id, product, brand, current_price, season, expires_at FROM market ORDER BY current_price ASC')
+    skill_discount = min(buy_skill * 0.02, 0.3)
+    cur.execute('SELECT id, product, brand, current_price, season, expires_at FROM market')
     rows = cur.fetchall()
     offers = []
     for r in rows:
@@ -237,30 +215,6 @@ def get_market_offers(user_id):
         offers.append({'id': r[0], 'product': f"{r[2]} {r[1]}", 'price': price, 'season': r[4], 'expires_at': r[5]})
     conn.close()
     return offers
-
-def buy_product(user_id, product_full, quantity):
-    """Покупка товара у поставщика"""
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-    # Находим предложение
-    cur.execute('SELECT id, current_price FROM market WHERE product = ?', (product_full.split(' ', 1)[1],))
-    row = cur.fetchone()
-    if not row:
-        conn.close()
-        return False, "Товар не найден"
-    price = row[1]
-    user = get_user(user_id)
-    skill_discount = min(user['buy_skill'] * 0.02, 0.3)
-    final_price = int(price * (1 - skill_discount)) * quantity
-    if user['balance'] < final_price:
-        return False, f"Не хватает {final_price} 💎"
-    # Списываем деньги
-    update_user(user_id, balance=user['balance'] - final_price)
-    # Добавляем в инвентарь
-    cur.execute('INSERT INTO inventory (user_id, product, quantity) VALUES (?, ?, ?) ON CONFLICT(user_id, product) DO UPDATE SET quantity = quantity + ?', (user_id, product_full, quantity, quantity))
-    conn.commit()
-    conn.close()
-    return True, f"✅ Куплено {product_full} x{quantity} за {final_price} 💎"
 
 def get_inventory(user_id):
     conn = sqlite3.connect(DB_NAME)
@@ -287,33 +241,28 @@ def remove_from_inventory(user_id, product):
     conn.close()
     return True
 
-def get_random_customer():
-    customers = ["Анна", "Михаил", "Екатерина", "Дмитрий", "Ольга", "Сергей", "Татьяна", "Алексей", "Наталья", "Владимир", "Ирина", "Константин"]
-    return random.choice(customers)
-
 def generate_customer_offer(user_id, product):
-    """Генерирует предложение от случайного клиента"""
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
-    # Базовая цена товара
-    cur.execute('SELECT product, brand, current_price FROM market WHERE product = ?', (product.split(' ', 1)[1],))
+    cur.execute('SELECT current_price FROM market WHERE product = ?', (product.split(' ', 1)[1],))
     row = cur.fetchone()
     if not row:
         conn.close()
         return None
-    base_price = row[2]
+    base_price = row[0]
     user = get_user(user_id)
-    skill_multiplier = 1 + user['sell_skill'] * 0.05
-    # Случайный разброс цены (0.7 до 1.3)
+    skill_multiplier = 1 + max(0, user['sell_skill'] * 0.05)
     random_factor = random.uniform(0.7, 1.3)
     offer_price = int(base_price * skill_multiplier * random_factor)
     offer_price = max(offer_price, 100)
-    customer = get_random_customer()
-    expires_at = datetime.now() + timedelta(minutes=random.randint(10, 60))
-    cur.execute('INSERT OR REPLACE INTO offers (user_id, customer_name, product, price, expires_at) VALUES (?, ?, ?, ?, ?)', (user_id, customer, product, offer_price, expires_at))
+    customers = ["Анна", "Михаил", "Екатерина", "Дмитрий", "Ольга", "Сергей", "Татьяна", "Алексей"]
+    customer = random.choice(customers)
+    expires_at = datetime.now() + timedelta(minutes=30)
+    cur.execute('INSERT OR REPLACE INTO offers (user_id, customer_name, product, price, expires_at) VALUES (?, ?, ?, ?, ?)',
+                (user_id, customer, product, offer_price, expires_at))
     conn.commit()
     conn.close()
-    return {'customer': customer, 'price': offer_price, 'expires_at': expires_at}
+    return {'customer': customer, 'price': offer_price}
 
 def get_offer(user_id):
     conn = sqlite3.connect(DB_NAME)
@@ -322,7 +271,7 @@ def get_offer(user_id):
     row = cur.fetchone()
     conn.close()
     if row and datetime.now() < datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S.%f"):
-        return {'customer': row[0], 'product': row[1], 'price': row[2], 'expires_at': row[3]}
+        return {'customer': row[0], 'product': row[1], 'price': row[2]}
     return None
 
 def clear_offer(user_id):
