@@ -1,7 +1,8 @@
 ﻿import asyncio
 import logging
 import random
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -41,6 +42,7 @@ async def cmd_start(message: types.Message):
         "🧑‍💼 *Добро пожаловать в товарный бизнес!*\n\n"
         "📈 Покупай товары по выгодной цене\n"
         "💰 Продавай, когда цена вырастет\n"
+        "🤝 Приглашай друзей — ускоряй прокачку!\n"
         "📊 Прокачивай навыки и становись лидером\n\n"
         "👇 *Выбери действие:*",
         parse_mode=ParseMode.MARKDOWN,
@@ -91,7 +93,7 @@ async def my_inventory(callback: types.CallbackQuery):
     await callback.message.edit_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=back_keyboard())
     await callback.answer()
 
-# ---------- ПРОДАЖА ТОВАРА ----------
+# ---------- ПРОДАЖА ТОВАРА (через покупателей) ----------
 @dp.callback_query(F.data == "sell_menu")
 async def sell_menu(callback: types.CallbackQuery):
     inv = game_db.get_inventory(callback.from_user.id)
@@ -101,44 +103,44 @@ async def sell_menu(callback: types.CallbackQuery):
         return
     keyboard = []
     for item in inv:
-        keyboard.append([InlineKeyboardButton(text=f"Продать {item['product']} (x{item['quantity']})", callback_data=f"sell_{item['product']}")])
+        keyboard.append([InlineKeyboardButton(text=f"Продать {item['product']} (x{item['quantity']})", callback_data=f"choose_{item['product']}")])
     keyboard.append([InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_main")])
     await callback.message.edit_text("💰 *Выберите товар для продажи:*", parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
     await callback.answer()
 
-@dp.callback_query(F.data.startswith("sell_"))
-async def sell_item(callback: types.CallbackQuery):
+@dp.callback_query(F.data.startswith("choose_"))
+async def choose_product(callback: types.CallbackQuery):
     product = callback.data.split("_", 1)[1]
+    # запоминаем выбранный товар во временном хранилище
+    game_db.set_temp_product(callback.from_user.id, product)
+    # генерируем покупателя
+    buyer_price, required_skill, buyer_name = game_db.generate_random_buyer(product)
     user = game_db.get_user(callback.from_user.id)
-    if not user:
-        await callback.answer("Ошибка данных")
+    if user['sell_skill'] < required_skill:
+        await callback.answer(f"❌ {buyer_name} требует навык продаж {required_skill}. Прокачайтесь!", show_alert=True)
         return
-    # находим рыночную цену
-    offers = game_db.get_market_offers()
-    market = next((o for o in offers if o['product'] == product), None)
-    if not market:
-        await callback.answer("❌ Этот товар сейчас не продаётся на рынке", show_alert=True)
-        return
-    # расчет цены с учётом навыка продаж
-    skill = user['sell_skill']
-    price = int(market['price'] * (1 + skill * 0.1))
-    # удаляем 1 единицу из инвентаря
-    if not game_db.remove_from_inventory(callback.from_user.id, product):
-        await callback.answer("❌ Недостаточно товара для продажи", show_alert=True)
-        return
-    # начисляем деньги и опыт
-    new_balance = user['balance'] + price
-    game_db.update_user(callback.from_user.id, balance=new_balance)
-    level_up = game_db.add_exp(callback.from_user.id, 20)
-    # достижение за первую продажу
-    game_db.earn_achievement(callback.from_user.id, "Первая продажа")
-    msg = f"✅ Продано: {product}\n💰 Выручка: +{price} 💎\n📈 Опыт: +20"
-    if level_up:
-        msg += f"\n🎉 *Уровень повышен до {level_up}!*"
-    await callback.answer(msg, show_alert=True)
-    await my_inventory(callback)
+    await callback.answer(f"👤 {buyer_name} предлагает {buyer_price} 💎 за {product}.\nИспользуйте /sell_confirm для подтверждения сделки.", show_alert=True)
+    # сохраняем предложение в БД
+    game_db.save_offer(callback.from_user.id, product, buyer_price)
 
-# ---------- БИЗНЕС-СТАТИСТИКА ----------
+@dp.message(Command("sell_confirm"))
+async def confirm_sale(message: types.Message):
+    user_id = message.from_user.id
+    offer = game_db.get_offer(user_id)
+    if not offer:
+        await message.answer("❌ Нет активного предложения. Сначала выберите товар в разделе «Продать товар».")
+        return
+    product, price = offer
+    if not game_db.remove_from_inventory(user_id, product):
+        await message.answer("❌ Товар уже продан или закончился.")
+        return
+    game_db.update_user(user_id, balance=game_db.get_user(user_id)['balance'] + price)
+    game_db.add_exp(user_id, 20)
+    game_db.earn_achievement(user_id, "Первая продажа")
+    await message.answer(f"✅ Продажа {product} за {price} 💎 совершена!")
+    game_db.clear_offer(user_id)
+
+# ---------- БИЗНЕС-СТАТИСТИКА И ПРОКАЧКА ----------
 @dp.callback_query(F.data == "my_business")
 async def my_business(callback: types.CallbackQuery):
     user = game_db.get_user(callback.from_user.id)
@@ -152,6 +154,7 @@ async def my_business(callback: types.CallbackQuery):
         f"⭐ Опыт: {user['exp']}/{user['level']*100}\n"
         f"🤝 Навык продаж: {user['sell_skill']}\n"
         f"📦 Навык закупок: {user['buy_skill']}\n"
+        f"👥 Приглашено друзей: {user['referrals']}\n"
         f"🏆 Побед: {user['wins']}\n"
         f"😞 Поражений: {user['losses']}\n"
     )
@@ -169,15 +172,18 @@ async def upgrade_sell(callback: types.CallbackQuery):
     if not user:
         await callback.answer("Ошибка")
         return
-    cost = user['sell_skill'] * 100
-    if user['balance'] >= cost:
-        new_skill = user['sell_skill'] + 1
-        new_balance = user['balance'] - cost
-        game_db.update_user(callback.from_user.id, balance=new_balance, sell_skill=new_skill)
-        await callback.answer(f"✅ Навык продаж повышен до {new_skill}!", show_alert=True)
-        await my_business(callback)
-    else:
-        await callback.answer(f"❌ Не хватает {cost} 💎", show_alert=True)
+    if user['sell_skill'] >= 10:
+        await callback.answer("✅ Навык продаж уже максимальный (10)!", show_alert=True)
+        return
+    # Проверка: либо 2 часа в игре, либо 3 друга
+    play_hours = (datetime.now() - user['last_play']).total_seconds() / 3600
+    if play_hours < 2 and user['referrals'] < 3:
+        await callback.answer("❌ Требуется: 2 часа в игре или 3 приглашённых друга.", show_alert=True)
+        return
+    new_skill = user['sell_skill'] + 1
+    game_db.update_user(callback.from_user.id, sell_skill=new_skill)
+    await callback.answer(f"✅ Навык продаж повышен до {new_skill}!", show_alert=True)
+    await my_business(callback)
 
 @dp.callback_query(F.data == "up_buy")
 async def upgrade_buy(callback: types.CallbackQuery):
@@ -185,15 +191,17 @@ async def upgrade_buy(callback: types.CallbackQuery):
     if not user:
         await callback.answer("Ошибка")
         return
-    cost = user['buy_skill'] * 100
-    if user['balance'] >= cost:
-        new_skill = user['buy_skill'] + 1
-        new_balance = user['balance'] - cost
-        game_db.update_user(callback.from_user.id, balance=new_balance, buy_skill=new_skill)
-        await callback.answer(f"✅ Навык закупок повышен до {new_skill}!", show_alert=True)
-        await my_business(callback)
-    else:
-        await callback.answer(f"❌ Не хватает {cost} 💎", show_alert=True)
+    if user['buy_skill'] >= 10:
+        await callback.answer("✅ Навык закупок уже максимальный (10)!", show_alert=True)
+        return
+    play_hours = (datetime.now() - user['last_play']).total_seconds() / 3600
+    if play_hours < 2 and user['referrals'] < 3:
+        await callback.answer("❌ Требуется: 2 часа в игре или 3 приглашённых друга.", show_alert=True)
+        return
+    new_skill = user['buy_skill'] + 1
+    game_db.update_user(callback.from_user.id, buy_skill=new_skill)
+    await callback.answer(f"✅ Навык закупок повышен до {new_skill}!", show_alert=True)
+    await my_business(callback)
 
 # ---------- ЛИДЕРЫ ----------
 @dp.callback_query(F.data == "leaders")
