@@ -708,14 +708,27 @@ async def set_avatar_part(callback: CallbackQuery):
     await show_avatar_options(callback)
 
 # ==================== ПОДРАБОТКИ ====================
-@dp.callback_query(F.data == "action_job", StateFilter(GameState.playing))
-async def show_jobs(callback: CallbackQuery):
-    kb = []
-    for j, job in enumerate(JOBS):
-        kb.append([InlineKeyboardButton(text=f"{job['emoji']} {job['name']} — {job['reward']}₽ ({job['duration']} сек)", callback_data=f"start_job_{j}")])
-    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, "💼 <b>ПОДРАБОТКИ</b>\n\nВыбери работу:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+# 1. Сначала функция анимации
+async def job_animation(user_id, job_idx):
+    """Показывает шаги работы с интервалом."""
+    job = JOBS[job_idx]
+    interval = job["duration"] / len(job["steps"])
+    for i, step in enumerate(job["steps"]):
+        await asyncio.sleep(interval)
+        if user_id not in side_jobs or side_jobs[user_id].get("done", True):
+            return
+        if i < len(job["steps"]) - 1:
+            try:
+                await send_msg(user_id, f"💼 {job['emoji']} {job['name']}\n\n{step}")
+            except:
+                pass
+    if user_id in side_jobs and not side_jobs[user_id].get("done", True):
+        side_jobs[user_id]["done"] = True
+        if user_id in players:
+            players[user_id]["balance"] += job["reward"]
+        await send_msg(user_id, f"✅ <b>РАБОТА ЗАВЕРШЕНА!</b>\n💰 +{job['reward']}₽")
 
+# 2. Потом обработчик кнопки
 @dp.callback_query(F.data.startswith("start_job_"))
 async def start_job(callback: CallbackQuery):
     user_id = callback.from_user.id; job_idx = int(callback.data.split("_")[2])
@@ -727,20 +740,6 @@ async def start_job(callback: CallbackQuery):
     await send_msg(user_id, f"💼 <b>ПРИСТУПИЛ!</b>\n{job['emoji']} {job['name']}\n⏱ {job['duration']} сек.\n💰 {job['reward']}₽\n\n<i>Напиши /check через {job['duration']} сек.</i>")
     asyncio.create_task(job_animation(user_id, job_idx))
     await callback.answer("Приступил!")
-
-async def job_animation(user_id, job_idx):
-    job = JOBS[job_idx]
-    interval = job["duration"] / len(job["steps"])
-    for i, step in enumerate(job["steps"]):
-        await asyncio.sleep(interval)
-        if user_id not in side_jobs or side_jobs[user_id].get("done", True): return
-        if i < len(job["steps"]) - 1:
-            try: await send_msg(user_id, f"💼 {job['emoji']} {job['name']}\n\n{step}")
-            except: pass
-    if user_id in side_jobs and not side_jobs[user_id].get("done", True):
-        side_jobs[user_id]["done"] = True
-        if user_id in players: players[user_id]["balance"] += job["reward"]
-        await send_msg(user_id, f"✅ <b>РАБОТА ЗАВЕРШЕНА!</b>\n💰 +{job['reward']}₽")
 
 # ==================== РЕПУТАЦИЯ, РЕФЕРАЛЫ, СТАТИСТИКА ====================
 @dp.callback_query(F.data == "action_rep_menu")
