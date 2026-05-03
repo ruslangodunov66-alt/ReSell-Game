@@ -457,19 +457,38 @@ async def check_job_cmd(message: types.Message):
 
 async def check_job_status(user_id):
     if user_id not in side_jobs or side_jobs[user_id].get("done", True):
-        return await send_msg(user_id, "💼 Нет активной работы.\nЗайди в 💼 ЗАРАБОТОК!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💼 ЗАРАБОТОК", callback_data="action_job")]]))
+        return await send_msg(user_id, "💼 Нет активной работы.\nЗайди в 💼 ЗАРАБОТОК!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💼 ЗАРАБОТОК", callback_data="action_job")]
+        ]))
     
-    job_data = side_jobs[user_id]; job = JOBS[job_data["job_type"]]
+    job_data = side_jobs[user_id]
+    job = JOBS[job_data["job_type"]]
     elapsed = int(time_module.time() - job_data["start_time"])
     
     if elapsed >= job["duration"] and not job_data["done"]:
         job_data["done"] = True
-        if user_id in players: players[user_id]["balance"] += job["reward"]; players[user_id]["stat_earned_today"] += job["reward"]
-        await send_msg(user_id, f"✅ <b>РАБОТА ЗАВЕРШЕНА!</b>\n\n{job['emoji']} {job['name']}\n💰 Заработано: {job['reward']}₽\n💼 Баланс: {players[user_id]['balance']}₽\n\n<i>Можешь взять новую подработку!</i>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💼 ЕЩЁ ЗАРАБОТОК", callback_data="action_job")]]))
+        if user_id in players:
+            players[user_id]["balance"] += job["reward"]
+            players[user_id]["stat_earned_today"] += job["reward"]
+        await send_msg(user_id, 
+            f"✅ <b>РАБОТА ЗАВЕРШЕНА!</b>\n\n"
+            f"{job['emoji']} {job['name']}\n"
+            f"💰 Заработано: {job['reward']}₽\n"
+            f"💼 Баланс: {players[user_id]['balance']}₽\n\n"
+            f"<i>Можешь взять новую подработку!</i>",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="💼 ЕЩЁ ЗАРАБОТОК", callback_data="action_job")]
+            ]))
     else:
-        remaining = job["duration"] - elapsed; current_step = min(len(job["steps"])-1, int(elapsed / (job["duration"] / len(job["steps"]))))
-        await send_msg(user_id, f"⏳ <b>РАБОТАЕМ...</b>\n\n{job['emoji']} {job['name']}\n{job['steps'][current_step]}\n\nОсталось: {remaining} сек.\n💰 Награда: {job['reward']}₽\n\n<i>Напиши /check позже</i>")
-
+        remaining = job["duration"] - elapsed
+        current_step = min(len(job["steps"])-1, int(elapsed / (job["duration"] / len(job["steps"]))))
+        await send_msg(user_id, 
+            f"⏳ <b>РАБОТАЕМ...</b>\n\n"
+            f"{job['emoji']} {job['name']}\n"
+            f"{job['steps'][current_step]}\n\n"
+            f"Осталось: {remaining} сек.\n"
+            f"💰 Награда: {job['reward']}₽\n\n"
+            f"<i>Напиши /check позже</i>")
 # ==================== ЧАТ С ПОКУПАТЕЛЯМИ ====================
 @dp.message(StateFilter(GameState.playing))
 async def handle_message(message: types.Message, state: FSMContext):
@@ -614,56 +633,57 @@ async def show_jobs(callback: CallbackQuery):
     user_id = callback.from_user.id
     kb = []
     for j, job in enumerate(JOBS):
-        kb.append([InlineKeyboardButton(text=f"{job['emoji']} {job['name']} — {job['reward']}₽ ({job['duration']} сек)", callback_data=f"start_job_{j}")])
+        kb.append([InlineKeyboardButton(
+            text=f"{job['emoji']} {job['name']} — {job['reward']}₽ ({job['duration']} сек)", 
+            callback_data=f"start_job_{j}"
+        )])
     kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
     
     active_job = ""
     if user_id in side_jobs and not side_jobs[user_id].get("done", True):
-        job_data = side_jobs[user_id]; job = JOBS[job_data["job_type"]]
-        elapsed = int(time_module.time() - job_data["start_time"]); remaining = max(0, job["duration"] - elapsed)
+        job_data = side_jobs[user_id]
+        job = JOBS[job_data["job_type"]]
+        elapsed = int(time_module.time() - job_data["start_time"])
+        remaining = max(0, job["duration"] - elapsed)
         active_job = f"\n\n⏳ <b>Работаю:</b> {job['emoji']} {job['name']}\nОсталось: {remaining} сек.\nНапиши /check чтобы проверить"
     
-    await edit_msg(callback.message, f"💼 <b>ПОДРАБОТКИ</b>\n\nЗаработай пока ждёшь покупателей!\nВыбери работу:{active_job}", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-
+    await edit_msg(callback.message, 
+        f"💼 <b>ПОДРАБОТКИ</b>\n\nЗаработай пока ждёшь покупателей!\nВыбери работу:{active_job}", 
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 @dp.callback_query(F.data.startswith("start_job_"))
 async def start_job(callback: CallbackQuery):
     user_id = callback.from_user.id; job_idx = int(callback.data.split("_")[2])
     job = JOBS[job_idx]
     
+    # Проверяем нет ли активной работы
     if user_id in side_jobs and not side_jobs[user_id].get("done", True):
-        job_data = side_jobs[user_id]
-        elapsed = int(time_module.time() - job_data["start_time"])
-        if elapsed < job_data["duration"]:
-            return await callback.answer(f"Уже работаешь! Осталось {job_data['duration'] - elapsed} сек.")
+        old_job_data = side_jobs[user_id]
+        old_job = JOBS[old_job_data["job_type"]]
+        elapsed = int(time_module.time() - old_job_data["start_time"])
+        if elapsed < old_job["duration"]:
+            remaining = old_job["duration"] - elapsed
+            return await callback.answer(f"Уже работаешь! Осталось {remaining} сек.")
     
-    side_jobs[user_id] = {"job_type": job_idx, "start_time": time_module.time(), "step": 0, "done": False}
+    side_jobs[user_id] = {
+        "job_type": job_idx, 
+        "start_time": time_module.time(), 
+        "step": 0, 
+        "done": False
+    }
     
     # Отправляем первое сообщение о начале работы
-    await send_msg(user_id, f"💼 <b>ПРИСТУПИЛ К РАБОТЕ!</b>\n\n{job['emoji']} {job['name']}\n⏱ {job['duration']} сек.\n💰 {job['reward']}₽\n\n{job['steps'][0]}\n\n<i>Напиши /check через {job['duration']} сек.\nРабота идёт фоном — можешь играть!</i>")
+    await send_msg(user_id, 
+        f"💼 <b>ПРИСТУПИЛ К РАБОТЕ!</b>\n\n"
+        f"{job['emoji']} {job['name']}\n"
+        f"⏱ {job['duration']} сек.\n"
+        f"💰 {job['reward']}₽\n\n"
+        f"{job['steps'][0]}\n\n"
+        f"<i>Напиши /check через {job['duration']} сек.\n"
+        f"Работа идёт фоном — можешь играть!</i>")
     
     # Запускаем анимацию шагов
     asyncio.create_task(job_animation(user_id, job_idx))
     await callback.answer("Приступил!")
-
-async def job_animation(user_id, job_idx):
-    """Показывает шаги работы с интервалом."""
-    job = JOBS[job_idx]
-    step_interval = job["duration"] / len(job["steps"])
-    
-    for step_idx, step_text in enumerate(job["steps"]):
-        await asyncio.sleep(step_interval)
-        if user_id not in side_jobs or side_jobs[user_id].get("done", True): return
-        side_jobs[user_id]["step"] = step_idx
-        # Не отправляем последний шаг (он будет в /check)
-        if step_idx < len(job["steps"]) - 1:
-            remaining = int(job["duration"] - (step_idx + 1) * step_interval)
-            try:
-                await send_msg(user_id, f"💼 <b>{job['emoji']} {job['name']}</b>\n\n{step_text}\n\nОсталось: ~{remaining} сек.\n<i>Напиши /check когда закончишь</i>")
-            except: pass
-    
-    # Работа завершена
-    if user_id in side_jobs and not side_jobs[user_id].get("done", True):
-        await check_job_status(user_id)
 
 # ==================== РЕПУТАЦИЯ И РЕФЕРАЛЫ ====================
 @dp.callback_query(F.data == "action_rep_menu")
