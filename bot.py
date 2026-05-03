@@ -605,33 +605,32 @@ async def process_chat_message(user_id, chat_key, text, message):
         if chat["offer"] < new_price <= chat["price"]:
             chat["offer"] = new_price
     
-    # Проверка завершения
+       # Проверка завершения диалога
     finished = False; result = None
     ml = ai_msg.lower()
     
-    for w in ["беру", "договорились", "по рукам", "забираю", "согласен"]:
-        if w in ml and "?" not in ml: finished = True; result = "sold"; break
+    # Согласие от клиента
+    agree_words = ["беру", "договорились", "по рукам", "забираю", "согласен", "давай", "идёт"]
+    for w in agree_words:
+        if w in ml and "?" not in ml: 
+            finished = True; result = "sold"; break
     
+    # Игрок соглашается продать по предложенной цене
+    user_agree = ["продано", "продаю", "согласен", "договорились", "по рукам", "забирай", "отдаю", "продам", "бери"]
+    for w in user_agree:
+        if w in text.lower():
+            finished = True; result = "sold"
+            # Фиксируем цену которую предложил клиент
+            ai_msg = f"Отлично! Тогда договорились на {chat['offer']}₽. Когда можно забрать?"
+            chat["history"].append({"role": "assistant", "content": ai_msg})
+            break
+    
+    # Отказ
     if not finished:
-        for w in ["нет", "не буду", "ушёл", "пошёл", "пока", "до свидания", "удачи"]:
-            if w in ml: finished = True; result = "lost"; break
-    
-    if not finished and chat["round"] >= chat["max_rounds"] - 1 and random.random() < 0.3:
-        finished = True; result = "lost"
-        ai_msg = random.choice(["Извините, я передумал.", "Пожалуй, поищу другое.", "Нет, не договоримся."])
-    
-    if finished:
-        chat["finished"] = True
-        if chat_key in remind_timers: remind_timers[chat_key].cancel()
-        if user_id in active_chat_for_user: del active_chat_for_user[user_id]
-        
-        if result == "sold":
-            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
-            await complete_sale(user_id, buyer_id, message)
-        else:
-            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}\n\n👋 Диалог завершён.")
-    else:
-        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+        decline_words = ["нет", "не буду", "ушёл", "пошёл", "пока", "до свидания", "удачи", "я пошёл"]
+        for w in decline_words:
+            if w in ml: 
+                finished = True; result = "lost"; break
 
 # ==================== ВКЛАДКА ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
@@ -920,6 +919,146 @@ async def back_to_menu(callback: CallbackQuery):
     et = f"\n\n{p['current_event']['text']}" if p.get("current_event") else ""
     demand = fmt_demand(p)
     await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{et}\n\n📊 <b>СПРОС:</b>\n{demand}", reply_markup=main_kb(user_id))
+
+# ==================== МИНИ-ИГРА: ЗАРАБОТОК ====================
+import time as time_module
+
+# Хранилище для мини-игры
+side_jobs = {}  # {user_id: {"type": str, "start_time": float, "reward": int, "duration": int, "done": bool}}
+
+JOBS = [
+    {"name": "📦 Расклейка объявлений", "description": "Расклеиваешь объявления по району. Платят немного, зато быстро.", "duration": 60, "reward": 200, "emoji": "📦"},
+    {"name": "🚗 Доставка заказов", "description": "Развозишь заказы на велосипеде. Средний заработок.", "duration": 120, "reward": 500, "emoji": "🚗"},
+    {"name": "💻 Фриланс (дизайн)", "description": "Делаешь логотип для клиента. Платят хорошо, но дольше.", "duration": 300, "reward": 1200, "emoji": "💻"},
+    {"name": "🏪 Работа в магазине", "description": "Подменяешь продавца в стоке. Можно и товар присмотреть.", "duration": 180, "reward": 700, "emoji": "🏪"},
+    {"name": "📸 Съёмка товаров", "description": "Фоткаешь вещи для других продавцов. Быстрые деньги.", "duration": 90, "reward": 350, "emoji": "📸"},
+]
+
+@dp.callback_query(F.data == "action_job", StateFilter(GameState.playing))
+async def show_jobs(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    
+    kb = []
+    for job in JOBS:
+        kb.append([InlineKeyboardButton(
+            text=f"{job['emoji']} {job['name']} — {job['reward']}₽ ({job['duration']} сек)",
+            callback_data=f"start_job_{JOBS.index(job)}"
+        )])
+    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
+    
+    # Проверяем есть ли активная работа
+    active_job = ""
+    if user_id in side_jobs and not side_jobs[user_id].get("done", True):
+        job_data = side_jobs[user_id]
+        elapsed = int(time_module.time() - job_data["start_time"])
+        remaining = max(0, job_data["duration"] - elapsed)
+        job = JOBS[job_data["type"]]
+        active_job = f"\n\n⏳ <b>Активная работа:</b> {job['emoji']} {job['name']}\nОсталось: {remaining} сек.\n💰 Награда: {job['reward']}₽\n\n<i>Напиши /check чтобы проверить готовность</i>"
+    
+    await edit_msg(callback.message, 
+        f"💼 <b>ПОДРАБОТКИ</b>\n\nЗаработай пока ждёшь покупателей!\nВыбери работу:{active_job}",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("start_job_"))
+async def start_job(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    job_idx = int(callback.data.split("_")[2])
+    job = JOBS[job_idx]
+    
+    # Проверяем нет ли активной работы
+    if user_id in side_jobs and not side_jobs[user_id].get("done", True):
+        job_data = side_jobs[user_id]
+        elapsed = int(time_module.time() - job_data["start_time"])
+        if elapsed < job_data["duration"]:
+            remaining = job_data["duration"] - elapsed
+            return await callback.answer(f"Уже работаешь! Осталось {remaining} сек.")
+    
+    side_jobs[user_id] = {
+        "type": job_idx,
+        "start_time": time_module.time(),
+        "reward": job["reward"],
+        "duration": job["duration"],
+        "done": False
+    }
+    
+    await send_msg(user_id, 
+        f"💼 <b>ПРИСТУПИЛ К РАБОТЕ!</b>\n\n"
+        f"{job['emoji']} {job['name']}\n"
+        f"⏱ Длительность: {job['duration']} сек.\n"
+        f"💰 Награда: {job['reward']}₽\n\n"
+        f"<i>Напиши /check через {job['duration']} сек. чтобы получить деньги!\n"
+        f"Можешь продолжать играть — работа идёт фоном.</i>")
+    await callback.answer("Приступил к работе!")
+
+@dp.message(Command('check'))
+async def check_job(message: types.Message):
+    user_id = message.from_user.id
+    await del_user_msgs(user_id)
+    
+    if user_id not in side_jobs or side_jobs[user_id].get("done", True):
+        return await send_msg(user_id, "💼 У тебя нет активной работы.\nЗайди в меню и выбери подработку!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💼 ПОДРАБОТКИ", callback_data="action_job")],
+        ]))
+    
+    job_data = side_jobs[user_id]
+    elapsed = int(time_module.time() - job_data["start_time"])
+    
+    if elapsed >= job_data["duration"] and not job_data["done"]:
+        # Работа завершена!
+        job_data["done"] = True
+        reward = job_data["reward"]
+        if user_id in players:
+            players[user_id]["balance"] += reward
+            players[user_id]["stat_earned_today"] += reward
+        
+        job = JOBS[job_data["type"]]
+        await send_msg(user_id, 
+            f"✅ <b>РАБОТА ЗАВЕРШЕНА!</b>\n\n"
+            f"{job['emoji']} {job['name']}\n"
+            f"💰 Заработано: {reward}₽\n"
+            f"💼 Баланс: {players[user_id]['balance']}₽\n\n"
+            f"<i>Можешь взять новую подработку или продолжить торговать!</i>",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="💼 ЕЩЁ ЗАРАБОТОК", callback_data="action_job")],
+                [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+            ]))
+    else:
+        remaining = job_data["duration"] - elapsed
+        job = JOBS[job_data["type"]]
+        await send_msg(user_id, 
+            f"⏳ <b>РАБОТАЕМ...</b>\n\n"
+            f"{job['emoji']} {job['name']}\n"
+            f"Осталось: {remaining} сек.\n"
+            f"💰 Награда: {job['reward']}₽\n\n"
+            f"<i>Напиши /check позже чтобы получить деньги</i>")
+
+@dp.message(Command('job'))
+async def job_cmd(message: types.Message):
+    user_id = message.from_user.id
+    await del_user_msgs(user_id)
+    await show_jobs_from_cmd(message)
+
+async def show_jobs_from_cmd(message):
+    user_id = message.from_user.id
+    kb = []
+    for job in JOBS:
+        kb.append([InlineKeyboardButton(
+            text=f"{job['emoji']} {job['name']} — {job['reward']}₽ ({job['duration']} сек)",
+            callback_data=f"start_job_{JOBS.index(job)}"
+        )])
+    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
+    
+    active_job = ""
+    if user_id in side_jobs and not side_jobs[user_id].get("done", True):
+        job_data = side_jobs[user_id]
+        elapsed = int(time_module.time() - job_data["start_time"])
+        remaining = max(0, job_data["duration"] - elapsed)
+        job = JOBS[job_data["type"]]
+        active_job = f"\n\n⏳ <b>Работаю:</b> {job['emoji']} {job['name']}\nОсталось: {remaining} сек.\nНапиши /check чтобы проверить"
+    
+    await send_msg(user_id, f"💼 <b>ПОДРАБОТКИ</b>\n\nЗаработай пока ждёшь!\nВыбери:{active_job}", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 # ==================== ЗАПУСК ====================
 async def main():
