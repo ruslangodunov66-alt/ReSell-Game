@@ -493,65 +493,93 @@ async def process_chat(user_id, chat_key, text, message):
     
     chat["history"].append({"role": "user", "content": text}); chat["round"] += 1
     
-    if chat["round"] > chat["max_rounds"]:
+    # Проверяем слова продажи от игрока ДО запроса к нейросети
+    user_agree = ["продано", "продаю", "согласен", "договорились", "по рукам", "забирай", "отдаю", "продам", "бери", "хорошо", "ок", "давай"]
+    for w in user_agree:
+        if w in text.lower():
+            chat["finished"] = True
+            if chat_key in remind_timers: remind_timers[chat_key].cancel()
+            if user_id in active_chat_for_user: del active_chat_for_user[user_id]
+            ai_msg = f"Отлично! Договорились на {chat['offer']}₽. Когда можно забрать?"
+            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+            await complete_sale(user_id, buyer_id, message)
+            return
+    
+    # ЛИМИТ СООБЩЕНИЙ: после 5 раундов клиент принимает решение
+    if chat["round"] >= 5:
         chat["finished"] = True
-        msgs = {"angry": "Всё, мне надоело. Удачи.", "kind": "Ладно, извините. Всего доброго!", "sly": "Понял, не договоримся. Поищу другого."}
         if chat_key in remind_timers: remind_timers[chat_key].cancel()
         if user_id in active_chat_for_user: del active_chat_for_user[user_id]
-        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msgs.get(client_type, 'Пока.')}\n\n⚠️ Диалог завершён.")
+        
+        # 60% шанс что клиент согласится на свою цену
+        if random.random() < 0.6:
+            ai_msg = f"Ладно, давайте {chat['offer']}₽. Договорились. Когда забирать?"
+            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+            await complete_sale(user_id, buyer_id, message)
+        else:
+            ai_msg = random.choice(["Извините, я передумал.", "Поищу другое.", "Не договоримся."])
+            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}\n\n👋 Диалог завершён.")
         return
     
-    # Запрос к DeepSeek
+    # Запрос к DeepSeek (только если не превышен лимит)
     try:
-        system_prompt = client["system_prompt"] + f"\n\nКонтекст: Товар - {chat['item']}. Цена продавца - {chat['price']}₽. Твоё предложение - {chat['offer']}₽. Раунд {chat['round']}/{chat['max_rounds']}. Веди ЕСТЕСТВЕННЫЙ диалог."
-        messages = [{"role": "system", "content": system_prompt}] + chat["history"][-8:]
-        resp = client_openai.chat.completions.create(model="deepseek-chat", messages=messages, temperature=0.95, max_tokens=250)
+        system_prompt = (
+            f"{client['system_prompt']}\n\n"
+            f"ВАЖНО: Это деловой чат. Товар: {chat['item']}. Твоя цена: {chat['offer']}₽, продавец хочет {chat['price']}₽. "
+            f"Сообщение {chat['round']} из 5. "
+        )
+        # Отправляем ТОЛЬКО последние 3 сообщения для контекста
+        messages = [{"role": "system", "content": system_prompt}] + chat["history"][-3:]
+        resp = client_openai.chat.completions.create(
+            model="deepseek-chat", messages=messages, 
+            temperature=0.7, max_tokens=100  # Уменьшил токены ответа
+        )
         ai_msg = resp.choices[0].message.content
     except:
-        fallbacks = {"angry": [f"Слушай, {chat['offer']}₽. Расскажи про состояние."], "kind": [f"Понимаю. А можно подробнее про товар?"], "sly": [f"Опиши товар детальнее — может подниму цену."]}
-        ai_msg = random.choice(fallbacks.get(client_type, ["Расскажите подробнее."]))
+        # Короткие запасные ответы
+        fallbacks = {
+            "angry": [
+                f"Слушай, {chat['offer']}₽. Берёшь?", 
+                f"Я своё сказал — {chat['offer']}₽. Решай.",
+                f"Ладно, {int(chat['offer']*1.05)}₽. Всё."
+            ],
+            "kind": [
+                f"Ну так что? {chat['offer']}₽ — берёте?",
+                f"Я готов на {chat['offer']}₽. Договоримся?",
+                f"Может всё-таки {chat['offer']}₽?"
+            ],
+            "sly": [
+                f"Рынок есть рынок. {chat['offer']}₽.",
+                f"Давай {chat['offer']}₽ и разойдёмся.",
+                f"Ну хорошо, {int(chat['offer']*1.05)}₽."
+            ]
+        }
+        ai_msg = random.choice(fallbacks.get(client_type, [f"{chat['offer']}₽."]))
     
     chat["history"].append({"role": "assistant", "content": ai_msg})
     
-    # Проверяем новую цену от клиента
+    # Проверяем новую цену
     prices = re.findall(r'(\d{3,5})₽', ai_msg)
     for p in prices:
         new_price = int(p)
         if chat["offer"] < new_price <= chat["price"]: chat["offer"] = new_price
     
-    # Проверка завершения
-    finished = False; result = None
+    # Проверка согласия клиента
+    finished = False
     ml = ai_msg.lower()
-    for w in ["беру", "договорились", "по рукам", "забираю", "согласен"]:
-        if w in ml and "?" not in ml: finished = True; result = "sold"; break
-    
-    # Игрок соглашается продать
-    user_agree = ["продано", "продаю", "согласен", "договорились", "по рукам", "забирай", "отдаю", "продам", "бери"]
-    for w in user_agree:
-        if w in text.lower():
-            finished = True; result = "sold"
-            ai_msg = f"Отлично! Договорились на {chat['offer']}₽. Когда можно забрать?"
-            chat["history"].append({"role": "assistant", "content": ai_msg}); break
-    
-    if not finished:
-        for w in ["нет", "не буду", "ушёл", "пошёл", "пока", "до свидания"]:
-            if w in ml: finished = True; result = "lost"; break
-    
-    if not finished and chat["round"] >= chat["max_rounds"] - 1 and random.random() < 0.3:
-        finished = True; result = "lost"
-        ai_msg = random.choice(["Извините, передумал.", "Поищу другое.", "Не договоримся."])
+    for w in ["беру", "договорились", "по рукам", "забираю", "согласен", "давай", "идёт"]:
+        if w in ml and "?" not in ml: finished = True; break
     
     if finished:
         chat["finished"] = True
         if chat_key in remind_timers: remind_timers[chat_key].cancel()
         if user_id in active_chat_for_user: del active_chat_for_user[user_id]
-        if result == "sold":
-            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
-            await complete_sale(user_id, buyer_id, message)
-        else:
-            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}\n\n👋 Диалог завершён.")
-    else:
         await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+        await complete_sale(user_id, buyer_id, message)
+    else:
+        # Показываем оставшиеся сообщения
+        remaining = 5 - chat["round"]
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}\n\n<i>Осталось сообщений: {remaining}</i>")
 
 # ==================== ВКЛАДКА ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
