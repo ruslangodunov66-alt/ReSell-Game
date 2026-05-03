@@ -747,9 +747,11 @@ async def show_avatar_menu_start(callback: CallbackQuery):
     # Отправляем фото или текстовую карточку
     await send_avatar_photo(user_id, txt, InlineKeyboardMarkup(inline_keyboard=kb))
     
-    # Удаляем сообщение с кнопкой меню
-    try: await callback.message.delete()
-    except: pass
+    # Безопасно удаляем callback-сообщение
+    try:
+        await callback.message.delete()
+    except:
+        pass  # Игнорируем ошибку если сообщение уже удалено
     
     await callback.answer()
 
