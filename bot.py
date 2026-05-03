@@ -9,7 +9,7 @@ from aiogram.utils import executor
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
 # ==================== КОНФИГ ====================
-API_TOKEN = 'ТОКЕН_ВТОРОГО_БОТА'
+API_TOKEN = '8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4'
 CHANNEL_LINK = '@vintagedrop61'
 CHANNEL_NAME = 'ReSell👾'
 
