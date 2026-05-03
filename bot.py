@@ -37,40 +37,40 @@ HOUSES = [
         "name": "🏚 Комната в общаге",
         "price": 0,
         "income_bonus": 0,
-        "description": "Бесплатное жильё в общаге. Никаких бонусов.",
-        "image_url": "https://i.imgur.com/room_placeholder.jpg"  # Можешь оставить заглушку или удалить
+        "description": "Бесплатное жильё. Никаких бонусов.",
+        "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"  # Заглушка
     },
     {
         "id": "flat",
         "name": "🏢 Квартира",
         "price": 10000,
         "income_bonus": 150,
-        "description": "Уютная квартира в спальном районе. +150₽ к ежедневному доходу.",
-        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_0.jpg"
+        "description": "Уютная квартира. +150₽ к доходу.",
+        "image_url": "AgACAgIAAxkBAAIBeGn3hGvVcFktYFQJP-YNnKti48v1AAKYGWsbUNy4SzN3yqU-dPZwAQADAgADeQADOwQ"
     },
     {
         "id": "house",
         "name": "🏠 Одноэтажный дом",
         "price": 35000,
         "income_bonus": 400,
-        "description": "Просторный дом с участком и гаражом. +400₽ к ежедневному доходу.",
-        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_1.jpg"
+        "description": "Просторный дом с гаражом. +400₽ к доходу.",
+        "image_url": "AgACAgIAAxkBAAIBemn3hKeq-IxdQ6l6jB7sD10pQPbHAAKUGGsbaAW5S4jG5ecluTqMAQADAgADeQADOwQ"
     },
     {
         "id": "villa",
         "name": "🏰 Богатая вилла",
         "price": 100000,
         "income_bonus": 1200,
-        "description": "Роскошная вилла с бассейном и садом. +1200₽ к ежедневному доходу.",
-        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_2.jpg"
+        "description": "Роскошная вилла с бассейном. +1200₽ к доходу.",
+        "image_url": "AgACAgIAAxkBAAIBfGn3hME0a5rsH1wos1Qyy1AhsYAnAAKVGGsbaAW5SzyFR-E8--65AQADAgADeQADOwQ"
     },
     {
         "id": "yacht",
         "name": "🛥 Яхта",
         "price": 250000,
         "income_bonus": 3000,
-        "description": "Собственная яхта у причала. +3000₽ к ежедневному доходу. Статус!",
-        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_3.jpg"
+        "description": "Собственная яхта. +3000₽ к доходу. Статус!",
+        "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"
     },
 ]
 
@@ -142,20 +142,42 @@ DEFAULT_AVATAR = {
 PIXEL_STYLE = "pixel-art"
 
 def get_avatar_url(avatar_config):
-    """Генерирует ссылку на пиксельный аватар."""
-    parts = []
-    for key, value in avatar_config.items():
-        if value != "none" and value != "white" and value != "default":
-            parts.append(f"{key}={value}")
+    """Генерирует ссылку на пиксельный аватар (DiceBear)."""
+    seed = hashlib.md5(str(avatar_config).encode()).hexdigest()[:10]
+    # Если DiceBear не работает в РФ — можно переключить на другой сервис
+    return f"https://api.dicebear.com/7.x/pixel-art/svg?seed={seed}"
+
+async def send_avatar_photo(user_id, caption="", reply_markup=None):
+    """Отправляет аватар игрока. Если не грузится — текстовая карточка."""
+    avatar = get_player_avatar(user_id)
+    avatar_url = get_avatar_url(avatar)
     
-    # Используем все части для seed чтобы аватар был уникальным
-    seed = "-".join(f"{k}:{v}" for k, v in avatar_config.items())
-    url = f"https://api.dicebear.com/7.x/{PIXEL_STYLE}/svg?seed={hashlib.md5(seed.encode()).hexdigest()[:10]}"
-    
-    if parts:
-        url += "&" + "&".join(parts)
-    
-    return url
+    try:
+        msg = await bot.send_photo(user_id, avatar_url, caption=caption, parse_mode="HTML", reply_markup=reply_markup)
+        return msg
+    except Exception as e:
+        print(f"Avatar load error: {e}")
+        # Текстовая карточка если фото не грузится
+        parts = []
+        for key, data in AVATAR_PARTS.items():
+            val = avatar.get(key, "default")
+            name = data["options"].get(val, val)
+            parts.append(f"{data['name']}: {name}")
+        
+        text_card = (
+            f"👤 <b>ТВОЙ ПЕРСОНАЖ</b>\n\n"
+            + "\n".join(parts)
+            + "\n\n<i>Редактируй персонажа ниже 👇</i>"
+        )
+        
+        if caption:
+            text_card = caption
+        
+        await del_prev(user_id)
+        await del_user_msgs(user_id)
+        msg = await bot.send_message(user_id, text_card, parse_mode="HTML", reply_markup=reply_markup)
+        last_bot_message[user_id] = msg.message_id
+        return msg
 
 def load_all():
     global referral_data, rep_data, learning_data, player_houses, player_avatars
@@ -627,19 +649,43 @@ async def show_houses(callback: CallbackQuery):
         status = "✅ ТВОЁ" if owned else f"💰 {house['price']}₽"
         txt += f"{house['name']}\n{house['description']}\n{status}\n\n"
         if not owned:
-            kb.append([InlineKeyboardButton(text=f"{house['name']} — {house['price']}₽", callback_data=f"buy_house_{house['id']}")])
+            kb.append([InlineKeyboardButton(
+                text=f"{house['name']} — {house['price']}₽",
+                callback_data=f"buy_house_{house['id']}"
+            )])
     
     kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
     
-    # Отправляем фото текущего дома
+    # Отправляем фото текущего дома через file_id
     current_house = next((h for h in HOUSES if h["id"] == current_id), HOUSES[0])
+    
     try:
-        await bot.send_photo(user_id, current_house["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+        # Пробуем отправить через file_id (работает в России)
+        if current_house["image_url"].startswith("AgAC"):
+            await bot.send_photo(
+                user_id,
+                current_house["image_url"],
+                caption=txt,
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
+            )
+        else:
+            # Если ссылка URL — пробуем через неё
+            await bot.send_photo(
+                user_id,
+                current_house["image_url"],
+                caption=txt,
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
+            )
         await del_prev(user_id)
         last_bot_message[user_id] = callback.message.message_id
         await callback.message.delete()
-    except:
+    except Exception as e:
+        print(f"Photo error: {e}")
+        # Если фото не загрузилось — просто текст
         await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("buy_house_"))
@@ -658,24 +704,23 @@ async def buy_house_btn(callback: CallbackQuery):
 async def show_avatar_menu(callback: CallbackQuery):
     user_id = callback.from_user.id
     avatar = get_player_avatar(user_id)
-    avatar_url = get_avatar_url(avatar)
     
-    txt = "👤 <b>ТВОЙ ПИКСЕЛЬНЫЙ АВАТАР</b>\n\n<i>Выбери часть для изменения:</i>"
+    txt = "👤 <b>ТВОЙ ПИКСЕЛЬНЫЙ ПЕРСОНАЖ</b>\n\n<i>Выбери что изменить:</i>"
     
     kb = []
     for part_key, part_data in AVATAR_PARTS.items():
         current_value = avatar.get(part_key, "default")
         current_name = part_data["options"].get(current_value, current_value)
-        kb.append([InlineKeyboardButton(text=f"{part_data['name']}: {current_name}", callback_data=f"avatar_part_{part_key}")])
+        kb.append([InlineKeyboardButton(
+            text=f"{part_data['name']}: {current_name}",
+            callback_data=f"avatar_part_{part_key}"
+        )])
     kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
     
-    try:
-        await bot.send_photo(user_id, avatar_url, caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-        await del_prev(user_id)
-        last_bot_message[user_id] = callback.message.message_id
-        await callback.message.delete()
-    except:
-        await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_avatar_photo(user_id, txt, InlineKeyboardMarkup(inline_keyboard=kb))
+    await del_prev(user_id)
+    last_bot_message[user_id] = callback.message.message_id
+    await callback.message.delete()
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("avatar_part_"))
