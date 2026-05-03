@@ -16,9 +16,8 @@ from openai import OpenAI
 # ==================== КОНФИГ ====================
 API_TOKEN = '8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4'
 CHANNEL_LINK = '@vintagedrop61'
-CHANNEL_NAME = 'ReSell👾'
 BOT_USERNAME = 'R-Game'
-DEEPSEEK_API_KEY = "sk-9515baacbf9b44bfbf45caadf97e5012"
+DEEPSEEK_API_KEY = "sk-8d6e9d7c39c84ec6a0ecba379674346d"
 
 client_openai = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
@@ -27,13 +26,48 @@ REPUTATION_FILE = "reputation_data.json"
 REFERRAL_FILE = "referrals.json"
 LEARNING_FILE = "learning_progress.json"
 
-# ==================== ОБУЧАЮЩАЯ СИСТЕМА ====================
+# ==================== СОВЕТЫ ВО ВРЕМЯ ИГРЫ ====================
+GAME_TIPS = {
+    "after_buy": [
+        "💡 <b>Совет:</b> Купил товар? Сразу публикуй! Чем быстрее выставишь — тем быстрее продашь.",
+        "💡 <b>Лайфхак:</b> Не держи товар в инвентаре долго — он теряет в цене (как в реальности).",
+        "💡 <b>Помни:</b> В реальной товарке деньги должны оборачиваться. Продал → купил новое → продал.",
+    ],
+    "after_publish": [
+        "💡 <b>Совет:</b> Пока ждёшь покупателей — закупай ещё товары. Не теряй время!",
+        "💡 <b>Лайфхак:</b> В реальности опубликуй объявление на Авито, Юле и в ТГ-каналах одновременно.",
+        "💡 <b>Помни:</b> Чем больше объявлений — тем выше шанс продажи. Диверсифицируй!",
+    ],
+    "during_chat": [
+        "💡 <b>Совет:</b> Не соглашайся на первую цену! Торгуйся — покупатель всегда закладывает пространство для торга.",
+        "💡 <b>Лайфхак:</b> Если клиент злой — сохраняй спокойствие. Вежливость продаёт лучше агрессии.",
+        "💡 <b>Помни:</b> В реальности спрашивай у клиента что ему нужно — может продашь доп. товар.",
+    ],
+    "after_sale": [
+        "💡 <b>Совет:</b> Продал? Отлично! Откладывай 30% прибыли на закуп нового товара.",
+        "💡 <b>Лайфхак:</b> В реальности попроси клиента оставить отзыв на Авито — повысит доверие к профилю.",
+        "💡 <b>Помни:</b> Записывай все сделки в таблицу — видь реальную прибыль и убытки.",
+    ],
+    "many_buyers": [
+        "💡 <b>Совет:</b> У тебя несколько покупателей! Отвечай всем — не теряй клиентов.",
+        "💡 <b>Лайфхак:</b> В реальности отвечай в течение 15 минут — быстрый ответ повышает шанс продажи на 50%.",
+    ],
+    "inventory_full": [
+        "💡 <b>Совет:</b> У тебя много товаров в инвентаре! Публикуй их, не держи мёртвый груз.",
+        "💡 <b>Лайфхак:</b> В реальности залежавшийся товар — это замороженные деньги. Лучше продать с маленькой прибылью чем держать.",
+    ],
+    "first_sale_tip": [
+        "💡 <b>Поздравляю с первой продажей!</b> В реальной товарке главное — начать. Теперь масштабируйся!",
+    ],
+}
+
+# ==================== ОБУЧЕНИЕ ====================
 LESSONS = [
     {
         "id": 1, "title": "🚀 Основы товарного бизнеса",
         "text": (
             "📚 <b>УРОК 1: ОСНОВЫ ТОВАРКИ</b>\n\n"
-            "<b>Товарный бизнес (товарка)</b> — это перепродажа вещей.\n\n"
+            "<b>Товарный бизнес</b> — это перепродажа вещей.\n\n"
             "🔹 <b>Где брать товар?</b>\n"
             "• Авито (б/у вещи дешевле рынка)\n"
             "• Оптовые рынки (Садовод, Люблино в Москве)\n"
@@ -42,13 +76,7 @@ LESSONS = [
             "• Telegram-каналы оптовиков\n\n"
             "🔹 <b>Как заработать?</b>\n"
             "Купил дешевле → продал дороже = прибыль\n\n"
-            "🔹 <b>С чего начать?</b>\n"
-            "1. Выбери нишу (одежда, электроника, хобби)\n"
-            "2. Найди где дёшево купить\n"
-            "3. Сделай хорошие фото\n"
-            "4. Выложи на Авито/Юлу/Telegram\n"
-            "5. Общайся с покупателями\n\n"
-            "<b>💰 Стартовый бюджет: от 1000₽</b>"
+            "💰 <b>Стартовый бюджет: от 1000₽</b>"
         ),
         "reward": 500
     },
@@ -59,17 +87,13 @@ LESSONS = [
             "<b>Как понять что продавать?</b>\n\n"
             "🔹 <b>Проверь спрос:</b>\n"
             "• Поищи товар на Авито — много объявлений?\n"
-            "• Посмотри проданные лоты (фильтр «Проданные»)\n"
-            "• Зайди в тематические группы ВК/ТГ\n\n"
+            "• Посмотри проданные лоты (фильтр «Проданные»)\n\n"
             "🔹 <b>Сезонность:</b>\n"
-            "• Осенью — куртки, обувь, школа\n"
-            "• Зимой — пуховики, подарки\n"
-            "• Весной — демисезон, велосипеды\n"
-            "• Летом — футболки, купальники\n\n"
-            "🔹 <b>Тренды:</b>\n"
-            "• Следи за блогерами — что носят?\n"
-            "• Смотри за модой в соцсетях\n\n"
-            "<b>💡 Совет:</b> Покупай когда дёшево, продавай когда спрос высокий!"
+            "• Осень — куртки, обувь, школа\n"
+            "• Зима — пуховики, подарки\n"
+            "• Весна — демисезон, велосипеды\n"
+            "• Лето — футболки, купальники\n\n"
+            "💡 Покупай когда дёшево, продавай когда спрос высокий!"
         ),
         "reward": 500
     },
@@ -78,38 +102,24 @@ LESSONS = [
         "text": (
             "📚 <b>УРОК 3: ПОСТАВЩИКИ</b>\n\n"
             "<b>Как не попасть на кидалово?</b>\n\n"
-            "🔹 <b>Проверка поставщика:</b>\n"
+            "🔹 <b>Проверка:</b>\n"
             "• Попроси отзывы и контакты клиентов\n"
-            "• Начни с маленького заказа (тестовый)\n"
+            "• Начни с маленького заказа\n"
             "• Проверь по чёрным спискам в ТГ\n"
             "• Никогда не вноси 100% предоплату\n\n"
-            "🔹 <b>Типы поставщиков:</b>\n"
-            "• 🏭 Крупные оптовики — дёшево, мин. заказ\n"
-            "• 👕 Мелкие поставщики — дороже, без мин. заказа\n"
-            "• 🎲 Сомнительные — очень дёшево, высокий риск\n\n"
-            "<b>⚠️ Правило:</b> Если цена слишком низкая — это подозрительно!"
+            "⚠️ Если цена слишком низкая — подозрительно!"
         ),
         "reward": 700
     },
     {
         "id": 4, "title": "💬 Общение с покупателями",
         "text": (
-            "📚 <b>УРОК 4: ПРОДАЖИ И ОБЩЕНИЕ</b>\n\n"
+            "📚 <b>УРОК 4: ПРОДАЖИ</b>\n\n"
             "<b>Как продать дороже?</b>\n\n"
-            "🔹 <b>Фото:</b>\n"
-            "• Хороший свет, чистота\n"
-            "• Все ракурсы, бирки, дефекты\n"
-            "• На человеке или на манекене\n\n"
-            "🔹 <b>Описание:</b>\n"
-            "• Бренд, размер, состояние\n"
-            "• Почему продаёшь (честно)\n"
-            "• Ключевые слова для поиска\n\n"
-            "🔹 <b>Общение:</b>\n"
-            "• Отвечай быстро (в течение часа)\n"
-            "• Не груби даже если клиент злой\n"
-            "• Предлагай альтернативы\n"
-            "• Торгуйся но знай свою минимальную цену\n\n"
-            "<b>💡 Лайфхак:</b> Поставь цену на 20% выше желаемой — будет пространство для торга."
+            "🔹 <b>Фото:</b> Хороший свет, все ракурсы, бирки\n"
+            "🔹 <b>Описание:</b> Бренд, размер, состояние, ключевые слова\n"
+            "🔹 <b>Общение:</b> Отвечай быстро, не груби, предлагай альтернативы\n\n"
+            "💡 Поставь цену на 20% выше — будет пространство для торга."
         ),
         "reward": 700
     },
@@ -118,48 +128,14 @@ LESSONS = [
         "text": (
             "📚 <b>УРОК 5: ПРОДВИЖЕНИЕ</b>\n\n"
             "<b>Как поднять объявление в топ?</b>\n\n"
-            "🔹 <b>Бесплатные методы:</b>\n"
-            "• Обновляй объявление каждые 24 часа\n"
-            "• Добавляй ключевые слова в описание\n"
-            "• Ставь правильную категорию\n"
-            "• Делай много фото (больше 5)\n\n"
-            "🔹 <b>Платные методы:</b>\n"
-            "• Продвижение на Авито (от 50₽/день)\n"
-            "• Турбо-продажа (фиксированная цена)\n"
-            "• Выделение цветом\n\n"
-            "🔹 <b>Социальные сети:</b>\n"
-            "• Telegram-каналы барахолок\n"
-            "• Группы ВК своего города\n"
-            "• Instagram с хештегами\n\n"
-            "<b>💡 Совет:</b> Сделай 5-10 объявлений — чем больше, тем выше шанс продажи!"
+            "🔹 <b>Бесплатно:</b> Обновляй каждые 24ч, ключевые слова\n"
+            "🔹 <b>Платно:</b> Продвижение от 50₽/день, Турбо-продажа\n"
+            "🔹 <b>Соцсети:</b> ТГ-каналы, ВК, Instagram\n\n"
+            "💡 Сделай 5-10 объявлений — выше шанс продажи!"
         ),
         "reward": 1000
     },
 ]
-
-# Советы при действиях
-TIPS = {
-    "buy": [
-        "💡 <b>Совет:</b> Всегда проверяй поставщика перед крупной сделкой. Начни с маленького заказа.",
-        "💡 <b>Совет:</b> Смотри на сезонность! Куртки зимой продаются лучше чем летом.",
-        "💡 <b>Совет:</b> Не вкладывай все деньги в один товар — диверсифицируй!",
-    ],
-    "publish": [
-        "💡 <b>Совет:</b> Сделай 5-10 фото товара при хорошем свете. Это увеличит шанс продажи на 40%.",
-        "💡 <b>Совет:</b> В описании укажи все размеры и дефекты — это вызывает доверие.",
-        "💡 <b>Совет:</b> Цену ставь на 20% выше желаемой — оставь пространство для торга.",
-    ],
-    "sale": [
-        "💡 <b>Совет:</b> После продажи спроси у клиента отзыв — это повысит доверие к твоему профилю.",
-        "💡 <b>Совет:</b> Откладывай 30% прибыли на закуп нового товара.",
-        "💡 <b>Совет:</b> Записывай все расходы и доходы в таблицу — видь реальную прибыль.",
-    ],
-    "chat": [
-        "💡 <b>Совет:</b> Если клиент грубит — не отвечай тем же. Вежливость продаёт лучше агрессии.",
-        "💡 <b>Совет:</b> Предложи встретиться у метро или в ТЦ — это безопасно для обоих.",
-        "💡 <b>Совет:</b> Если клиент просит скидку — попроси что-то взамен (например, быструю оплату).",
-    ],
-}
 
 # ==================== ПОСТАВЩИКИ ====================
 SUPPLIERS = [
@@ -171,55 +147,55 @@ SUPPLIERS = [
 ]
 VIP_SUPPLIER = {"name": "👑 PremiumStock", "rating": 10, "price_mult": 1.05, "scam_chance": 0, "emoji": "👑", "desc": "VIP-поставщик. Лучшие цены, 100% надёжность."}
 
-# ==================== ТОВАРЫ С ОБУЧАЮЩИМИ ОПИСАНИЯМИ ====================
+# ==================== ТОВАРЫ ====================
 BASE_ITEMS = [
-    {"cat": "👖 Джинсы", "name": "Levi's 501 Vintage", "base_price": 2000, "lesson": "Винтажные джинсы Levi's всегда в цене. Проверяй бирку и страну производства."},
-    {"cat": "👖 Джинсы", "name": "Carhartt WIP Denim", "base_price": 3500, "lesson": "Carhartt — бренд рабочий одежды, популярен в стритвире. Ищи оригинал, много подделок."},
-    {"cat": "👕 Худи", "name": "Adidas Originals Hoodie", "base_price": 2500, "lesson": "Классика спортивного стиля. Трёхполоска всегда продаётся. Смотри на состояние манжет."},
-    {"cat": "👕 Худи", "name": "Nike ACG Fleece", "base_price": 3000, "lesson": "ACG (All Conditions Gear) — линейка Nike для активного отдыха. Ценится выше обычных."},
-    {"cat": "🧥 Куртки", "name": "The North Face Nuptse", "base_price": 5000, "lesson": "Легендарный пуховик. Осенью-зимой цена взлетает в 2 раза. Проверяй подлинность."},
-    {"cat": "🧥 Куртки", "name": "Alpha Industries MA-1", "base_price": 4000, "lesson": "Классическая куртка пилотов. Всегда в моде. Смотри на состояние резинок."},
-    {"cat": "👟 Кроссы", "name": "Nike Air Max 90", "base_price": 3500, "lesson": "Культовая модель кроссовок. Размерная сетка маломерит — учитывай при продаже."},
-    {"cat": "👟 Кроссы", "name": "Adidas Samba OG", "base_price": 2800, "lesson": "Samba сейчас в тренде. Новые стоят 2x от этих. Проверяй язычок и стельку."},
-    {"cat": "🎒 Аксессуары", "name": "Stüssy Tote Bag", "base_price": 1500, "lesson": "Сумка-шоппер от культового бренда. Аксессуары всегда легче продать чем одежду."},
-    {"cat": "🎒 Аксессуары", "name": "New Era 59Fifty Cap", "base_price": 1200, "lesson": "Кепки New Era популярны круглый год. Смотри на состояние козырька."},
-    {"cat": "👕 Худи", "name": "Supreme Box Logo", "base_price": 1800, "lesson": "Supreme — самый хайповый бренд. Оригинал стоит дорого, много подделок. Проверяй бирку!"},
-    {"cat": "🧥 Куртки", "name": "Stone Island Soft Shell", "base_price": 6000, "lesson": "Stone Island — премиум бренд. Наличие патча (нашивки) ОБЯЗАТЕЛЬНО для продажи."},
-    {"cat": "👟 Кроссы", "name": "New Balance 990v3", "base_price": 4200, "lesson": "New Balance — комфорт и стиль. Модели из США ценятся выше азиатских."},
-    {"cat": "🎒 Аксессуары", "name": "Patagonia Hip Pack", "base_price": 2000, "lesson": "Patagonia — эко-бренд, популярен у молодёжи. Поясные сумки сейчас в тренде."},
-    {"cat": "👖 Джинсы", "name": "Wrangler Retro", "base_price": 1800, "lesson": "Wrangler — американская классика. Дешевле Levi's но качество не хуже."},
-    {"cat": "🧥 Куртки", "name": "Patagonia Down Jacket", "base_price": 5500, "lesson": "Пуховик Patagonia — тёплый и экологичный. Зимой цена вырастает на 50-70%."},
+    {"cat": "👖 Джинсы", "name": "Levi's 501 Vintage", "base_price": 2000, "lesson": "Винтаж Levi's всегда в цене. Проверяй бирку."},
+    {"cat": "👖 Джинсы", "name": "Carhartt WIP Denim", "base_price": 3500, "lesson": "Carhartt популярен в стритвире. Много подделок."},
+    {"cat": "👕 Худи", "name": "Adidas Originals Hoodie", "base_price": 2500, "lesson": "Классика. Смотри на состояние манжет."},
+    {"cat": "👕 Худи", "name": "Nike ACG Fleece", "base_price": 3000, "lesson": "ACG — линейка для активного отдыха. Ценится выше."},
+    {"cat": "🧥 Куртки", "name": "The North Face Nuptse", "base_price": 5000, "lesson": "Легендарный пуховик. Осенью цена взлетает вдвое."},
+    {"cat": "🧥 Куртки", "name": "Alpha Industries MA-1", "base_price": 4000, "lesson": "Куртка пилотов. Всегда в моде. Смотри резинки."},
+    {"cat": "👟 Кроссы", "name": "Nike Air Max 90", "base_price": 3500, "lesson": "Культовая модель. Размерная сетка маломерит."},
+    {"cat": "👟 Кроссы", "name": "Adidas Samba OG", "base_price": 2800, "lesson": "Samba в тренде. Новые стоят 2x. Проверяй стельку."},
+    {"cat": "🎒 Аксессуары", "name": "Stüssy Tote Bag", "base_price": 1500, "lesson": "Сумка-шоппер. Аксессуары легче продать чем одежду."},
+    {"cat": "🎒 Аксессуары", "name": "New Era 59Fifty Cap", "base_price": 1200, "lesson": "Кепки популярны круглый год. Смотри козырёк."},
+    {"cat": "👕 Худи", "name": "Supreme Box Logo", "base_price": 1800, "lesson": "Supreme — хайп. Оригинал дорогой, много подделок."},
+    {"cat": "🧥 Куртки", "name": "Stone Island Soft Shell", "base_price": 6000, "lesson": "Stone Island — премиум. Наличие патча ОБЯЗАТЕЛЬНО."},
+    {"cat": "👟 Кроссы", "name": "New Balance 990v3", "base_price": 4200, "lesson": "Made in USA ценятся выше азиатских."},
+    {"cat": "🎒 Аксессуары", "name": "Patagonia Hip Pack", "base_price": 2000, "lesson": "Patagonia — эко-бренд. Поясные сумки в тренде."},
+    {"cat": "👖 Джинсы", "name": "Wrangler Retro", "base_price": 1800, "lesson": "Wrangler — американская классика. Дешевле Levi's."},
+    {"cat": "🧥 Куртки", "name": "Patagonia Down Jacket", "base_price": 5500, "lesson": "Пуховик Patagonia. Зимой цена вырастает на 50-70%."},
 ]
 
 CATEGORIES = ["👖 Джинсы", "👕 Худи", "🧥 Куртки", "👟 Кроссы", "🎒 Аксессуары"]
 
 MARKET_EVENTS = [
-    {"text": "📰 Хайп на винтажные джинсы! Самое время продавать Levi's.", "cat": "👖 Джинсы", "mult": 1.5},
-    {"text": "📰 Дожди — спрос на куртки вырос. Выставляй быстрее!", "cat": "🧥 Куртки", "mult": 1.4},
-    {"text": "📰 Все хотят кроссовки! Отличное время для продажи.", "cat": "👟 Кроссы", "mult": 1.5},
-    {"text": "📰 Лето близко — джинсы падают в цене. Закупай дёшево на зиму.", "cat": "👖 Джинсы", "mult": 0.6},
-    {"text": "📰 Авито ввело комиссию 15%. Учитывай это в цене!", "cat": None, "mult": 0.8},
-    {"text": "📰 Ретро-аксессуары в тренде! Сумки и кепки на пике.", "cat": "🎒 Аксессуары", "mult": 1.6},
+    {"text": "📰 Хайп на винтажные джинсы!", "cat": "👖 Джинсы", "mult": 1.5},
+    {"text": "📰 Дожди — спрос на куртки вырос!", "cat": "🧥 Куртки", "mult": 1.4},
+    {"text": "📰 Все хотят кроссовки!", "cat": "👟 Кроссы", "mult": 1.5},
+    {"text": "📰 Лето близко — джинсы падают.", "cat": "👖 Джинсы", "mult": 0.6},
+    {"text": "📰 Авито комиссия 15% — все осторожны.", "cat": None, "mult": 0.8},
+    {"text": "📰 Ретро-аксессуары в тренде!", "cat": "🎒 Аксессуары", "mult": 1.6},
 ]
 
 # ==================== НЕЙРОКЛИЕНТЫ ====================
 CLIENT_TYPES = {
     "angry": {
-        "system_prompt": "Ты покупатель на Авито. Ты недоволен ценой, грубишь (без мата), торгуешься жёстко, сбиваешь 30-50%. Можешь написать 'дорого'. Если уступают — берёшь. НИКОГДА не говори что ты злой. Коротко, 1-2 предложения.",
+        "system_prompt": "Ты покупатель на Авито. Недоволен ценой, грубишь (без мата), торгуешься жёстко, сбиваешь 30-50%. НИКОГДА не говори что ты злой. Коротко, 1-2 предложения.",
         "discount_range": (0.5, 0.7), "patience": 3, "remind_time": (120, 300)
     },
     "kind": {
-        "system_prompt": "Ты покупатель, вежливый и добрый. Просишь скидку 10-20%, хвалишь товар. НИКОГДА не говори что ты добрый. Коротко, 1-2 предложения.",
+        "system_prompt": "Ты вежливый покупатель. Просишь скидку 10-20%, хвалишь товар. НИКОГДА не говори что ты добрый. Коротко, 1-2 предложения.",
         "discount_range": (0.8, 0.9), "patience": 5, "remind_time": (180, 420)
     },
     "sly": {
-        "system_prompt": "Ты покупатель-перекупщик. Хитрый, аргументируешь цену рынком, блефуешь. Сбиваешь 20-40%. НИКОГДА не говори что ты хитрый. Коротко.",
+        "system_prompt": "Ты хитрый перекупщик. Аргументируешь цену рынком, блефуешь. Сбиваешь 20-40%. НИКОГДА не говори что ты хитрый. Коротко.",
         "discount_range": (0.6, 0.8), "patience": 4, "remind_time": (150, 360)
     }
 }
 
 # ==================== РЕПУТАЦИЯ ====================
-REPUTATION_LEVELS = {-100: "💀 ЧС", -50: "🔴 Ужасная", -10: "🟠 Плохая", 0: "🟡 Нейтральная", 25: "🟢 Хорошая", 50: "🔵 Отличная", 75: "🟣 Легенда", 90: "🟡 Золотая", 100: "👑 Бог товарки"}
+REPUTATION_LEVELS = {-100: "💀 ЧС", -50: "🔴 Ужасная", -10: "🟠 Плохая", 0: "🟡 Нейтральная", 25: "🟢 Хорошая", 50: "🔵 Отличная", 75: "🟣 Легенда", 100: "👑 Бог товарки"}
 ACHIEVEMENTS = [
     {"id": "first_sale", "name": "🎯 Первая продажа", "target": 1, "reward": 5},
     {"id": "seller_10", "name": "📦 Продавец", "target": 10, "reward": 10},
@@ -247,6 +223,8 @@ published_items = {}
 last_bot_message = {}
 pending_messages = defaultdict(list)
 remind_timers = {}
+# Дополнительные советы, которые уже показывали
+shown_tips = defaultdict(set)
 
 # ==================== ЗАГРУЗКА ДАННЫХ ====================
 def load_json(filename, default):
@@ -367,11 +345,9 @@ def complete_lesson(user_id, lesson_id):
         l["current"] = lesson_id + 1
         save_json(LEARNING_FILE, learning_data)
         save_json(REPUTATION_FILE, rep_data)
-        # Награда
         lesson = next((ls for ls in LESSONS if ls["id"] == lesson_id), None)
-        if lesson:
-            if user_id in players:
-                players[user_id]["balance"] += lesson["reward"]
+        if lesson and user_id in players:
+            players[user_id]["balance"] += lesson["reward"]
             add_rep(user_id, 3, f"Урок: {lesson['title']}")
         check_ach(user_id)
         return True
@@ -408,31 +384,42 @@ def fmt_demand(p):
         lines.append(f"{emoji} {cat}: x{mult:.1f}")
     return "\n".join(lines)
 
-def main_kb():
+def get_active_buyers_count(user_id):
+    """Считает активных покупателей."""
+    count = 0
+    for chat in active_chats.values():
+        if chat["user_id"] == user_id and not chat["finished"]:
+            count += 1
+    return count
+
+def main_kb(user_id=None):
+    buyers_count = get_active_buyers_count(user_id) if user_id else 0
+    chat_label = f"💬 ЧАТЫ ({buyers_count})" if buyers_count > 0 else "💬 ЧАТЫ"
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🏭 ЗАКУПИТЬСЯ", callback_data="action_buy")],
         [InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="action_inventory")],
-        [InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn"),
-         InlineKeyboardButton(text="📊 СТАТИСТИКА", callback_data="action_stats")],
-        [InlineKeyboardButton(text="📈 СПРОС НА РЫНКЕ", callback_data="action_demand"),
+        [InlineKeyboardButton(text=chat_label, callback_data="action_chats"),
+         InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn")],
+        [InlineKeyboardButton(text="📊 СТАТИСТИКА", callback_data="action_stats"),
+         InlineKeyboardButton(text="🏆 РЕПУТАЦИЯ", callback_data="action_rep_menu")],
+        [InlineKeyboardButton(text="📈 СПРОС", callback_data="action_demand"),
          InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="action_ref_menu")],
         [InlineKeyboardButton(text="⏩ СЛЕД. ДЕНЬ", callback_data="action_nextday"),
          InlineKeyboardButton(text="🏁 ЗАВЕРШИТЬ", callback_data="action_end")],
-        [InlineKeyboardButton(text="🏆 РЕПУТАЦИЯ", callback_data="action_rep_menu")],
     ])
 
 # ==================== НЕЙРОКЛИЕНТЫ ====================
 def first_msg(client_type, item_name, price, offer):
     msgs = {
-        "angry": [f"Здравствуйте! {item_name} за {price}₽? Цена завышена. Готов предложить {offer}₽.", f"Привет! {item_name} — {price}₽ дорого. Давайте {offer}₽?"],
-        "kind": [f"Добрый день! {item_name} — отличная вещь! Но {price}₽ дороговато. Может {offer}₽?", f"Здравствуйте! Ищу {item_name}. Бюджет {offer}₽. Договоримся?"],
-        "sly": [f"Привет! По {item_name}. Рынок щас — {offer}₽. Отдашь?", f"Здорово! {item_name} интересен. Кэш {offer}₽ прямо сейчас."],
+        "angry": [f"Здравствуйте! {item_name} за {price}₽? Цена завышена. Предлагаю {offer}₽.", f"Привет! {item_name} — {price}₽ дорого. Давайте {offer}₽?"],
+        "kind": [f"Добрый день! {item_name} — отличная вещь! {price}₽ дороговато. Может {offer}₽?", f"Здравствуйте! Ищу {item_name}. Бюджет {offer}₽. Договоримся?"],
+        "sly": [f"Привет! По {item_name}. Рынок — {offer}₽. Отдашь?", f"Здорово! {item_name}. Кэш {offer}₽ прямо сейчас."],
     }
     return random.choice(msgs.get(client_type, msgs["kind"]))
 
 def remind_msg(client_type, item_name, offer):
     msgs = {
-        "angry": [f"Жду ответ по {item_name}. {offer}₽. Решайте!", f"Ну что? {item_name} за {offer}₽. Я серьёзно."],
+        "angry": [f"Жду ответ по {item_name}. {offer}₽. Решайте!", f"Ну что? {item_name} за {offer}₽. Серьёзно."],
         "kind": [f"Извините! {item_name} за {offer}₽ ещё в силе? :)", f"Напомню: {item_name}, моя цена {offer}₽."],
         "sly": [f"По {item_name} — нашёл вариант. Давай за {offer}₽?", f"Рынок меняется. {item_name} за {offer}₽. Решайся!"],
     }
@@ -461,15 +448,22 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
         }
         
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💬 ОТВЕТИТЬ ПОКУПАТЕЛЮ", callback_data=f"nr_{user_id}_{buyer_id}")],
+            [InlineKeyboardButton(text="💬 ОТВЕТИТЬ", callback_data=f"nr_{user_id}_{buyer_id}")],
             [InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"nd_{user_id}_{buyer_id}")],
         ])
         
+        # Считаем активных покупателей
+        buyers_count = get_active_buyers_count(user_id)
+        tip = ""
+        if buyers_count >= 2 and "many_buyers" not in shown_tips[user_id]:
+            tip = f"\n\n{random.choice(GAME_TIPS['many_buyers'])}"
+            shown_tips[user_id].add("many_buyers")
+        
         await send_msg(user_id,
-            f"📩 <b>НОВЫЙ ПОКУПАТЕЛЬ #{buyer_id}</b>\n\n"
-            f"📦 {item_name} | 💰 Твоя цена: {price}₽\n\n"
+            f"📩 <b>ПОКУПАТЕЛЬ #{buyer_id}</b>\n\n"
+            f"📦 {item_name} | 💰 {price}₽\n\n"
             f"💬 <i>«{msg}»</i>\n\n"
-            f"👉 Нажми <b>«ОТВЕТИТЬ»</b> и напиши ответ!",
+            f"👉 Жми <b>«ОТВЕТИТЬ»</b> или зайди в 💬 ЧАТЫ{tip}",
             reply_markup=kb)
         
         if client["remind_time"]:
@@ -484,10 +478,14 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
         
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="💬 ОТВЕТИТЬ", callback_data=f"nr_{user_id}_{buyer_id}")],
-            [InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"nd_{user_id}_{buyer_id}")],
         ])
         
-        await send_msg(user_id, f"🔔 <b>НАПОМИНАНИЕ #{buyer_id}</b>\n📦 {item_name}\n\n💬 <i>«{msg}»</i>\n\nНажми «ОТВЕТИТЬ»!", reply_markup=kb)
+        tip = ""
+        if chat["reminders_sent"] >= 2 and "during_chat" not in shown_tips[user_id]:
+            tip = f"\n\n{random.choice(GAME_TIPS['during_chat'])}"
+            shown_tips[user_id].add("during_chat")
+        
+        await send_msg(user_id, f"🔔 <b>ПОКУПАТЕЛЬ #{buyer_id} НАПОМИНАЕТ</b>\n📦 {item_name}\n\n💬 <i>«{msg}»</i>{tip}", reply_markup=kb)
         
         if chat["reminders_sent"] < chat["max_reminders"]:
             task = asyncio.create_task(do_remind(user_id, buyer_id, random.randint(*client["remind_time"])))
@@ -510,10 +508,12 @@ async def spawn_buyers(user_id):
     if rm["haggle_bonus"] > 0.1: n = min(3, n + 1)
     types = random.choices(list(CLIENT_TYPES.keys()), k=n)
     
+    tip = random.choice(GAME_TIPS["during_chat"])
     await send_msg(user_id,
         f"📱 <b>ОБЪЯВЛЕНИЕ РАБОТАЕТ!</b>\n\n"
         f"📦 {item['name']}\n💰 Цена: {item['market_price']}₽\n👥 Пишут: <b>{n}</b> чел.\n\n"
-        f"{random.choice(TIPS['chat'])}\n\n<i>Отвечай им, торгуйся!</i>")
+        f"{tip}\n\n"
+        f"<i>Заходи в 💬 ЧАТЫ чтобы видеть всех покупателей!</i>")
     
     pub["buyers_list"] = []
     for i, bt in enumerate(types):
@@ -536,14 +536,13 @@ async def complete_sale(user_id, buyer_id, message=None):
         sold = published_items[user_id]["item"]
         published_items[user_id] = None
     
-    # Ищем в инвентаре
     for i, inv in enumerate(p["inventory"]):
         if inv["name"] == item_name:
             sold = p["inventory"].pop(i)
             break
     
     if not sold:
-        if message: await send_msg(user_id, "❌ Ошибка: товар не найден в инвентаре.")
+        if message: await send_msg(user_id, "❌ Ошибка: товар не найден.")
         return None
     
     profit = final - sold["buy_price"]
@@ -567,9 +566,18 @@ async def complete_sale(user_id, buyer_id, message=None):
     
     chat["finished"] = True
     
+    # Советы после продажи
+    tip = ""
+    if p["items_sold"] == 1 and "first_sale_tip" not in shown_tips[user_id]:
+        tip = f"\n\n{random.choice(GAME_TIPS['first_sale_tip'])}"
+        shown_tips[user_id].add("first_sale_tip")
+    elif "after_sale" not in shown_tips[user_id] and p["items_sold"] >= 2:
+        tip = f"\n\n{random.choice(GAME_TIPS['after_sale'])}"
+        shown_tips[user_id].add("after_sale")
+    
     if message:
         await send_msg(user_id,
-            f"🎉 <b>ПРОДАНО!</b>\n\n📦 {item_name}\n💰 Цена: {final}₽\n💵 Прибыль: {profit}₽\n💼 Баланс: {p['balance']}₽\n⭐ Репутация: {p['reputation']}/100\n\n{random.choice(TIPS['sale'])}")
+            f"🎉 <b>ПРОДАНО!</b>\n\n📦 {item_name}\n💰 Цена: {final}₽\n💵 Прибыль: {profit}₽\n💼 Баланс: {p['balance']}₽\n⭐ Репутация: {p['reputation']}/100{tip}")
     
     return profit
 
@@ -588,7 +596,7 @@ async def start_cmd(message: types.Message, state: FSMContext):
             referral_data[referrer_id]["invited"].append(user_id)
             save_json(REFERRAL_FILE, dict(referral_data))
             if int(referrer_id) in players: players[int(referrer_id)]["balance"] += 500
-            try: await bot.send_message(int(referrer_id), f"🎉 Новый реферал! +500₽\n👥 Всего: {len(referral_data[referrer_id]['invited'])}", parse_mode="HTML")
+            try: await bot.send_message(int(referrer_id), f"🎉 Новый реферал! +500₽", parse_mode="HTML")
             except: pass
     
     p = players.get(user_id)
@@ -602,28 +610,22 @@ async def start_cmd(message: types.Message, state: FSMContext):
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
             [InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn")],
-            [InlineKeyboardButton(text="🔄 НАЧАТЬ ЗАНОВО", callback_data="restart_game_confirm")],
+            [InlineKeyboardButton(text="🔄 ЗАНОВО", callback_data="restart_game_confirm")],
         ])
         await send_msg(user_id, txt, reply_markup=kb)
     else:
         l = get_learning(user_id)
         txt = (
-            "🎮 <b>RESELL TYCOON — ТРЕНАЖЁР ТОВАРНОГО БИЗНЕСА</b>\n\n"
-            "Научись зарабатывать на перепродаже вещей!\n\n"
+            "🎮 <b>RESELL TYCOON</b>\n\n"
+            "Научись зарабатывать на перепродаже!\n\n"
             "📖 <b>ЧТО ТЫ УЗНАЕШЬ:</b>\n"
-            "• Где закупать товар дёшево\n"
+            "• Где закупать товар\n"
             "• Как анализировать рынок\n"
-            "• Как общаться с покупателями\n"
-            "• Как продвигать объявления\n\n"
-            "💰 <b>КАК ИГРАТЬ:</b>\n"
-            "1. Пройди обучение (📚)\n"
-            "2. Закупись у поставщиков\n"
-            "3. Опубликуй товар в инвентаре\n"
-            "4. Общайся с покупателями\n\n"
-            f"📚 Пройдено уроков: {len(l['completed'])}/{len(LESSONS)}"
+            "• Как общаться с покупателями\n\n"
+            f"📚 Уроков пройдено: {len(l['completed'])}/{len(LESSONS)}"
         )
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📚 ПРОЙТИ ОБУЧЕНИЕ", callback_data="action_learn")],
+            [InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn")],
             [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
             [InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="ref_info")],
         ])
@@ -650,16 +652,9 @@ async def play_cmd(message: types.Message, state: FSMContext):
     vip_txt = "\n👑 VIP!" if is_vip(user_id) else ""
     demand = fmt_demand(p)
     await send_msg(user_id,
-        f"🌟 <b>ДЕНЬ 1</b>\n💰 Баланс: 5 000₽{vip_txt}{et}\n\n"
-        f"📊 <b>СПРОС НА РЫНКЕ:</b>\n{demand}\n\n"
-        f"👇 <b>Что делать:</b>\n"
-        f"1. Жми 🏭 ЗАКУПИТЬСЯ\n"
-        f"2. Купи товары (смотри спрос!)\n"
-        f"3. Зайди в 📦 ИНВЕНТАРЬ\n"
-        f"4. Нажми на товар → Опубликовать\n"
-        f"5. Жди покупателей и общайся!\n\n"
-        f"📚 Не забудь пройти ОБУЧЕНИЕ!",
-        reply_markup=main_kb())
+        f"🌟 <b>ДЕНЬ 1</b>\n💰 5 000₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\n"
+        f"👇 1. 🏭 Закупись → 2. 📦 Инвентарь → 3. Опубликуй → 4. 💬 Общайся!",
+        reply_markup=main_kb(user_id))
 
 @dp.message(Command('ref'))
 async def ref_cmd(message: types.Message):
@@ -679,18 +674,43 @@ async def rep_cmd(message: types.Message):
     new_a = check_ach(user_id, pd)
     u = get_rep(user_id)
     lvl = rep_level(u["score"])
-    rm = rep_mult(u["score"])
     bar = "█" * int((u["score"]+100)/200*10) + "░" * (10-int((u["score"]+100)/200*10))
-    txt = f"🏆 <b>РЕПУТАЦИЯ: {lvl}</b>\n📊 [{bar}] {u['score']}/100\n\n📦 Продаж: {u['total_sales']}\n💰 Прибыль: {u['total_profit']}₽\n📚 Уроков: {u['lessons_completed']}/{len(LESSONS)}\n🏅 Достижений: {len(u['achievements'])}/{len(ACHIEVEMENTS)}"
-    if new_a: txt += "\n\n🎉 <b>НОВЫЕ!</b>\n" + "\n".join(f"{a['name']} (+{a['reward']})" for a in new_a)
+    txt = f"🏆 <b>РЕПУТАЦИЯ: {lvl}</b>\n📊 [{bar}] {u['score']}/100\n\n📦 Продаж: {u['total_sales']}\n💰 Прибыль: {u['total_profit']}₽\n📚 Уроков: {u['lessons_completed']}/{len(LESSONS)}"
+    if new_a: txt += "\n\n🎉 <b>НОВЫЕ!</b>\n" + "\n".join(f"{a['name']}" for a in new_a)
     await send_msg(user_id, txt)
 
-@dp.message(Command('learn'))
-async def learn_cmd(message: types.Message):
-    user_id = message.from_user.id
-    await del_user_msgs(user_id)
-    await show_learning_menu(message, user_id)
+# ==================== ВКЛАДКА ЧАТЫ ====================
+@dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
+async def show_chats(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    active_list = []
+    for key, chat in active_chats.items():
+        if chat["user_id"] == user_id and not chat["finished"]:
+            active_list.append((key, chat))
+    
+    if not active_list:
+        return await edit_msg(callback.message,
+            "💬 <b>ЧАТЫ</b>\n\nУ тебя нет активных диалогов.\n\nОпубликуй товар в 📦 Инвентаре и жди покупателей!",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📦 В ИНВЕНТАРЬ", callback_data="action_inventory")],
+                [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+            ]))
+    
+    txt = f"💬 <b>АКТИВНЫЕ ЧАТЫ ({len(active_list)}):</b>\n\n"
+    kb = []
+    for key, chat in active_list:
+        status = "⏳ Ждёт ответа" if chat["round"] == 1 else f"💬 Диалог ({chat['round']}/{chat['max_rounds']})"
+        txt += f"👤 <b>Покупатель #{chat['buyer_id']}</b>\n📦 {chat['item']}\n💰 Предложение: {chat['offer']}₽ | {status}\n\n"
+        kb.append([InlineKeyboardButton(
+            text=f"💬 Покупатель #{chat['buyer_id']} — {chat['item']} ({chat['offer']}₽)",
+            callback_data=f"nr_{user_id}_{chat['buyer_id']}"
+        )])
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    
+    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await callback.answer()
 
+# ==================== ОБУЧЕНИЕ ====================
 async def show_learning_menu(message_or_callback, user_id):
     l = get_learning(user_id)
     kb = []
@@ -700,31 +720,35 @@ async def show_learning_menu(message_or_callback, user_id):
         kb.append([InlineKeyboardButton(text=f"{status} Урок {lesson['id']}: {lesson['title']}", callback_data=f"lesson_{lesson['id']}")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="back_to_start")])
     
-    txt = f"📚 <b>ОБУЧЕНИЕ ТОВАРНОМУ БИЗНЕСУ</b>\n\nПройдено: {len(l['completed'])}/{len(LESSONS)}\n\n<i>Каждый урок — реальные знания + бонус к игре!</i>"
+    txt = f"📚 <b>ОБУЧЕНИЕ ТОВАРНОМУ БИЗНЕСУ</b>\n\nПройдено: {len(l['completed'])}/{len(LESSONS)}\n\n<i>Советы появляются и во время игры!</i>"
     
     if hasattr(message_or_callback, 'edit_text'):
         await edit_msg(message_or_callback, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     else:
         await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
+@dp.callback_query(F.data == "action_learn")
+async def learn_btn(callback: CallbackQuery):
+    await show_learning_menu(callback.message, callback.from_user.id)
+
 @dp.callback_query(F.data.startswith("lesson_"))
 async def show_lesson(callback: CallbackQuery):
     user_id = callback.from_user.id
     lesson_id = int(callback.data.split("_")[1])
     lesson = next((l for l in LESSONS if l["id"] == lesson_id), None)
-    if not lesson: return await callback.answer("Урок не найден")
+    if not lesson: return await callback.answer("Не найден")
     
     l = get_learning(user_id)
     done = lesson_id in l["completed"]
     
     kb = []
     if not done:
-        kb.append([InlineKeyboardButton(text="✅ ЗАВЕРШИТЬ УРОК", callback_data=f"complete_lesson_{lesson_id}")])
+        kb.append([InlineKeyboardButton(text="✅ ЗАВЕРШИТЬ (+₽)", callback_data=f"complete_lesson_{lesson_id}")])
     kb.append([InlineKeyboardButton(text="🔙 К УРОКАМ", callback_data="action_learn")])
     
     txt = lesson["text"]
-    if done: txt += "\n\n✅ <b>УРОК ПРОЙДЕН!</b>"
-    else: txt += f"\n\n💰 <b>Награда за прохождение: +{lesson['reward']}₽</b>"
+    if done: txt += "\n\n✅ <b>ПРОЙДЕН!</b>"
+    else: txt += f"\n\n💰 <b>Награда: +{lesson['reward']}₽</b>"
     
     await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     await callback.answer()
@@ -739,9 +763,9 @@ async def complete_lesson_btn(callback: CallbackQuery):
         await callback.answer(f"Урок пройден! +{lesson['reward']}₽")
         await show_learning_menu(callback.message, user_id)
     else:
-        await callback.answer("Урок уже был пройден")
+        await callback.answer("Уже пройден")
 
-# ==================== ОБРАБОТКА ЧАТА ====================
+# ==================== ОБРАБОТКА ЧАТА С ПОКУПАТЕЛЯМИ ====================
 @dp.callback_query(F.data.startswith("nr_"))
 async def neuro_reply(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split("_")
@@ -751,7 +775,24 @@ async def neuro_reply(callback: CallbackQuery, state: FSMContext):
         await callback.answer("Диалог завершён"); return
     chat = active_chats[chat_key]
     await state.set_state(GameState.playing)
-    await send_msg(user_id, f"💬 <b>ДИАЛОГ С ПОКУПАТЕЛЕМ #{buyer_id}</b>\n📦 {chat['item']}\n💰 Твоя цена: {chat['price']}₽ | Предложение: {chat['offer']}₽\n\n<i>Напиши ответ. Торгуйся, убеждай!</i>")
+    
+    tip = ""
+    if "during_chat" not in shown_tips[user_id]:
+        tip = f"\n\n{random.choice(GAME_TIPS['during_chat'])}"
+        shown_tips[user_id].add("during_chat")
+    
+    await send_msg(user_id, f"💬 <b>ДИАЛОГ С ПОКУПАТЕЛЕМ #{buyer_id}</b>\n📦 {chat['item']}\n💰 Твоя цена: {chat['price']}₽ | Предложение: {chat['offer']}₽\n\n<i>Пиши ответ в чат. Торгуйся, убеждай!</i>{tip}")
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("nd_"))
+async def neuro_decline(callback: CallbackQuery):
+    parts = callback.data.split("_")
+    user_id = int(parts[1]); buyer_id = int(parts[2])
+    chat_key = f"{user_id}_{buyer_id}"
+    if chat_key in active_chats:
+        active_chats[chat_key]["finished"] = True
+        if chat_key in remind_timers: remind_timers[chat_key].cancel()
+    await send_msg(user_id, "❌ Вы отказались. Клиент ушёл.\n\n💡 <b>Совет:</b> Не отказывайся сразу — всегда можно поторговаться!")
     await callback.answer()
 
 @dp.message(StateFilter(GameState.playing))
@@ -772,7 +813,7 @@ async def handle_chat(message: types.Message, state: FSMContext):
         active["finished"] = True
         msgs = {"angry": "Всё, надоело. Я пошёл.", "kind": "Ладно, подумаю. Спасибо!", "sly": "Хорошо, удачи."}
         if key in remind_timers: remind_timers[key].cancel()
-        await send_msg(user_id, f"👤 <b>Покупатель #{active['buyer_id']}:</b> {msgs.get(active['client_type'], 'Пока.')}\n\n⚠️ Диалог завершён.")
+        await send_msg(user_id, f"👤 <b>Покупатель #{active['buyer_id']}:</b> {msgs.get(active['client_type'], 'Пока.')}\n\n⚠️ Диалог завершён.\n\n💡 <b>Совет:</b> Не тяни с ответом — клиенты уходят!")
         return
     
     try:
@@ -801,22 +842,15 @@ async def handle_chat(message: types.Message, state: FSMContext):
     else:
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="💬 ПРОДОЛЖИТЬ", callback_data=f"nr_{user_id}_{active['buyer_id']}")],
-            [InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"nd_{user_id}_{active['buyer_id']}")],
+            [InlineKeyboardButton(text="💬 ВСЕ ЧАТЫ", callback_data="action_chats")],
         ])
-        await send_msg(user_id, f"👤 <b>Покупатель #{active['buyer_id']}:</b> {ai_msg}\n\n<i>Раунд {active['round']}/{active['max_rounds']} | Предложение: {active['offer']}₽</i>", reply_markup=kb)
+        tip = ""
+        if active["round"] >= 2 and "during_chat" not in shown_tips[user_id]:
+            tip = f"\n\n{random.choice(GAME_TIPS['during_chat'])}"
+            shown_tips[user_id].add("during_chat")
+        await send_msg(user_id, f"👤 <b>Покупатель #{active['buyer_id']}:</b> {ai_msg}\n\n<i>Раунд {active['round']}/{active['max_rounds']} | Предложение: {active['offer']}₽</i>{tip}", reply_markup=kb)
 
-@dp.callback_query(F.data.startswith("nd_"))
-async def neuro_decline(callback: CallbackQuery):
-    parts = callback.data.split("_")
-    user_id = int(parts[1]); buyer_id = int(parts[2])
-    chat_key = f"{user_id}_{buyer_id}"
-    if chat_key in active_chats:
-        active_chats[chat_key]["finished"] = True
-        if chat_key in remind_timers: remind_timers[chat_key].cancel()
-    await send_msg(user_id, "❌ Вы отказались. Клиент ушёл.")
-    await callback.answer()
-
-# ==================== CALLBACK-ОБРАБОТЧИКИ ====================
+# ==================== ОСТАЛЬНЫЕ CALLBACK-ОБРАБОТЧИКИ ====================
 @dp.callback_query(F.data == "start_new_game")
 async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
@@ -836,7 +870,7 @@ async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     et = f"\n\n📰 {event['text']}" if event else ""
     vip_txt = "\n👑 VIP!" if is_vip(user_id) else ""
     demand = fmt_demand(p)
-    await edit_msg(callback.message, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n\n🌟 День 1 | 💰 5 000₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\n👇 1. Закупись → 2. Инвентарь → 3. Опубликуй!", reply_markup=main_kb())
+    await edit_msg(callback.message, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n\n🌟 День 1 | 💰 5 000₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\n👇 1. Закупись → 2. Инвентарь → 3. Опубликуй!", reply_markup=main_kb(user_id))
     await callback.answer("🚀")
 
 @dp.callback_query(F.data == "continue_game")
@@ -848,21 +882,21 @@ async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
     et = f"\n\n{p['current_event']['text']}" if p.get("current_event") else ""
     vip_txt = "\n👑 VIP" if is_vip(user_id) else ""
     demand = fmt_demand(p)
-    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=main_kb())
+    tip = ""
+    if len(p["inventory"]) >= 3 and "inventory_full" not in shown_tips[user_id]:
+        tip = f"\n\n{random.choice(GAME_TIPS['inventory_full'])}"
+        shown_tips[user_id].add("inventory_full")
+    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}{tip}\n\nВыбери:", reply_markup=main_kb(user_id))
     await callback.answer("🎮")
 
 @dp.callback_query(F.data == "restart_game_confirm")
 async def restart_confirm(callback: CallbackQuery):
-    await edit_msg(callback.message, "⚠️ <b>СБРОСИТЬ?</b>\n\nБаланс и инвентарь потеряются. Репутация сохранится.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⚠️ ДА", callback_data="restart_game_yes")], [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")]]))
+    await edit_msg(callback.message, "⚠️ <b>СБРОСИТЬ?</b>\n\nБаланс и инвентарь потеряются.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⚠️ ДА", callback_data="restart_game_yes")], [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")]]))
 
 @dp.callback_query(F.data == "restart_game_yes")
 async def restart_yes(callback: CallbackQuery, state: FSMContext):
     if callback.from_user.id in players: del players[callback.from_user.id]
     await start_new_game_btn(callback, state)
-
-@dp.callback_query(F.data == "action_learn")
-async def learn_btn(callback: CallbackQuery):
-    await show_learning_menu(callback.message, callback.from_user.id)
 
 @dp.callback_query(F.data == "ref_info")
 async def ref_info(callback: CallbackQuery):
@@ -873,11 +907,10 @@ async def back_start(callback: CallbackQuery):
     user_id = callback.from_user.id
     p = players.get(user_id)
     if p and p.get("day", 0) > 0:
-        r = get_rep(user_id)
-        lvl = rep_level(r["score"])
+        r = get_rep(user_id); lvl = rep_level(r["score"])
         await edit_msg(callback.message, f"👋 <b>МЕНЮ</b>\n\n📅 День {p['day']} | 💰 {p['balance']}₽\n⭐ {lvl}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")], [InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn")]]))
     else:
-        await edit_msg(callback.message, "🎮 <b>RESELL TYCOON</b>\n\nГотов начать?", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")], [InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn")]]))
+        await edit_msg(callback.message, "🎮 <b>RESELL TYCOON</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")], [InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn")]]))
 
 @dp.callback_query(F.data == "action_buy", StateFilter(GameState.playing))
 async def show_suppliers(callback: CallbackQuery):
@@ -886,10 +919,11 @@ async def show_suppliers(callback: CallbackQuery):
     if is_vip(user_id): supps.insert(0, VIP_SUPPLIER)
     kb = []
     for s in supps:
-        kb.append([InlineKeyboardButton(text=f"{s['emoji']} {s['name']} | ⭐{s['rating']}/10 | Кид:{s['scam_chance']}%", callback_data=f"sup_{supps.index(s)}")])
+        kb.append([InlineKeyboardButton(text=f"{s['emoji']} {s['name']} | ⭐{s['rating']} | Кид:{s['scam_chance']}%", callback_data=f"sup_{supps.index(s)}")])
     kb.append([InlineKeyboardButton(text="🔙 В МЕНЮ", callback_data="action_back")])
-    vip_txt = "\n👑 VIP-поставщик доступен!" if is_vip(user_id) else ""
-    await edit_msg(callback.message, f"🏭 <b>ПОСТАВЩИКИ:</b>{vip_txt}\n\n⭐ Рейтинг ↑ = надёжнее\n⚠️ Шанс кидка — могут взять деньги и пропасть!\n\n{random.choice(TIPS['buy'])}", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    vip_txt = "\n👑 VIP доступен!" if is_vip(user_id) else ""
+    tip = random.choice(GAME_TIPS["after_buy"]) if user_id not in shown_tips else ""
+    await edit_msg(callback.message, f"🏭 <b>ПОСТАВЩИКИ:</b>{vip_txt}\n⭐ Рейтинг ↑ = надёжнее\n⚠️ Шанс кидка — могут пропасть с деньгами!\n\n{tip}", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("sup_"), StateFilter(GameState.playing))
 async def show_items(callback: CallbackQuery, state: FSMContext):
@@ -904,11 +938,11 @@ async def show_items(callback: CallbackQuery, state: FSMContext):
     for i, it in enumerate(items):
         pr = int(item_price(it["base_price"], sup) * p["rep_mult"]["supplier_discount"])
         mp = market_price(it["base_price"], p["market_demand"].get(it["cat"], 1.0))
-        kb.append([InlineKeyboardButton(text=f"{it['cat']} {it['name']} — {pr}₽ (рынок ~{mp}₽)", callback_data=f"bi_{i}")])
+        kb.append([InlineKeyboardButton(text=f"{it['cat']} {it['name']} — {pr}₽ (~{mp}₽)", callback_data=f"bi_{i}")])
     kb.append([InlineKeyboardButton(text="🔄 ОБНОВИТЬ", callback_data=f"sup_{idx}")])
     kb.append([InlineKeyboardButton(text="🔙 К ПОСТАВЩИКАМ", callback_data="action_buy")])
     await state.update_data(sup_idx=idx, sup_items=items)
-    await edit_msg(callback.message, f"{sup['emoji']} <b>{sup['name']}</b>\n{sup['desc']}\n⭐ {sup['rating']}/10 | ⚠️ Кид:{sup['scam_chance']}%\n\nВыбери товар:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await edit_msg(callback.message, f"{sup['emoji']} <b>{sup['name']}</b>\n{sup['desc']}\n⭐ {sup['rating']}/10 | ⚠️ Кид:{sup['scam_chance']}%\n\nВыбери товар (закуп → рынок):", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("bi_"), StateFilter(GameState.playing))
 async def buy_item(callback: CallbackQuery, state: FSMContext):
@@ -930,36 +964,24 @@ async def buy_item(callback: CallbackQuery, state: FSMContext):
         p["balance"] -= price; p["total_spent"] += price; p["scam_times"] += 1
         p["reputation"] = max(0, p["reputation"] - 5)
         add_rep(user_id, -5, f"Кинул {sup['name']}")
-        await edit_msg(callback.message, f"💀 <b>КИНУЛИ!</b>\n{sup['name']} пропал.\n-{price}₽ | 💼 {p['balance']}₽\n\n💡 <b>Урок:</b> Всегда проверяй поставщика! Начни с малого заказа.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+        await edit_msg(callback.message, f"💀 <b>КИНУЛИ!</b>\n{sup['name']} пропал.\n-{price}₽ | 💼 {p['balance']}₽\n\n💡 <b>Урок:</b> Проверяй поставщика! Начни с малого заказа.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
         return
     p["balance"] -= price; p["total_spent"] += price
     demand = p["market_demand"].get(item["cat"], 1.0)
     mp = market_price(item["base_price"], demand)
-    # ДОБАВЛЯЕМ ТОВАР В ИНВЕНТАРЬ
-    p["inventory"].append({
-        "name": f"{item['cat']} {item['name']}",
-        "cat": item["cat"],
-        "buy_price": price,
-        "market_price": mp,
-        "base_price": item["base_price"]
-    })
+    p["inventory"].append({"name": f"{item['cat']} {item['name']}", "cat": item["cat"], "buy_price": price, "market_price": mp, "base_price": item["base_price"]})
     if sup["rating"] >= 8: add_rep(user_id, 1, "Надёжный поставщик")
     check_ach(user_id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"], "balance": p["balance"]})
     save_json(REPUTATION_FILE, rep_data)
+    tip = ""
+    if "after_buy" not in shown_tips[user_id]:
+        tip = f"\n\n{random.choice(GAME_TIPS['after_buy'])}"
+        shown_tips[user_id].add("after_buy")
     await edit_msg(callback.message,
-        f"✅ <b>ТОВАР КУПЛЕН!</b>\n\n"
-        f"📦 {item['cat']} {item['name']}\n"
-        f"💰 Закуп: {price}₽ | 📊 Рынок: ~{mp}₽\n"
-        f"💼 Баланс: {p['balance']}₽\n"
-        f"📦 В инвентаре: {len(p['inventory'])} товаров\n\n"
-        f"{item.get('lesson', '')}\n\n"
-        f"👇 <b>ДАЛЬШЕ:</b>\n"
-        f"👉 Зайди в 📦 <b>ИНВЕНТАРЬ</b>\n"
-        f"👉 Нажми на товар → <b>Опубликовать</b>\n"
-        f"👉 Жди покупателей!",
+        f"✅ <b>КУПЛЕНО!</b>\n\n📦 {item['cat']} {item['name']}\n💰 Закуп: {price}₽ | 📊 Рынок: ~{mp}₽\n💼 Баланс: {p['balance']}₽\n📦 В инвентаре: {len(p['inventory'])} товаров\n\n{item.get('lesson', '')}{tip}\n\n👇 <b>ДАЛЬШЕ:</b> Зайди в 📦 ИНВЕНТАРЬ и опубликуй!",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📦 ПЕРЕЙТИ В ИНВЕНТАРЬ", callback_data="action_inventory")],
-            [InlineKeyboardButton(text="🔄 Купить ещё", callback_data=f"sup_{sup_idx}")],
+            [InlineKeyboardButton(text="📦 В ИНВЕНТАРЬ", callback_data="action_inventory")],
+            [InlineKeyboardButton(text="🔄 Ещё закупка", callback_data=f"sup_{sup_idx}")],
             [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
         ]))
 
@@ -968,20 +990,16 @@ async def show_inventory(callback: CallbackQuery):
     user_id = callback.from_user.id
     p = get_player(user_id)
     if not p["inventory"]:
-        return await edit_msg(callback.message,
-            "📦 <b>ИНВЕНТАРЬ ПУСТ</b>\n\nТут будут твои товары.\nСначала закупись! 👇",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🏭 ЗАКУПИТЬСЯ", callback_data="action_buy")],
-                [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
-            ]))
+        return await edit_msg(callback.message, "📦 <b>ИНВЕНТАРЬ ПУСТ</b>\n\nЗакупись у поставщиков! 👇", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏭 ЗАКУПИТЬСЯ", callback_data="action_buy")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
     kb = []
     for i, it in enumerate(p["inventory"]):
         pub = user_id in published_items and published_items[user_id] and published_items[user_id]["item"]["name"] == it["name"]
         status = "📢 ОПУБЛИКОВАН" if pub else "📱 ОПУБЛИКОВАТЬ"
-        kb.append([InlineKeyboardButton(text=f"{it['name']} | Закуп:{it['buy_price']}₽ | ~{it['market_price']}₽ | {status}", callback_data=f"inv_{i}")])
+        kb.append([InlineKeyboardButton(text=f"{it['name']} | {it['buy_price']}₽ → ~{it['market_price']}₽ | {status}", callback_data=f"inv_{i}")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     txt = "📦 <b>ИНВЕНТАРЬ:</b>\n\n" + "\n".join(f"{i+1}. {it['name']}\n   Закуп: {it['buy_price']}₽ | Рынок: ~{it['market_price']}₽" for i, it in enumerate(p["inventory"]))
-    txt += "\n\n👇 <b>Нажми на товар чтобы опубликовать на Авито!</b>"
+    txt += "\n\n👇 <b>Нажми на товар чтобы опубликовать!</b>"
+    if len(p["inventory"]) >= 3: txt += f"\n\n{random.choice(GAME_TIPS['inventory_full'])}"
     await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("inv_"), StateFilter(GameState.playing))
@@ -994,13 +1012,14 @@ async def publish_item(callback: CallbackQuery):
     if user_id in published_items and published_items[user_id] and published_items[user_id]["item"]["name"] == item["name"]:
         return await callback.answer("Уже опубликован!")
     published_items[user_id] = {"item": item.copy(), "buyers_list": []}
+    tip = ""
+    if "after_publish" not in shown_tips[user_id]:
+        tip = f"\n\n{random.choice(GAME_TIPS['after_publish'])}"
+        shown_tips[user_id].add("after_publish")
     await edit_msg(callback.message,
-        f"📢 <b>ОПУБЛИКОВАНО НА АВИТО!</b>\n\n"
-        f"📦 {item['name']}\n💰 Цена: {item['market_price']}₽\n\n"
-        f"⏳ <b>Жди 1-3 минуты</b> — придут покупатели!\n"
-        f"💬 Они напишут в этот чат.\n\n"
-        f"{random.choice(TIPS['publish'])}",
+        f"📢 <b>ОПУБЛИКОВАНО!</b>\n\n📦 {item['name']}\n💰 {item['market_price']}₽\n\n⏳ Жди 1-3 минуты — придут покупатели!\n💬 Они напишут в 💬 ЧАТЫ{tip}",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💬 ОТКРЫТЬ ЧАТЫ", callback_data="action_chats")],
             [InlineKeyboardButton(text="📦 В ИНВЕНТАРЬ", callback_data="action_inventory")],
             [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
         ]))
@@ -1014,9 +1033,7 @@ async def show_stats(callback: CallbackQuery):
     ref_n = len(referral_data[str(user_id)]["invited"])
     vip = "👑 ДА" if is_vip(user_id) else "❌ Нет"
     l = get_learning(user_id)
-    await edit_msg(callback.message,
-        f"📊 <b>СТАТИСТИКА:</b>\n\n💰 Баланс: {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n🛒 Потрачено: {p['total_spent']}₽\n👥 Рефералы: {ref_n}\n📚 Уроки: {len(l['completed'])}/{len(LESSONS)}\n👑 VIP: {vip}",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"📊 <b>СТАТИСТИКА:</b>\n\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n👥 Рефералы: {ref_n}\n📚 Уроки: {len(l['completed'])}/{len(LESSONS)}\n👑 VIP: {vip}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_rep_menu")
 async def rep_menu(callback: CallbackQuery):
@@ -1038,9 +1055,9 @@ async def show_demand(callback: CallbackQuery):
         elif mult >= 0.5: emoji = "📉"; s = "Падает"; tips.append(f"⚠️ {cat}: покупай дёшево")
         else: emoji = "💀"; s = "Мёртвый"; tips.append(f"🚫 {cat}: не покупай")
         lines.append(f"{emoji} <b>{cat}</b>: x{mult:.1f} ({s})")
-    et = f"\n\n📰 <b>Событие:</b>\n{p['current_event']['text']}" if p.get("current_event") else ""
+    et = f"\n\n📰 {p['current_event']['text']}" if p.get("current_event") else ""
     tt = "\n\n".join(tips) if tips else ""
-    await edit_msg(callback.message, f"📊 <b>РЫНОК — День {p['day']}</b>\n\n"+"\n".join(lines)+et+(f"\n\n💡 <b>Советы:</b>\n{tt}" if tt else ""), reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"📊 <b>РЫНОК — День {p['day']}</b>\n\n"+"\n".join(lines)+et+(f"\n\n💡 {tt}" if tt else ""), reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_nextday", StateFilter(GameState.playing))
 async def next_day(callback: CallbackQuery):
@@ -1059,19 +1076,19 @@ async def next_day(callback: CallbackQuery):
     check_ach(user_id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"], "balance": p["balance"]})
     save_json(REPUTATION_FILE, rep_data)
     demand = fmt_demand(p)
-    await edit_msg(callback.message, f"{summary}\n\n☀️ <b>ДЕНЬ {p['day']}</b>{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=main_kb())
+    await edit_msg(callback.message, f"{summary}\n\n☀️ <b>ДЕНЬ {p['day']}</b>{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=main_kb(user_id))
 
 @dp.callback_query(F.data == "action_end", StateFilter(GameState.playing))
 async def end_game(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     p = get_player(user_id)
     await state.clear()
-    if p["balance"] >= 50000: r = "🏆 <b>ПОБЕДА!</b> Ты заработал 50 000₽!"
+    if p["balance"] >= 50000: r = "🏆 <b>ПОБЕДА!</b> 50 000₽!"
     elif p["balance"] <= 0: r = "💀 <b>БАНКРОТ!</b>"
     else: r = "🎮 Игра окончена."
     check_ach(user_id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"], "balance": p["balance"]})
     save_json(REPUTATION_FILE, rep_data)
-    await edit_msg(callback.message, f"{r}\n\n💰 {p['balance']}₽ | 📋 Продаж: {p['items_sold']}\n\n👉 {CHANNEL_LINK} — реальные продажи!\n/play — ещё раз", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")]]))
+    await edit_msg(callback.message, f"{r}\n\n💰 {p['balance']}₽ | 📋 Продаж: {p['items_sold']}\n\n👉 {CHANNEL_LINK}\n/play — ещё раз", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")]]))
 
 @dp.callback_query(F.data == "restart_game")
 async def restart_game(callback: CallbackQuery):
@@ -1085,11 +1102,11 @@ async def back_to_menu(callback: CallbackQuery):
     et = f"\n\n{p['current_event']['text']}" if p.get("current_event") else ""
     vip_txt = "\n👑 VIP" if is_vip(user_id) else ""
     demand = fmt_demand(p)
-    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=main_kb())
+    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=main_kb(user_id))
 
 # ==================== ЗАПУСК ====================
 async def main():
-    print("🎮 ReSell Tycoon + Обучение запущены!")
+    print("🎮 ReSell Tycoon + Чаты + Советы запущены!")
     await dp.start_polling(bot, skip_updates=True)
 
 if __name__ == '__main__':
