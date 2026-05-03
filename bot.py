@@ -540,6 +540,8 @@ async def handle_message(message: types.Message, state: FSMContext):
 async def process_chat_message(user_id, chat_key, text, message):
     chat = active_chats[chat_key]
     buyer_id = chat["buyer_id"]
+    client_type = chat["client_type"]
+    client = CLIENT_TYPES[client_type]
     
     # Добавляем сообщение игрока
     chat["history"].append({"role": "user", "content": text})
@@ -553,7 +555,7 @@ async def process_chat_message(user_id, chat_key, text, message):
             "kind": "Ладно, извините что побеспокоил. Всего доброго!",
             "sly": "Понял, не договоримся. Поищу другого продавца."
         }
-        end_msg = msgs.get(chat["client_type"], "До свидания.")
+        end_msg = msgs.get(client_type, "До свидания.")
         if chat_key in remind_timers: remind_timers[chat_key].cancel()
         if user_id in active_chat_for_user: del active_chat_for_user[user_id]
         await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {end_msg}\n\n⚠️ Диалог завершён.")
@@ -561,13 +563,41 @@ async def process_chat_message(user_id, chat_key, text, message):
     
     # Запрос к нейросети
     try:
+        # Создаём правильный системный промпт
+        system_prompt = client["system_prompt"] + f"\n\nКонтекст: Ты покупатель на Авито. Товар: {chat['item']}. Продавец хочет {chat['price']}₽. Ты предложил {chat['offer']}₽. Ты должен торговаться, реагировать на аргументы продавца, менять своё мнение если аргументы убедительные. Не повторяй одно и то же. Отвечай КОРОТКО (1-2 предложения) как в реальном чате."
+        
+        # Отправляем историю диалога (последние 6 сообщений)
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(chat["history"][-6:])  # Последние 6 сообщений для контекста
+        
         resp = client_openai.chat.completions.create(
-            model="deepseek-chat", messages=chat["history"],
-            temperature=0.9, max_tokens=200
+            model="deepseek-chat",
+            messages=messages,
+            temperature=0.9,
+            max_tokens=200
         )
         ai_msg = resp.choices[0].message.content
-    except:
-        ai_msg = f"Я предлагаю {chat['offer']}₽. Это моя цена."
+    except Exception as e:
+        print(f"DeepSeek error: {e}")
+        # Разные запасные ответы в зависимости от раунда
+        fallbacks = {
+            "angry": [
+                f"Слушай, я уже сказал — {chat['offer']}₽. Это моя цена. Если не нравится — я пошёл.",
+                f"Я что, непонятно объясняю? {chat['offer']}₽ и ни рублём больше.",
+                f"Ладно, давай {int(chat['offer'] * 1.1)}₽. Но это максимум!",
+            ],
+            "kind": [
+                f"Понимаю вашу позицию, правда. Но у меня правда только {chat['offer']}₽. Может всё-таки договоримся?",
+                f"Если бы мог — дал бы больше. Но бюджет ограничен. Может {int(chat['offer'] * 1.05)}₽?",
+                f"Давайте встретимся посередине? Я могу предложить {int(chat['offer'] * 1.08)}₽.",
+            ],
+            "sly": [
+                f"Бро, я рынок знаю. Такие как {chat['item']} сейчас за {chat['offer']}₽ уходят. Не накручивай.",
+                f"Смотри, я нашёл точно такой же за {chat['offer']}₽. Но готов у тебя взять за {int(chat['offer'] * 1.05)}₽.",
+                f"Ладно, чувствую ты норм чел. Давай {int(chat['offer'] * 1.15)}₽ и разбежимся.",
+            ]
+        }
+        ai_msg = random.choice(fallbacks.get(client_type, [f"Моё предложение {chat['offer']}₽. Договоримся?"]))
     
     chat["history"].append({"role": "assistant", "content": ai_msg})
     
@@ -575,24 +605,37 @@ async def process_chat_message(user_id, chat_key, text, message):
     finished = False; result = None
     ml = ai_msg.lower()
     
-    # Согласие
-    for w in ["беру", "договорились", "по рукам", "забираю", "согласен", "давай", "идёт"]:
-        if w in ml and "?" not in ml: finished = True; result = "sold"; break
+    # Проверяем согласие
+    agree_words = ["беру", "договорились", "по рукам", "забираю", "согласен"]
+    for w in agree_words:
+        if w in ml and "?" not in ml: 
+            finished = True; result = "sold"; break
     
-    # Отказ
+    # Проверяем отказ
     if not finished:
-        for w in ["нет", "не буду", "ушёл", "пошёл", "пока", "до свидания", "удачи"]:
-            if w in ml: finished = True; result = "lost"; break
+        decline_words = ["нет", "не буду", "ушёл", "пошёл", "пока", "до свидания", "удачи", "я пошёл"]
+        for w in decline_words:
+            if w in ml: 
+                finished = True; result = "lost"; break
     
-    # Проверка: если клиент сам решил уйти (нет слов согласия и прошло много раундов)
+    # Проверяем изменение цены от клиента
+    if not finished:
+        import re
+        prices = re.findall(r'(\d{3,5})₽', ai_msg)
+        for p in prices:
+            new_price = int(p)
+            if new_price > chat["offer"] and new_price <= chat["price"]:
+                # Клиент поднял цену!
+                chat["offer"] = new_price
+    
+    # Случайный шанс что клиент устанет
     if not finished and chat["round"] >= chat["max_rounds"] - 1:
-        if random.random() < 0.3:  # 30% шанс что клиент сам завершит
-            finished = True
-            result = "lost"
+        if random.random() < 0.3:
+            finished = True; result = "lost"
             ai_msg = random.choice([
                 "Извините, я передумал. Не буду брать.",
                 "Пожалуй, поищу что-то другое. Спасибо.",
-                "Нет, не устраивает. Удачи.",
+                "Нет, не договоримся. Удачи в продажах.",
             ])
     
     if finished:
@@ -601,18 +644,19 @@ async def process_chat_message(user_id, chat_key, text, message):
         if user_id in active_chat_for_user: del active_chat_for_user[user_id]
         
         if result == "sold":
-            # Показываем финальное сообщение и завершаем продажу
             await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
             await complete_sale(user_id, buyer_id, message)
         else:
             await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}\n\n👋 Диалог завершён.")
     else:
-        # Отправляем ответ клиента
-        txt = f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}"
-        if chat["round"] >= 2:
-            txt += f"\n\n<i>💡 {random.choice(GAME_TIPS['during_chat'])}</i>" if random.random() < 0.3 else ""
+        # Показываем подсказку иногда
+        hint = ""
+        if chat["round"] == 2 and random.random() < 0.5:
+            hint = f"\n\n💡 <b>Совет:</b> Предложи свою цену или аргументируй почему товар стоит дороже!"
+        elif chat["round"] >= 3 and random.random() < 0.4:
+            hint = f"\n\n💡 <b>Совет:</b> Можешь согласиться на {chat['offer']}₽ или предложить компромиссную цену."
         
-        await send_msg(user_id, txt)
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}{hint}")
 
 # ==================== ВКЛАДКА ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
