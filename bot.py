@@ -38,7 +38,7 @@ HOUSES = [
         "price": 0,
         "income_bonus": 0,
         "description": "Бесплатное жильё в общаге. Никаких бонусов.",
-        "image_url": "https://i.imgur.com/room_placeholder.jpg"
+        "image_url": "https://i.imgur.com/room_placeholder.jpg"  # Можешь оставить заглушку или удалить
     },
     {
         "id": "flat",
@@ -46,7 +46,7 @@ HOUSES = [
         "price": 10000,
         "income_bonus": 150,
         "description": "Уютная квартира в спальном районе. +150₽ к ежедневному доходу.",
-        "image_url": "https://i.imgur.com/flat_placeholder.jpg"
+        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_0.jpg"
     },
     {
         "id": "house",
@@ -54,7 +54,7 @@ HOUSES = [
         "price": 35000,
         "income_bonus": 400,
         "description": "Просторный дом с участком и гаражом. +400₽ к ежедневному доходу.",
-        "image_url": "https://i.imgur.com/house_placeholder.jpg"
+        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_1.jpg"
     },
     {
         "id": "villa",
@@ -62,7 +62,7 @@ HOUSES = [
         "price": 100000,
         "income_bonus": 1200,
         "description": "Роскошная вилла с бассейном и садом. +1200₽ к ежедневному доходу.",
-        "image_url": "https://i.imgur.com/villa_placeholder.jpg"
+        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_2.jpg"
     },
     {
         "id": "yacht",
@@ -70,7 +70,7 @@ HOUSES = [
         "price": 250000,
         "income_bonus": 3000,
         "description": "Собственная яхта у причала. +3000₽ к ежедневному доходу. Статус!",
-        "image_url": "https://i.imgur.com/yacht_placeholder.jpg"
+        "image_url": "https://api.telegram.org/file/bot8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4/photos/file_3.jpg"
     },
 ]
 
