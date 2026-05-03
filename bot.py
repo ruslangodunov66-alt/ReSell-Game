@@ -770,10 +770,13 @@ async def show_avatar_menu_start(callback: CallbackQuery):
         )])
     kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="back_to_start")])
     
-    await send_avatar_photo(user_id, txt, InlineKeyboardMarkup(inline_keyboard=kb))
+       await send_avatar_photo(user_id, txt, InlineKeyboardMarkup(inline_keyboard=kb))
     await del_prev(user_id)
     last_bot_message[user_id] = callback.message.message_id
-    await callback.message.delete()
+    try:
+        await callback.message.delete()
+    except:
+        pass  # Сообщение уже удалено или недоступно — игнорируем
     await callback.answer()
 
 @dp.callback_query(F.data == "action_avatar", StateFilter(GameState.playing))
