@@ -542,12 +542,18 @@ async def buy_house_btn(callback: CallbackQuery):
 # АВАТАРЫ
 @dp.callback_query(F.data == "action_avatar")
 async def show_avatar_start(callback: CallbackQuery):
-    user_id = callback.from_user.id; avatar = get_player_avatar(user_id)
+    user_id = callback.from_user.id
+    avatar = get_player_avatar(user_id)
+    txt = "👤 <b>ТВОЙ ПЕРСОНАЖ</b>\n\n<i>Выбери что изменить:</i>"
     kb = []
     for pk, pd in AVATAR_PARTS.items():
-        kb.append([InlineKeyboardButton(text=f"{pd['name']}: {pd['options'][avatar.get(pk, 'default')]}", callback_data=f"ap_{pk}")])
+        current = pd['options'][avatar.get(pk, 'default')]
+        kb.append([InlineKeyboardButton(
+            text=f"{pd['name']}: {current}",
+            callback_data=f"ap_{pk}"
+        )])
     kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="back_to_start")])
-    await send_avatar_photo(user_id, "👤 <b>ТВОЙ ПЕРСОНАЖ</b>\n\n<i>Выбери что изменить:</i>", InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_avatar_photo(user_id, txt, InlineKeyboardMarkup(inline_keyboard=kb))
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("ap_"))
