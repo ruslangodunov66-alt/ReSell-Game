@@ -33,48 +33,33 @@ AVATARS_FILE = "player_avatars.json"
 # ==================== НЕДВИЖИМОСТЬ ====================
 HOUSES = [
     {
-        "id": "room",
-        "name": "🏚 Комната в общаге",
-        "price": 0,
-        "income_bonus": 0,
+        "id": "room", "name": "🏚 Комната в общаге", "price": 0, "income_bonus": 0,
         "description": "Бесплатное жильё. Никаких бонусов.",
         "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"
     },
     {
-        "id": "flat",
-        "name": "🏢 Квартира",
-        "price": 10000,
-        "income_bonus": 150,
+        "id": "flat", "name": "🏢 Квартира", "price": 10000, "income_bonus": 150,
         "description": "Уютная квартира в спальном районе. +150₽ к ежедневному доходу.",
         "image_url": "AgACAgIAAxkBAAIBeGn3hGvVcFktYFQJP-YNnKti48v1AAKYGWsbUNy4SzN3yqU-dPZwAQADAgADeQADOwQ"
     },
     {
-        "id": "house",
-        "name": "🏠 Одноэтажный дом",
-        "price": 35000,
-        "income_bonus": 400,
+        "id": "house", "name": "🏠 Одноэтажный дом", "price": 35000, "income_bonus": 400,
         "description": "Просторный дом с участком и гаражом. +400₽ к ежедневному доходу.",
         "image_url": "AgACAgIAAxkBAAIBemn3hKeq-IxdQ6l6jB7sD10pQPbHAAKUGGsbaAW5S4jG5ecluTqMAQADAgADeQADOwQ"
     },
     {
-        "id": "villa",
-        "name": "🏰 Богатая вилла",
-        "price": 100000,
-        "income_bonus": 1200,
+        "id": "villa", "name": "🏰 Богатая вилла", "price": 100000, "income_bonus": 1200,
         "description": "Роскошная вилла с бассейном и садом. +1200₽ к ежедневному доходу.",
         "image_url": "AgACAgIAAxkBAAIBfGn3hME0a5rsH1wos1Qyy1AhsYAnAAKVGGsbaAW5SzyFR-E8--65AQADAgADeQADOwQ"
     },
     {
-        "id": "yacht",
-        "name": "🛥 Яхта",
-        "price": 250000,
-        "income_bonus": 3000,
+        "id": "yacht", "name": "🛥 Яхта", "price": 250000, "income_bonus": 3000,
         "description": "Собственная яхта у причала. +3000₽ к ежедневному доходу. Статус!",
         "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"
     },
 ]
 
-# ==================== ПИКСЕЛЬНЫЕ АВАТАРЫ ====================
+# ==================== АВАТАРЫ ====================
 AVATAR_PARTS = {
     "face": {"name": "😶 Лицо", "options": {"default": "Обычное", "smile": "Улыбка", "cool": "Крутое", "angry": "Злое", "surprised": "Удивлённое"}},
     "hair": {"name": "💇 Причёска", "options": {"none": "Лысый", "short": "Короткие", "long": "Длинные", "mohawk": "Ирокез", "cap": "Кепка"}},
@@ -161,11 +146,11 @@ CLIENT_TYPES = {
 
 # ==================== ПОДРАБОТКИ ====================
 JOBS = [
-    {"id": "flyers", "name": "📦 Расклейка объявлений", "description": "Расклеиваешь объявления по району. Платят немного, зато быстро.", "duration": 60, "reward": 200, "emoji": "📦", "steps": ["📦 Взял пачку объявлений...", "🏃 Бежишь по району...", "📌 Клеишь на доски...", "✅ Готово!"]},
-    {"id": "delivery", "name": "🚗 Доставка заказов", "description": "Развозишь заказы на велосипеде. Средний заработок.", "duration": 120, "reward": 500, "emoji": "🚗", "steps": ["🚗 Принял заказ в приложении...", "📦 Забираешь посылку...", "🛵 Едешь к клиенту...", "📱 Отмечаешь доставку...", "✅ Доставлено!"]},
-    {"id": "freelance", "name": "💻 Фриланс (дизайн)", "description": "Делаешь логотип для клиента. Платят хорошо, но дольше.", "duration": 300, "reward": 1200, "emoji": "💻", "steps": ["💻 Открыл редактор...", "🎨 Подбираешь цвета...", "✏️ Рисуешь макет...", "📤 Отправляешь клиенту...", "🔄 Правки от клиента...", "✅ Клиент доволен!"]},
-    {"id": "shop", "name": "🏪 Работа в магазине", "description": "Подменяешь продавца в стоке. Можно и товар присмотреть.", "duration": 180, "reward": 700, "emoji": "🏪", "steps": ["🏪 Пришёл на смену...", "📦 Разбираешь товар...", "👥 Консультируешь покупателей...", "💰 Пробиваешь на кассе...", "✅ Смена окончена!"]},
-    {"id": "photo", "name": "📸 Съёмка товаров", "description": "Фоткаешь вещи для других продавцов. Быстрые деньги.", "duration": 90, "reward": 350, "emoji": "📸", "steps": ["📸 Настроил свет...", "👕 Раскладываешь вещи...", "📷 Делаешь кадры...", "💻 Обрабатываешь фото...", "✅ Отправил заказчику!"]},
+    {"id": "flyers", "name": "📦 Расклейка объявлений", "duration": 60, "reward": 200, "emoji": "📦", "steps": ["📦 Взял пачку...", "🏃 Бежишь...", "📌 Клеишь...", "✅ Готово!"]},
+    {"id": "delivery", "name": "🚗 Доставка заказов", "duration": 120, "reward": 500, "emoji": "🚗", "steps": ["🚗 Принял заказ...", "📦 Забираешь...", "🛵 Едешь...", "✅ Доставлено!"]},
+    {"id": "freelance", "name": "💻 Фриланс", "duration": 300, "reward": 1200, "emoji": "💻", "steps": ["💻 Открыл редактор...", "🎨 Рисуешь...", "📤 Отправляешь...", "✅ Готово!"]},
+    {"id": "shop", "name": "🏪 Работа в магазине", "duration": 180, "reward": 700, "emoji": "🏪", "steps": ["🏪 Пришёл...", "📦 Разбираешь...", "💰 Касса...", "✅ Смена окончена!"]},
+    {"id": "photo", "name": "📸 Съёмка товаров", "duration": 90, "reward": 350, "emoji": "📸", "steps": ["📸 Настроил свет...", "📷 Снимаешь...", "💻 Обрабатываешь...", "✅ Готово!"]},
 ]
 
 # ==================== РЕПУТАЦИЯ ====================
@@ -174,8 +159,6 @@ ACHIEVEMENTS = [
     {"id": "first_sale", "name": "🎯 Первая продажа", "target": 1, "reward": 5},
     {"id": "seller_10", "name": "📦 Продавец", "target": 10, "reward": 10},
     {"id": "profit_5000", "name": "💰 Навар", "target": 5000, "reward": 5},
-    {"id": "angry_win", "name": "😡 Укротитель", "target": 1, "reward": 10},
-    {"id": "haggle_master", "name": "🎯 Мастер торга", "target": 1, "reward": 10},
 ]
 
 # ==================== БОТ ====================
@@ -201,7 +184,7 @@ side_jobs = {}
 player_houses = {}
 player_avatars = {}
 
-# ==================== ЗАГРУЗКА ДАННЫХ ====================
+# ==================== ЗАГРУЗКА ====================
 def load_json(filename, default):
     if os.path.exists(filename):
         with open(filename, "r", encoding="utf-8") as f: return json.load(f)
@@ -232,31 +215,48 @@ async def del_user_msgs(user_id):
         except: pass
     pending_messages[user_id] = []
 
+# Кнопка МЕНЮ для каждого сообщения
 def menu_btn():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")]
     ])
 
 async def send_msg(user_id, text, parse_mode="HTML", reply_markup=None):
+    """Отправляет сообщение с кнопкой МЕНЮ."""
     await del_prev(user_id)
     await del_user_msgs(user_id)
-    if reply_markup is None: reply_markup = menu_btn()
+    if reply_markup is None:
+        reply_markup = menu_btn()
     msg = await bot.send_message(user_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
     last_bot_message[user_id] = msg.message_id
     return msg
 
 async def edit_msg(message, text, parse_mode="HTML", reply_markup=None):
+    """Редактирует сообщение. Если не получается — отправляет новое."""
     await del_user_msgs(message.chat.id)
-    try: await message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
-    except: pass
+    if reply_markup is None:
+        reply_markup = menu_btn()
+    try:
+        await message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+    except Exception as e:
+        print(f"Edit error: {e}")
+        # Если не можем отредактировать — отправляем новое
+        await send_msg(message.chat.id, text, parse_mode=parse_mode, reply_markup=reply_markup)
 
 async def send_avatar_photo(user_id, caption="", reply_markup=None):
+    """Отправляет фото аватара или текстовую карточку."""
     avatar = get_player_avatar(user_id)
     avatar_url = get_avatar_url(avatar)
+    
+    if reply_markup is None:
+        reply_markup = menu_btn()
+    
     try:
         msg = await bot.send_photo(user_id, avatar_url, caption=caption, parse_mode="HTML", reply_markup=reply_markup)
         return msg
-    except:
+    except Exception as e:
+        print(f"Avatar photo error: {e}")
+        # Текстовая карточка
         parts = []
         for key, data in AVATAR_PARTS.items():
             val = avatar.get(key, "default")
@@ -264,7 +264,8 @@ async def send_avatar_photo(user_id, caption="", reply_markup=None):
             parts.append(f"{data['name']}: {name}")
         text_card = f"👤 <b>ТВОЙ ПЕРСОНАЖ</b>\n\n" + "\n".join(parts) + "\n\n<i>Редактируй персонажа ниже 👇</i>"
         if caption: text_card = caption
-        await del_prev(user_id); await del_user_msgs(user_id)
+        await del_prev(user_id)
+        await del_user_msgs(user_id)
         msg = await bot.send_message(user_id, text_card, parse_mode="HTML", reply_markup=reply_markup)
         last_bot_message[user_id] = msg.message_id
         return msg
@@ -312,8 +313,6 @@ def check_ach(user_id, pd=None):
         if a["id"] == "first_sale" and u["total_sales"] >= 1: earn = True
         elif a["id"] == "seller_10" and u["total_sales"] >= 10: earn = True
         elif a["id"] == "profit_5000" and u["total_profit"] >= 5000: earn = True
-        elif a["id"] == "angry_win" and u["angry_deals"] >= 1: earn = True
-        elif a["id"] == "haggle_master" and u["haggle_wins"] >= 1: earn = True
         if earn: u["achievements"].append(a["id"]); add_rep(user_id, a["reward"]); new_a.append(a)
     save_json(REPUTATION_FILE, rep_data)
     return new_a
@@ -409,7 +408,7 @@ def main_kb(user_id=None):
          InlineKeyboardButton(text="🏁 ЗАВЕРШИТЬ", callback_data="action_end")],
     ])
 
-# ==================== НЕЙРОКЛИЕНТЫ: ЧАТ ====================
+# ==================== НЕЙРОКЛИЕНТЫ ====================
 def first_msg(client_type, item_name, price, offer):
     msgs = {
         "angry": [f"Здравствуйте! {item_name}. Расскажите о состоянии? {price}₽ — окончательная цена?", f"Привет! Интересует {item_name}. Что по состоянию?"],
@@ -524,11 +523,13 @@ async def start_cmd(message: types.Message):
             [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
             [InlineKeyboardButton(text="👤 АВАТАР", callback_data="action_avatar")],
             [InlineKeyboardButton(text="📚 ОБУЧЕНИЕ", callback_data="action_learn")],
+            [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
         ]))
     else:
         await send_msg(user_id, "🎮 <b>RESELL TYCOON</b>\n\nТренажёр товарного бизнеса!\nПокупай недвижимость, настраивай аватара, общайся с нейроклиентами!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
             [InlineKeyboardButton(text="👤 НАСТРОИТЬ АВАТАРА", callback_data="action_avatar")],
+            [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
         ]))
 
 @dp.message(Command('play'))
@@ -547,7 +548,10 @@ async def play_cmd(message: types.Message, state: FSMContext):
 async def check_job_cmd(message: types.Message):
     user_id = message.from_user.id; await del_user_msgs(user_id)
     if user_id not in side_jobs or side_jobs[user_id].get("done", True):
-        return await send_msg(user_id, "💼 Нет активной работы.\nЗайди в 💼 ЗАРАБОТОК!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💼 ЗАРАБОТОК", callback_data="action_job")]]))
+        return await send_msg(user_id, "💼 Нет активной работы.\nЗайди в 💼 ЗАРАБОТОК!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💼 ЗАРАБОТОК", callback_data="action_job")],
+            [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+        ]))
     
     job_data = side_jobs[user_id]; job = JOBS[job_data["job_type"]]
     elapsed = int(time_module.time() - job_data["start_time"])
@@ -555,7 +559,10 @@ async def check_job_cmd(message: types.Message):
     if elapsed >= job["duration"] and not job_data["done"]:
         job_data["done"] = True
         if user_id in players: players[user_id]["balance"] += job["reward"]; players[user_id]["stat_earned_today"] += job["reward"]
-        await send_msg(user_id, f"✅ <b>РАБОТА ЗАВЕРШЕНА!</b>\n\n{job['emoji']} {job['name']}\n💰 Заработано: {job['reward']}₽\n💼 Баланс: {players[user_id]['balance']}₽\n\n<i>Можешь взять новую подработку!</i>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💼 ЕЩЁ ЗАРАБОТОК", callback_data="action_job")]]))
+        await send_msg(user_id, f"✅ <b>РАБОТА ЗАВЕРШЕНА!</b>\n\n{job['emoji']} {job['name']}\n💰 Заработано: {job['reward']}₽\n💼 Баланс: {players[user_id]['balance']}₽\n\n<i>Можешь взять новую подработку!</i>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💼 ЕЩЁ ЗАРАБОТОК", callback_data="action_job")],
+            [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+        ]))
     else:
         remaining = job["duration"] - elapsed
         current_step = min(len(job["steps"]) - 1, int(elapsed / (job["duration"] / len(job["steps"]))))
@@ -581,7 +588,6 @@ async def process_chat(user_id, chat_key, text, message):
     client = CLIENT_TYPES[chat["client_type"]]
     chat["history"].append({"role": "user", "content": text}); chat["round"] += 1
     
-    # Проверка продажи от игрока
     for w in ["продано", "продаю", "согласен", "договорились", "по рукам", "забирай", "отдаю", "продам", "бери", "хорошо", "ок", "давай"]:
         if w in text.lower():
             chat["finished"] = True
@@ -590,7 +596,6 @@ async def process_chat(user_id, chat_key, text, message):
             await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> Отлично! Договорились на {chat['offer']}₽. Когда можно забрать?")
             await complete_sale(user_id, buyer_id, message); return
     
-    # Лимит сообщений
     if chat["round"] >= 5:
         chat["finished"] = True
         if chat_key in remind_timers: remind_timers[chat_key].cancel()
@@ -602,7 +607,6 @@ async def process_chat(user_id, chat_key, text, message):
             await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> Извините, я передумал.\n\n👋 Диалог завершён.")
         return
     
-    # Запрос к DeepSeek
     try:
         system_prompt = client["system_prompt"] + f"\n\nКонтекст: Товар - {chat['item']}. Твоя цена: {chat['offer']}₽, продавец хочет {chat['price']}₽. Сообщение {chat['round']} из 5. Веди ЕСТЕСТВЕННЫЙ диалог."
         messages = [{"role": "system", "content": system_prompt}] + chat["history"][-3:]
@@ -614,13 +618,11 @@ async def process_chat(user_id, chat_key, text, message):
     
     chat["history"].append({"role": "assistant", "content": ai_msg})
     
-    # Проверяем новую цену от клиента
     prices = re.findall(r'(\d{3,5})₽', ai_msg)
     for p in prices:
         new_price = int(p)
         if chat["offer"] < new_price <= chat["price"]: chat["offer"] = new_price
     
-    # Проверка завершения
     finished = False
     for w in ["беру", "договорились", "по рукам", "забираю", "согласен", "давай", "идёт"]:
         if w in ai_msg.lower() and "?" not in ai_msg.lower(): finished = True; break
@@ -694,9 +696,10 @@ async def show_houses_catalog(callback: CallbackQuery, page: int = 0):
         else:
             msg = await bot.send_photo(user_id, house["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
         await del_prev(user_id); last_bot_message[user_id] = msg.message_id
-        await callback.message.delete()
+        try: await callback.message.delete()
+        except: pass
     except Exception as e:
-        print(f"Photo error: {e}")
+        print(f"House photo error: {e}")
         await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     await callback.answer()
 
@@ -716,42 +719,80 @@ async def buy_house_btn(callback: CallbackQuery):
     else:
         await callback.answer(msg, show_alert=True)
 
-# ==================== АВАТАР ====================
+# ==================== АВАТАР (ИСПРАВЛЕНО) ====================
 @dp.callback_query(F.data == "action_avatar")
 async def show_avatar_menu_start(callback: CallbackQuery):
-    user_id = callback.from_user.id; avatar = get_player_avatar(user_id)
+    """Показывает аватар — работает и в игре и без неё."""
+    user_id = callback.from_user.id
+    avatar = get_player_avatar(user_id)
+    
     txt = "👤 <b>ТВОЙ ПИКСЕЛЬНЫЙ ПЕРСОНАЖ</b>\n\n<i>Выбери что изменить:</i>"
+    
     kb = []
     for part_key, part_data in AVATAR_PARTS.items():
         current_value = avatar.get(part_key, "default")
         current_name = part_data["options"].get(current_value, current_value)
-        kb.append([InlineKeyboardButton(text=f"{part_data['name']}: {current_name}", callback_data=f"avatar_part_{part_key}")])
-    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="back_to_start")])
+        kb.append([InlineKeyboardButton(
+            text=f"{part_data['name']}: {current_name}",
+            callback_data=f"avatar_part_{part_key}"
+        )])
+    
+    # Проверяем состояние игры для правильной кнопки возврата
+    p = players.get(user_id)
+    if p and p.get("day", 0) > 0:
+        kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    else:
+        kb.append([InlineKeyboardButton(text="🏠 НА ГЛАВНУЮ", callback_data="back_to_start")])
+    
+    # Отправляем фото или текстовую карточку
     await send_avatar_photo(user_id, txt, InlineKeyboardMarkup(inline_keyboard=kb))
-    await del_prev(user_id); last_bot_message[user_id] = callback.message.message_id
-    await callback.message.delete()
+    
+    # Удаляем сообщение с кнопкой меню
+    try: await callback.message.delete()
+    except: pass
+    
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("avatar_part_"))
 async def show_avatar_options(callback: CallbackQuery):
-    user_id = callback.from_user.id; part_key = callback.data.replace("avatar_part_", "")
-    part_data = AVATAR_PARTS[part_key]; avatar = get_player_avatar(user_id)
+    user_id = callback.from_user.id
+    part_key = callback.data.replace("avatar_part_", "")
+    part_data = AVATAR_PARTS.get(part_key)
+    
+    if not part_data:
+        return await callback.answer("Ошибка!")
+    
+    avatar = get_player_avatar(user_id)
+    
     txt = f"👤 <b>ВЫБЕРИ {part_data['name'].upper()}</b>"
+    
     kb = []
     for opt_key, opt_name in part_data["options"].items():
         selected = "✅ " if avatar.get(part_key) == opt_key else ""
-        kb.append([InlineKeyboardButton(text=f"{selected}{opt_name}", callback_data=f"set_avatar_{part_key}_{opt_key}")])
+        kb.append([InlineKeyboardButton(
+            text=f"{selected}{opt_name}",
+            callback_data=f"set_avatar_{part_key}_{opt_key}"
+        )])
     kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_avatar")])
+    
     await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await callback.answer()
 
 @dp.callback_query(F.data.startswith("set_avatar_"))
 async def set_avatar_part(callback: CallbackQuery):
-    user_id = callback.from_user.id; parts = callback.data.split("_")
-    part_key = parts[2]; opt_key = "_".join(parts[3:])
-    if part_key in AVATAR_PARTS:
-        update_avatar_part(user_id, part_key, opt_key)
-        await callback.answer("✅ Обновлено!")
-        await show_avatar_options(callback)
+    user_id = callback.from_user.id
+    parts = callback.data.split("_")
+    
+    if len(parts) >= 4:
+        part_key = parts[2]
+        opt_key = "_".join(parts[3:])
+        
+        if part_key in AVATAR_PARTS and opt_key in AVATAR_PARTS[part_key]["options"]:
+            update_avatar_part(user_id, part_key, opt_key)
+            await callback.answer("✅ Обновлено!")
+            await show_avatar_options(callback)
+        else:
+            await callback.answer("❌ Ошибка данных")
     else:
         await callback.answer("❌ Ошибка данных")
 
@@ -798,7 +839,7 @@ async def start_job(callback: CallbackQuery):
     asyncio.create_task(job_animation(user_id, job_idx))
     await callback.answer("Приступил!")
 
-# ==================== РЕПУТАЦИЯ, РЕФЕРАЛЫ, СТАТИСТИКА ====================
+# ==================== РЕПУТАЦИЯ, РЕФЕРАЛЫ ====================
 @dp.callback_query(F.data == "action_rep_menu")
 async def rep_menu_callback(callback: CallbackQuery):
     p = players.get(callback.from_user.id)
@@ -814,6 +855,7 @@ async def ref_menu_callback(callback: CallbackQuery):
     count = len(referral_data[str(user_id)]["invited"]); vip = "👑 Ты в ТОП-3! VIP!" if is_vip(user_id) else ""
     await edit_msg(callback.message, f"🔗 <b>РЕФЕРАЛЫ:</b>\n\n<code>{ref_link(user_id)}</code>\n\n👥 Приглашено: {count}\n💰 Бонус: {count*500}₽\n{vip}")
 
+# ==================== ОСТАЛЬНЫЕ CALLBACK-ОБРАБОТЧИКИ ====================
 @dp.callback_query(F.data == "action_stats", StateFilter(GameState.playing))
 async def show_stats(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
@@ -826,7 +868,6 @@ async def show_demand(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
     await edit_msg(callback.message, f"📊 <b>РЫНОК — День {p['day']}</b>\n\n{fmt_demand(p)}")
 
-# ==================== ОСТАЛЬНЫЕ CALLBACK-ОБРАБОТЧИКИ ====================
 @dp.callback_query(F.data == "start_new_game")
 async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id; r = get_rep(user_id)
@@ -850,7 +891,11 @@ async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == "restart_game_confirm")
 async def restart_confirm(callback: CallbackQuery):
-    await edit_msg(callback.message, "⚠️ <b>СБРОСИТЬ ПРОГРЕСС?</b>\n\nБаланс и инвентарь потеряются.\nРепутация и рефералы сохранятся.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⚠️ ДА, СБРОСИТЬ", callback_data="restart_game_yes")], [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")]]))
+    await edit_msg(callback.message, "⚠️ <b>СБРОСИТЬ ПРОГРЕСС?</b>\n\nБаланс и инвентарь потеряются.\nРепутация и рефералы сохранятся.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⚠️ ДА, СБРОСИТЬ", callback_data="restart_game_yes")],
+        [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")],
+        [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+    ]))
 
 @dp.callback_query(F.data == "restart_game_yes")
 async def restart_yes(callback: CallbackQuery, state: FSMContext):
@@ -875,6 +920,7 @@ async def show_lesson(callback: CallbackQuery):
     kb = []
     if not done: kb.append([InlineKeyboardButton(text="✅ ЗАВЕРШИТЬ (+₽)", callback_data=f"complete_lesson_{lesson['id']}")])
     kb.append([InlineKeyboardButton(text="🔙 К УРОКАМ", callback_data="action_learn")])
+    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
     await edit_msg(callback.message, lesson["text"] + (f"\n\n💰 +{lesson['reward']}₽" if not done else "\n✅ Пройден!"), reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("complete_lesson_"))
@@ -891,9 +937,15 @@ async def ref_info(callback: CallbackQuery):
 async def back_start(callback: CallbackQuery):
     p = players.get(callback.from_user.id)
     if p and p.get("day", 0) > 0:
-        await edit_msg(callback.message, f"👋 <b>МЕНЮ</b>\n📅 День {p['day']} | 💰 {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")]]))
+        await edit_msg(callback.message, f"👋 <b>МЕНЮ</b>\n📅 День {p['day']} | 💰 {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
+            [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+        ]))
     else:
-        await edit_msg(callback.message, "🎮 <b>RESELL TYCOON</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")]]))
+        await edit_msg(callback.message, "🎮 <b>RESELL TYCOON</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")],
+            [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+        ]))
 
 @dp.callback_query(F.data == "action_buy", StateFilter(GameState.playing))
 async def show_suppliers(callback: CallbackQuery):
@@ -918,6 +970,7 @@ async def show_items(callback: CallbackQuery, state: FSMContext):
         kb.append([InlineKeyboardButton(text=f"{it['cat']} {it['name']} — {pr}₽ (~{mp}₽)", callback_data=f"bi_{i}")])
     kb.append([InlineKeyboardButton(text="🔄 ОБНОВИТЬ", callback_data=f"sup_{idx}")])
     kb.append([InlineKeyboardButton(text="🔙 К ПОСТАВЩИКАМ", callback_data="action_buy")])
+    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
     await state.update_data(sup_idx=idx, sup_items=items)
     await edit_msg(callback.message, f"{sup['emoji']} <b>{sup['name']}</b>\n{sup['desc']}\n⭐ {sup['rating']}/10 | ⚠️ Кид:{sup['scam_chance']}%\n\nВыбери товар:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
@@ -970,7 +1023,11 @@ async def publish_item(callback: CallbackQuery):
     if user_id in published_items and published_items[user_id] and published_items[user_id].get("item", {}).get("name") == item["name"]:
         return await callback.answer("Уже опубликован!")
     published_items[user_id] = {"item": item.copy()}
-    await edit_msg(callback.message, f"📢 <b>ОПУБЛИКОВАНО!</b>\n\n📦 {item['name']}\n💰 {item['market_price']}₽\n\n⏳ Жди 1-3 минуты — придут покупатели!\n💬 Они напишут тебе в этот чат.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💬 ЧАТЫ", callback_data="action_chats")], [InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="action_inventory")], [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"📢 <b>ОПУБЛИКОВАНО!</b>\n\n📦 {item['name']}\n💰 {item['market_price']}₽\n\n⏳ Жди 1-3 минуты — придут покупатели!\n💬 Они напишут тебе в этот чат.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💬 ЧАТЫ", callback_data="action_chats")],
+        [InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="action_inventory")],
+        [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+    ]))
     asyncio.create_task(spawn_buyers(user_id))
     await callback.answer("Опубликовано!")
 
@@ -996,7 +1053,10 @@ async def end_game(callback: CallbackQuery, state: FSMContext):
     r = "🏆 <b>ПОБЕДА!</b>" if p["balance"] >= 50000 else "💀 <b>БАНКРОТ!</b>" if p["balance"] <= 0 else "🎮 Игра окончена."
     check_ach(callback.from_user.id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"]})
     save_json(REPUTATION_FILE, rep_data)
-    await edit_msg(callback.message, f"{r}\n💰 {p['balance']}₽\n📦 Продаж: {p['items_sold']}\n\n/play — ещё раз", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")]]))
+    await edit_msg(callback.message, f"{r}\n💰 {p['balance']}₽\n📦 Продаж: {p['items_sold']}\n\n/play — ещё раз", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")],
+        [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")],
+    ]))
 
 @dp.callback_query(F.data == "restart_game")
 async def restart_game(callback: CallbackQuery):
