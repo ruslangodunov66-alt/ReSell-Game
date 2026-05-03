@@ -362,23 +362,106 @@ async def spawn_buyers(user_id):
 
 # ==================== КОМАНДЫ ====================
 @dp.message(Command('start'))
-async def start_cmd(message: types.Message):
+async def start_cmd(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     args = message.text.split()
+    
+    # Проверка реферальной ссылки
     if len(args) > 1 and args[1].startswith("ref_"):
         ref_code = args[1][4:]
         referrer_id = None
         for uid in referral_data:
-            if generate_ref_code(uid) == ref_code: referrer_id = uid; break
+            if generate_ref_code(uid) == ref_code:
+                referrer_id = uid
+                break
         if referrer_id and referrer_id != str(user_id) and user_id not in referral_data[referrer_id]["invited"]:
             referral_data[referrer_id]["invited"].append(user_id)
             save_json(REFERRAL_FILE, dict(referral_data))
-            if int(referrer_id) in players: players[int(referrer_id)]["balance"] += 500
-            try: await bot.send_message(int(referrer_id), f"🎉 Новый реферал! +500₽\n👥 Всего: {len(referral_data[referrer_id]['invited'])}", parse_mode="HTML")
-            except: pass
-            await message.answer("👋 Привет! Ты по реферальной ссылке.\n/play — играть | /ref — ссылка", parse_mode="HTML")
-            return
-    await message.answer(f"🎮 <b>ReSell Tycoon</b>\n💰 5 000₽ → 🎯 50 000₽\n\n/play | /ref | /rep", parse_mode="HTML")
+            if int(referrer_id) in players:
+                players[int(referrer_id)]["balance"] += 500
+            try:
+                await bot.send_message(
+                    int(referrer_id),
+                    f"🎉 <b>НОВЫЙ РЕФЕРАЛ!</b>\n\n"
+                    f"По твоей ссылке присоединился новый игрок!\n"
+                    f"💰 Ты получил +500₽ бонуса.\n"
+                    f"👥 Всего рефералов: {len(referral_data[referrer_id]['invited'])}",
+                    parse_mode="HTML"
+                )
+            except:
+                pass
+    
+    # 🔥 НОВОЕ КРАСИВОЕ ПРИВЕТСТВИЕ (не сбрасывает игру!)
+    p = players.get(user_id)  # Проверяем, есть ли уже игра
+    
+    if p and p.get("day", 0) > 0:
+        # Игрок уже играл — показываем меню с текущим состоянием
+        await show_welcome_back(message, user_id, p)
+    else:
+        # Новый игрок — красивое приветствие
+        await show_welcome_new(message, user_id)
+
+async def show_welcome_new(message: types.Message, user_id: int):
+    """Красивое приветствие для нового игрока."""
+    welcome_text = (
+        "🎮 <b>ДОБРО ПОЖАЛОВАТЬ В RESELL TYCOON!</b>\n\n"
+        "Ты — начинающий перекупщик. Твоя цель — раскрутиться с 5 000₽ до 50 000₽.\n\n"
+        "📊 <b>Что тебя ждёт:</b>\n"
+        "🏭 • Закупайся у поставщиков (осторожно, могут кинуть!)\n"
+        "📱 • Публикуй товары на Авито\n"
+        "💬 • Общайся с нейроклиентами (торгуйся!)\n"
+        "📈 • Следи за спросом и трендами\n"
+        "⭐ • Зарабатывай репутацию\n\n"
+        "🎁 <b>Бонусы:</b>\n"
+        "👥 • Приглашай друзей — получай +500₽ за каждого\n"
+        "👑 • Топ-3 реферера получают VIP-доступ\n\n"
+        "Готов начать свой путь в товарке?"
+    )
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        [InlineKeyboardButton(text="📖 Как играть?", callback_data="how_to_play")],
+        [InlineKeyboardButton(text="🔗 Реферальная система", callback_data="ref_info")],
+        [InlineKeyboardButton(text="👑 VIP-доступ", callback_data="vip_info")],
+    ])
+    
+    await message.answer(welcome_text, parse_mode="HTML", reply_markup=kb)
+
+async def show_welcome_back(message: types.Message, user_id: int, p: dict):
+    """Приветствие для вернувшегося игрока."""
+    rep = get_user_rep(user_id)
+    level = get_rep_level(rep["score"])
+    vip = is_vip(user_id)
+    
+    welcome_text = (
+        f"👋 <b>С ВОЗВРАЩЕНИЕМ, ПЕРЕКУПЩИК!</b>\n\n"
+        f"📅 День: {p['day']}\n"
+        f"💰 Баланс: {p['balance']}₽\n"
+        f"📦 Товаров: {len(p['inventory'])} шт.\n"
+        f"📋 Продано: {p['items_sold']} шт.\n"
+        f"⭐ Репутация: {level['name']}\n"
+        f"{'👑 VIP-статус активен!' if vip else ''}\n\n"
+        f"Игра продолжается! Что будешь делать?"
+    )
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ ИГРУ", callback_data="continue_game")],
+        [InlineKeyboardButton(text="🔄 НАЧАТЬ ЗАНОВО", callback_data="restart_game_confirm")],
+        [InlineKeyboardButton(text="📊 Статистика", callback_data="action_stats_menu")],
+        [InlineKeyboardButton(text="🔗 Рефералы", callback_data="action_ref")],
+    ])
+    
+    await message.answer(welcome_text, parse_mode="HTML", reply_markup=kb)
+
+@dp.message(Command('menu'))
+async def menu_cmd(message: types.Message):
+    """Показывает главное меню без сброса игры."""
+    user_id = message.from_user.id
+    p = players.get(user_id)
+    if p and p.get("day", 0) > 0:
+        await show_welcome_back(message, user_id, p)
+    else:
+        await show_welcome_new(message, user_id)
 
 @dp.message(Command('play'))
 async def play_cmd(message: types.Message, state: FSMContext):
@@ -784,6 +867,186 @@ async def back_to_menu(callback: CallbackQuery):
     et = f"\n\n{p['current_event']['text']}" if p.get("current_event") else ""
     vip_txt = "\n👑 VIP" if is_vip(user_id) else ""
     await callback.message.edit_text(f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\nДействие:", parse_mode="HTML", reply_markup=get_main_keyboard())
+
+
+@dp.callback_query(F.data == "start_new_game")
+async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    rep = get_user_rep(user_id)
+    players[user_id] = {
+        "balance": 5000, "reputation": max(0, rep["score"]), "inventory": [],
+        "day": 1, "total_earned": 0, "total_spent": 0,
+        "items_sold": rep["total_sales"], "scam_times": rep["scam_survived"],
+        "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None,
+        "stat_earned_today": 0, "stat_sold_today": 0,
+        "rep_mult": get_rep_multiplier(rep["score"]),
+    }
+    p = players[user_id]
+    event = generate_daily_event()
+    p["current_event"] = event
+    if event:
+        apply_market_event(p, event)
+    await state.set_state(GameState.playing)
+    et = f"\n\n{event['text']}" if event else ""
+    vip_txt = "\n👑 VIP-доступ активен!" if is_vip(user_id) else ""
+    
+    await callback.message.edit_text(
+        f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n\n"
+        f"🌟 День 1\n"
+        f"💰 Баланс: 5 000₽\n"
+        f"📦 Инвентарь: пуст\n"
+        f"{vip_txt}{et}\n\n"
+        f"Твоя цель — заработать 50 000₽!\n"
+        f"Начни с закупки товаров у поставщиков 👇",
+        parse_mode="HTML",
+        reply_markup=get_main_keyboard()
+    )
+    await callback.answer("Игра началась! 🚀")
+
+@dp.callback_query(F.data == "continue_game")
+async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    p = players.get(user_id)
+    if not p:
+        return await callback.answer("Нет активной игры. Начни новую!")
+    
+    await state.set_state(GameState.playing)
+    et = f"\n\n{p['current_event']['text']}" if p.get("current_event") else ""
+    vip_txt = "\n👑 VIP" if is_vip(user_id) else ""
+    
+    await callback.message.edit_text(
+        f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\nВыбери действие:",
+        parse_mode="HTML",
+        reply_markup=get_main_keyboard()
+    )
+    await callback.answer("Продолжаем! 🎮")
+
+@dp.callback_query(F.data == "restart_game_confirm")
+async def restart_game_confirm_btn(callback: CallbackQuery):
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⚠️ ДА, СБРОСИТЬ", callback_data="restart_game_yes")],
+        [InlineKeyboardButton(text="❌ НЕТ, ОТМЕНА", callback_data="continue_game")],
+    ])
+    await callback.message.edit_text(
+        "⚠️ <b>ТОЧНО СБРОСИТЬ ПРОГРЕСС?</b>\n\n"
+        "Весь баланс, инвентарь и статистика текущей игры будут потеряны!\n"
+        "Репутация и рефералы сохранятся.",
+        parse_mode="HTML",
+        reply_markup=kb
+    )
+    await callback.answer()
+
+@dp.callback_query(F.data == "restart_game_yes")
+async def restart_game_yes_btn(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    if user_id in players:
+        del players[user_id]
+    await start_new_game_btn(callback, state)
+
+@dp.callback_query(F.data == "how_to_play")
+async def how_to_play_btn(callback: CallbackQuery):
+    text = (
+        "📖 <b>КАК ИГРАТЬ В RESELL TYCOON:</b>\n\n"
+        "1️⃣ <b>Закупка:</b> Купи товары у поставщиков\n"
+        "   • Высокий рейтинг = надёжно, но дорого\n"
+        "   • Низкий рейтинг = дёшево, но могут кинуть\n\n"
+        "2️⃣ <b>Публикация:</b> Опубликуй товар в инвентаре\n"
+        "   • Жми «📱 Опубликовать» на товаре\n"
+        "   • Жди 1-3 минуты — придут нейроклиенты\n\n"
+        "3️⃣ <b>Продажа:</b> Общайся с покупателями\n"
+        "   • Торгуйся, предлагай свою цену\n"
+        "   • Соглашайся или отказывайся\n"
+        "   • Злые 😡 сбивают цену сильно\n"
+        "   • Добрые 😊 просят небольшую скидку\n"
+        "   • Хитрые 😏 манипулируют рынком\n\n"
+        "4️⃣ <b>Репутация:</b> Растёт от успешных продаж\n"
+        "   • Выше репутация = лучше цены и меньше кидалова\n\n"
+        "5️⃣ <b>Рефералы:</b> Приглашай друзей через /ref\n"
+        "   • +500₽ за каждого друга\n"
+        "   • Топ-3 открывают VIP-поставщика 👑"
+    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
+    ])
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+@dp.callback_query(F.data == "ref_info")
+async def ref_info_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    link = get_ref_link(user_id)
+    text = (
+        "🔗 <b>РЕФЕРАЛЬНАЯ СИСТЕМА:</b>\n\n"
+        "👥 Приглашай друзей — получай бонусы!\n\n"
+        f"🔗 Твоя ссылка:\n<code>{link}</code>\n\n"
+        "🎁 <b>Награды:</b>\n"
+        "💰 +500₽ за каждого друга\n"
+        "👑 Топ-3 реферера — VIP-поставщик\n"
+        "⭐ Достижения за рефералов\n\n"
+        "Отправь ссылку другу. Как только он нажмёт /start — ты получишь бонус!"
+    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
+    ])
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+@dp.callback_query(F.data == "vip_info")
+async def vip_info_btn(callback: CallbackQuery):
+    text = (
+        "👑 <b>VIP-ДОСТУП:</b>\n\n"
+        "VIP-поставщик PremiumStock открывается для топ-3 рефереров!\n\n"
+        "🌟 <b>Преимущества VIP:</b>\n"
+        "• Цены всего на 5% выше закупочных\n"
+        "• 0% шанс кидалова\n"
+        "• Максимальный рейтинг 10/10\n"
+        "• Эксклюзивные товары\n\n"
+        "📈 Приглашайте друзей через /ref и попадите в топ-3!"
+    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
+    ])
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+
+@dp.callback_query(F.data == "back_to_welcome")
+async def back_to_welcome_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = players.get(user_id)
+    if p and p.get("day", 0) > 0:
+        await show_welcome_back(callback.message, user_id, p)
+    else:
+        await show_welcome_new(callback.message, user_id)
+
+@dp.callback_query(F.data == "action_stats_menu")
+async def stats_menu_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = players.get(user_id)
+    if not p:
+        return await callback.answer("Нет активной игры")
+    ref_n = len(referral_data[str(user_id)]["invited"])
+    vip = "👑 ДА" if is_vip(user_id) else "❌ Нет"
+    
+    text = (
+        f"📊 <b>СТАТИСТИКА:</b>\n\n"
+        f"💰 Баланс: {p['balance']}₽\n"
+        f"📦 Товаров в инвентаре: {len(p['inventory'])} шт.\n"
+        f"📅 День: {p['day']}\n"
+        f"📋 Всего продано: {p['items_sold']} шт.\n"
+        f"💸 Всего заработано: {p['total_earned']}₽\n"
+        f"🛒 Потрачено на закуп: {p['total_spent']}₽\n"
+        f"⚠️ Раз кинули: {p['scam_times']}\n"
+        f"👥 Рефералы: {ref_n}\n"
+        f"👑 VIP: {vip}"
+    )
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
+    ])
+    
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
+    await callback.answer()
 
 # ==================== ЗАПУСК ====================
 async def main():
