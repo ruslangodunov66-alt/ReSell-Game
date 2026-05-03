@@ -143,6 +143,29 @@ def load_all():
 
 load_all()
 
+# ==================== АВАТАР ====================
+def get_player_avatar(user_id):
+    uid = str(user_id)
+    if uid not in player_avatars:
+        player_avatars[uid] = DEFAULT_AVATAR.copy()
+        save_json(AVATARS_FILE, player_avatars)
+    return player_avatars[uid]
+
+def update_avatar_part(user_id, part, value):
+    uid = str(user_id)
+    if uid not in player_avatars:
+        player_avatars[uid] = DEFAULT_AVATAR.copy()
+    player_avatars[uid][part] = value
+    save_json(AVATARS_FILE, player_avatars)
+
+async def send_avatar_photo(user_id, caption="", reply_markup=None):
+    avatar = get_player_avatar(user_id)
+    photo = draw_pixel_avatar(avatar)
+    await del_prev(user_id); await del_user_msgs(user_id)
+    msg = await bot.send_photo(user_id, types.BufferedInputFile(photo.read(), filename="avatar.png"), caption=caption, parse_mode="HTML", reply_markup=reply_markup)
+    last_bot_message[user_id] = msg.message_id
+    return msg
+
 # ==================== ЧИСТКА ====================
 async def del_prev(user_id):
     if user_id in last_bot_message:
@@ -261,27 +284,6 @@ def draw_pixel_avatar(avatar_config):
     bio.seek(0)
     return bio
 
-def get_player_avatar(user_id):
-    uid = str(user_id)
-    if uid not in player_avatars:
-        player_avatars[uid] = DEFAULT_AVATAR.copy()
-        save_json(AVATARS_FILE, player_avatars)
-    return player_avatars[uid]
-
-def update_avatar_part(user_id, part, value):
-    uid = str(user_id)
-    if uid not in player_avatars:
-        player_avatars[uid] = DEFAULT_AVATAR.copy()
-    player_avatars[uid][part] = value
-    save_json(AVATARS_FILE, player_avatars)
-
-async def send_avatar_photo(user_id, caption="", reply_markup=None):
-    avatar = get_player_avatar(user_id)
-    photo = draw_pixel_avatar(avatar)
-    await del_prev(user_id); await del_user_msgs(user_id)
-    msg = await bot.send_photo(user_id, types.BufferedInputFile(photo.read(), filename="avatar.png"), caption=caption, parse_mode="HTML", reply_markup=reply_markup)
-    last_bot_message[user_id] = msg.message_id
-    return msg
 
 # ==================== ИГРА ====================
 def get_player(user_id):
