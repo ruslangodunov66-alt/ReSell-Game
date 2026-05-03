@@ -635,58 +635,108 @@ async def open_chat(callback: CallbackQuery, state: FSMContext):
     await callback.answer("Чат открыт!")
 
 # ==================== НЕДВИЖИМОСТЬ ====================
+# ==================== КАТАЛОГ НЕДВИЖИМОСТИ С ПРОЛИСТЫВАНИЕМ ====================
+
 @dp.callback_query(F.data == "action_houses", StateFilter(GameState.playing))
-async def show_houses(callback: CallbackQuery):
+async def show_houses_catalog(callback: CallbackQuery, page: int = 0):
+    """Показывает каталог недвижимости по одному объекту с перелистыванием."""
     user_id = callback.from_user.id
     current_id = get_player_house(user_id)
     p = get_player(user_id)
     
-    txt = "🏠 <b>НЕДВИЖИМОСТЬ</b>\n\n<i>Покупай жильё и получай бонус к доходу каждый день!</i>\n\n"
+    # Проверяем границы
+    if page < 0: page = 0
+    if page >= len(HOUSES): page = len(HOUSES) - 1
+    
+    house = HOUSES[page]
+    owned = current_id == house["id"]
+    
+    # Формируем текст
+    if owned:
+        status_text = "✅ <b>ЭТО ТВОЁ ЖИЛЬЁ</b>"
+        action_btn = None
+    else:
+        if p["balance"] >= house["price"]:
+            status_text = f"💰 <b>Цена: {house['price']}₽</b> (хватает!)"
+            action_btn = InlineKeyboardButton(text=f"🛒 КУПИТЬ ЗА {house['price']}₽", callback_data=f"buy_house_{house['id']}")
+        else:
+            need = house["price"] - p["balance"]
+            status_text = f"💰 <b>Цена: {house['price']}₽</b>\n❌ Не хватает: {need}₽"
+            action_btn = None
+    
+    txt = (
+        f"🏠 <b>КАТАЛОГ НЕДВИЖИМОСТИ</b>\n"
+        f"📄 {page + 1} из {len(HOUSES)}\n\n"
+        f"{house['name']}\n"
+        f"{house['description']}\n\n"
+        f"{status_text}\n\n"
+        f"💼 Твой баланс: {p['balance']}₽\n"
+        f"🏠 Твоё жильё: {next((h['name'] for h in HOUSES if h['id'] == current_id), 'Нет')}"
+    )
+    
+    # Кнопки навигации
+    nav_buttons = []
+    if page > 0:
+        nav_buttons.append(InlineKeyboardButton(text="⬅️ НАЗАД", callback_data=f"house_page_{page - 1}"))
+    if page < len(HOUSES) - 1:
+        nav_buttons.append(InlineKeyboardButton(text="ВПЕРЁД ➡️", callback_data=f"house_page_{page + 1}"))
+    
     kb = []
+    if nav_buttons:
+        kb.append(nav_buttons)
+    if action_btn:
+        kb.append([action_btn])
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     
-    for house in HOUSES:
-        owned = current_id == house["id"]
-        status = "✅ ТВОЁ" if owned else f"💰 {house['price']}₽"
-        txt += f"{house['name']}\n{house['description']}\n{status}\n\n"
-        if not owned:
-            kb.append([InlineKeyboardButton(
-                text=f"{house['name']} — {house['price']}₽",
-                callback_data=f"buy_house_{house['id']}"
-            )])
-    
-    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")])
-    
-    # Отправляем фото текущего дома через file_id
-    current_house = next((h for h in HOUSES if h["id"] == current_id), HOUSES[0])
-    
+    # Отправляем фото
     try:
-        # Пробуем отправить через file_id (работает в России)
-        if current_house["image_url"].startswith("AgAC"):
-            await bot.send_photo(
-                user_id,
-                current_house["image_url"],
-                caption=txt,
-                parse_mode="HTML",
+        if house["image_url"].startswith("AgAC"):
+            msg = await bot.send_photo(
+                user_id, house["image_url"],
+                caption=txt, parse_mode="HTML",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
             )
         else:
-            # Если ссылка URL — пробуем через неё
-            await bot.send_photo(
-                user_id,
-                current_house["image_url"],
-                caption=txt,
-                parse_mode="HTML",
+            msg = await bot.send_photo(
+                user_id, house["image_url"],
+                caption=txt, parse_mode="HTML",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
             )
         await del_prev(user_id)
-        last_bot_message[user_id] = callback.message.message_id
+        last_bot_message[user_id] = msg.message_id
         await callback.message.delete()
     except Exception as e:
         print(f"Photo error: {e}")
-        # Если фото не загрузилось — просто текст
         await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     
     await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("house_page_"), StateFilter(GameState.playing))
+async def house_page_btn(callback: CallbackQuery):
+    """Перелистывание страниц каталога."""
+    page = int(callback.data.split("_")[2])
+    await show_houses_catalog(callback, page)
+
+
+@dp.callback_query(F.data.startswith("buy_house_"), StateFilter(GameState.playing))
+async def buy_house_btn(callback: CallbackQuery):
+    """Покупка недвижимости."""
+    user_id = callback.from_user.id
+    house_id = callback.data.replace("buy_house_", "")
+    success, msg = buy_house(user_id, house_id)
+    
+    if success:
+        await callback.answer(msg)
+        # Обновляем каталог на той же странице
+        current_page = 0
+        for i, h in enumerate(HOUSES):
+            if h["id"] == house_id:
+                current_page = i
+                break
+        await show_houses_catalog(callback, current_page)
+    else:
+        await callback.answer(msg, show_alert=True)
 
 @dp.callback_query(F.data.startswith("buy_house_"))
 async def buy_house_btn(callback: CallbackQuery):
@@ -700,6 +750,32 @@ async def buy_house_btn(callback: CallbackQuery):
         await callback.answer(msg)
 
 # ==================== АВАТАР (КОНСТРУКТОР) ====================
+
+# Этот обработчик сработает и без состояния игры (для стартового меню)
+@dp.callback_query(F.data == "action_avatar")
+async def show_avatar_menu_start(callback: CallbackQuery):
+    """Показывает аватар даже если игра не начата."""
+    user_id = callback.from_user.id
+    avatar = get_player_avatar(user_id)
+    
+    txt = "👤 <b>ТВОЙ ПИКСЕЛЬНЫЙ ПЕРСОНАЖ</b>\n\n<i>Выбери что изменить:</i>"
+    
+    kb = []
+    for part_key, part_data in AVATAR_PARTS.items():
+        current_value = avatar.get(part_key, "default")
+        current_name = part_data["options"].get(current_value, current_value)
+        kb.append([InlineKeyboardButton(
+            text=f"{part_data['name']}: {current_name}",
+            callback_data=f"avatar_part_{part_key}"
+        )])
+    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="back_to_start")])
+    
+    await send_avatar_photo(user_id, txt, InlineKeyboardMarkup(inline_keyboard=kb))
+    await del_prev(user_id)
+    last_bot_message[user_id] = callback.message.message_id
+    await callback.message.delete()
+    await callback.answer()
+
 @dp.callback_query(F.data == "action_avatar", StateFilter(GameState.playing))
 async def show_avatar_menu(callback: CallbackQuery):
     user_id = callback.from_user.id
