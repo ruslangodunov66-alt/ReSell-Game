@@ -1,13 +1,13 @@
 ﻿# bot.py — ReSell Tycoon (aiogram 3.x)
 import asyncio
 import random
-from datetime import datetime
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from settings import BOT_TOKEN
 
@@ -118,7 +118,8 @@ class GameState(StatesGroup):
 
 # ==================== БОТ ====================
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+storage = MemoryStorage()
+dp = Dispatcher(storage=storage)
 
 # ==================== КОМАНДЫ ====================
 
