@@ -210,104 +210,92 @@ def add_rep(user_id, amount):
 
 # ==================== АВАТАРЫ ====================
 def draw_pixel_avatar(avatar_config):
-    size = 128
+    """Рисует пиксельного персонажа 512x512 (хорошее качество)."""
+    size = 512  # Было 128 — увеличил в 4 раза
     img = Image.new("RGB", (size, size), BG_COLORS.get(avatar_config.get("background", "white"), "#FFFFFF"))
     draw = ImageDraw.Draw(img)
     
-    clothes = avatar_config.get("clothes", "tshirt")
-    draw.rectangle([32, 80, 96, 120], fill=CLOTHES_COLORS.get(clothes, "#FFFFFF"), outline="#000000", width=2)
+    # Масштаб (все координаты умножаем на 4)
+    s = 4
     
+    # Тело (одежда)
+    clothes = avatar_config.get("clothes", "tshirt")
+    draw.rectangle([32*s, 80*s, 96*s, 120*s], fill=CLOTHES_COLORS.get(clothes, "#FFFFFF"), outline="#000000", width=3*s)
+    
+    # Голова
     face = avatar_config.get("face", "default")
     skin = SKIN_COLORS.get(face, "#FFD5B8")
-    draw.ellipse([40, 20, 88, 80], fill=skin, outline="#000000", width=2)
+    draw.ellipse([40*s, 20*s, 88*s, 80*s], fill=skin, outline="#000000", width=3*s)
     
-    eye_y = 45
+    # Глаза
     if face == "angry":
-        draw.line([(48, 45), (58, 50)], fill="#000000", width=2)
-        draw.line([(70, 50), (80, 45)], fill="#000000", width=2)
+        draw.line([(48*s, 45*s), (58*s, 50*s)], fill="#000000", width=3*s)
+        draw.line([(70*s, 50*s), (80*s, 45*s)], fill="#000000", width=3*s)
     elif face == "surprised":
-        for ex, ey in [(48, 44), (72, 44)]:
-            draw.ellipse([ex, ey, ex+8, ey+8], fill="#FFFFFF", outline="#000000", width=1)
-            draw.ellipse([ex+2, ey+2, ex+4, ey+4], fill="#000000")
+        for ex, ey in [(48*s, 44*s), (72*s, 44*s)]:
+            draw.ellipse([ex, ey, ex+8*s, ey+10*s], fill="#FFFFFF", outline="#000000", width=2*s)
+            draw.ellipse([ex+3*s, ey+3*s, ex+5*s, ey+5*s], fill="#000000")
     elif face == "cool":
-        draw.rectangle([46, 44, 58, 48], fill="#000000")
-        draw.rectangle([70, 44, 82, 48], fill="#000000")
+        draw.rectangle([46*s, 44*s, 58*s, 48*s], fill="#000000")
+        draw.rectangle([70*s, 44*s, 82*s, 48*s], fill="#000000")
     else:
-        for ex, ey in [(48, 44), (72, 44)]:
-            draw.ellipse([ex, ey, ex+8, ey+8], fill="#FFFFFF", outline="#000000", width=1)
-            draw.ellipse([ex+2, ey+2, ex+4, ey+4], fill="#000000")
+        for ex, ey in [(48*s, 44*s), (72*s, 44*s)]:
+            draw.ellipse([ex, ey, ex+8*s, ey+10*s], fill="#FFFFFF", outline="#000000", width=2*s)
+            draw.ellipse([ex+3*s, ey+3*s, ex+5*s, ey+5*s], fill="#000000")
     
+    # Рот
     if face == "smile":
-        draw.arc([55, 58, 73, 70], start=0, end=180, fill="#000000", width=2)
+        draw.arc([55*s, 58*s, 73*s, 70*s], start=0, end=180, fill="#000000", width=3*s)
     elif face == "angry":
-        draw.arc([55, 65, 73, 75], start=180, end=360, fill="#000000", width=2)
+        draw.arc([55*s, 65*s, 73*s, 78*s], start=180, end=360, fill="#000000", width=3*s)
     elif face == "surprised":
-        draw.ellipse([60, 60, 68, 66], fill="#000000")
+        draw.ellipse([60*s, 60*s, 68*s, 66*s], fill="#000000")
     elif face == "cool":
-        draw.line([56, 63, 72, 63], fill="#000000", width=2)
+        draw.line([56*s, 63*s, 72*s, 63*s], fill="#000000", width=3*s)
     else:
-        draw.line([56, 65, 72, 65], fill="#000000", width=2)
+        draw.line([56*s, 65*s, 72*s, 65*s], fill="#000000", width=3*s)
     
+    # Волосы
     hair = avatar_config.get("hair", "short")
     hair_color = HAIR_COLORS.get(hair)
     if hair_color:
         if hair == "short":
-            draw.arc([36, 16, 92, 50], start=180, end=360, fill=hair_color)
-            draw.rectangle([36, 30, 92, 42], fill=hair_color)
+            draw.arc([36*s, 16*s, 92*s, 50*s], start=180, end=360, fill=hair_color)
+            draw.rectangle([36*s, 30*s, 92*s, 42*s], fill=hair_color)
         elif hair == "long":
-            draw.arc([36, 16, 92, 50], start=180, end=360, fill=hair_color)
-            draw.rectangle([36, 30, 40, 80], fill=hair_color)
-            draw.rectangle([88, 30, 92, 80], fill=hair_color)
+            draw.arc([36*s, 16*s, 92*s, 50*s], start=180, end=360, fill=hair_color)
+            draw.rectangle([36*s, 30*s, 40*s, 80*s], fill=hair_color)
+            draw.rectangle([88*s, 30*s, 92*s, 80*s], fill=hair_color)
         elif hair == "mohawk":
-            draw.rectangle([58, 10, 70, 45], fill=hair_color)
+            draw.rectangle([58*s, 10*s, 70*s, 45*s], fill=hair_color)
         elif hair == "cap":
-            draw.arc([36, 16, 92, 50], start=180, end=360, fill=hair_color)
-            draw.rectangle([36, 30, 92, 38], fill=hair_color)
-            draw.rectangle([60, 14, 68, 30], fill=hair_color)
+            draw.arc([36*s, 16*s, 92*s, 50*s], start=180, end=360, fill=hair_color)
+            draw.rectangle([36*s, 30*s, 92*s, 38*s], fill=hair_color)
+            draw.rectangle([58*s, 14*s, 70*s, 30*s], fill=hair_color)
     
+    # Аксессуары
     accessory = avatar_config.get("accessory", "none")
     if accessory == "glasses":
-        draw.rectangle([44, 42, 60, 50], outline="#000000", width=2)
-        draw.rectangle([68, 42, 84, 50], outline="#000000", width=2)
-        draw.line([60, 46, 68, 46], fill="#000000", width=2)
+        draw.rectangle([44*s, 42*s, 60*s, 50*s], outline="#000000", width=3*s)
+        draw.rectangle([68*s, 42*s, 84*s, 50*s], outline="#000000", width=3*s)
+        draw.line([60*s, 46*s, 68*s, 46*s], fill="#000000", width=3*s)
     elif accessory == "sunglasses":
-        draw.rectangle([42, 40, 62, 52], fill="#000000")
-        draw.rectangle([66, 40, 86, 52], fill="#000000")
-        draw.line([62, 46, 66, 46], fill="#000000", width=2)
+        draw.rectangle([42*s, 40*s, 62*s, 52*s], fill="#000000")
+        draw.rectangle([66*s, 40*s, 86*s, 52*s], fill="#000000")
+        draw.line([62*s, 46*s, 66*s, 46*s], fill="#000000", width=3*s)
     elif accessory == "chain":
-        draw.arc([50, 75, 78, 90], start=0, end=180, fill="#FFD700", width=2)
-        draw.ellipse([60, 85, 68, 93], fill="#FFD700")
+        draw.arc([50*s, 75*s, 78*s, 95*s], start=0, end=180, fill="#FFD700", width=4*s)
+        draw.ellipse([60*s, 88*s, 68*s, 96*s], fill="#FFD700")
     elif accessory == "headphones":
-        draw.rectangle([34, 40, 38, 60], fill="#333333")
-        draw.rectangle([90, 40, 94, 60], fill="#333333")
-        draw.arc([36, 20, 92, 45], start=180, end=360, fill="#333333", width=3)
+        draw.rectangle([34*s, 40*s, 38*s, 60*s], fill="#333333")
+        draw.rectangle([90*s, 40*s, 94*s, 60*s], fill="#333333")
+        draw.arc([36*s, 20*s, 92*s, 45*s], start=180, end=360, fill="#333333", width=4*s)
     
     bio = io.BytesIO()
+    img = img.resize((256, 256), Image.NEAREST)  # Оптимальный размер для Telegram
     img.save(bio, format="PNG")
     bio.seek(0)
     return bio
-
-def get_player_avatar(user_id):
-    uid = str(user_id)
-    if uid not in player_avatars:
-        player_avatars[uid] = DEFAULT_AVATAR.copy()
-        save_json(AVATARS_FILE, player_avatars)
-    return player_avatars[uid]
-
-def update_avatar_part(user_id, part, value):
-    uid = str(user_id)
-    if uid not in player_avatars:
-        player_avatars[uid] = DEFAULT_AVATAR.copy()
-    player_avatars[uid][part] = value
-    save_json(AVATARS_FILE, player_avatars)
-
-async def send_avatar_photo(user_id, caption="", reply_markup=None):
-    avatar = get_player_avatar(user_id)
-    photo = draw_pixel_avatar(avatar)
-    await del_prev(user_id); await del_user_msgs(user_id)
-    msg = await bot.send_photo(user_id, types.BufferedInputFile(photo.read(), filename="avatar.png"), caption=caption, parse_mode="HTML", reply_markup=reply_markup)
-    last_bot_message[user_id] = msg.message_id
-    return msg
 
 # ==================== ИГРА ====================
 def get_player(user_id):
@@ -741,12 +729,19 @@ async def back_to_menu(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "back_to_start")
 async def back_start(callback: CallbackQuery):
-    p = players.get(callback.from_user.id)
+    user_id = callback.from_user.id
+    p = players.get(user_id)
     if p and p.get("day", 0) > 0:
-        await edit_msg(callback.message, f"👋 <b>МЕНЮ</b>\n📅 День {p['day']} | 💰 {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")]]))
+        await edit_msg(callback.message, 
+            f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}",
+            reply_markup=main_kb(user_id))
     else:
-        await edit_msg(callback.message, "🎮 <b>RESELL TYCOON</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")]]))
-
+        await edit_msg(callback.message, 
+            "🎮 <b>RESELL TYCOON</b>",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+                [InlineKeyboardButton(text="👤 АВАТАР", callback_data="action_avatar")],
+            ]))
 # ==================== ЗАПУСК ====================
 async def main():
     print("🎮 ReSell Tycoon запущен!")
