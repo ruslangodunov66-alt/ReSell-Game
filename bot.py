@@ -75,36 +75,36 @@ MARKET_EVENTS = [
     {"text": "📰 Эконом-режим — ищут дешёвое.", "cat": None, "mult": 0.7},
 ]
 
-# ==================== НЕЙРОКЛИЕНТЫ (характер скрыт) ====================
+# ==================== НЕЙРОКЛИЕНТЫ ====================
 CLIENT_TYPES = {
     "angry": {
         "name": "Покупатель",
-        "system_prompt": "Ты покупатель на Авито. Ты ОЧЕНЬ НЕДОВОЛЕН ценой, грубишь (без мата), торгуешься жёстко, сбиваешь цену на 30-50%. Можешь написать 'дорого, я такое на помойке нашёл'. Если продавец уступает — берёшь но ворчишь. Если долго не отвечают — пишешь 'Эй, ты где? Я долго ждать не буду!'. НИКОГДА не говори что ты злой. Веди себя естественно. Коротко, 1-2 предложения.",
+        "system_prompt": "Ты покупатель на Авито. Ты недоволен ценой, грубишь (без мата), торгуешься жёстко, сбиваешь цену на 30-50%. Можешь написать 'дорого'. Если продавец уступает — берёшь но ворчишь. Если не отвечают — пишешь 'Эй, ты где?'. НИКОГДА не говори что ты злой. Коротко, 1-2 предложения.",
         "discount_range": (0.5, 0.7), "patience": 3, "remind_time": (120, 300)
     },
     "kind": {
         "name": "Покупатель",
-        "system_prompt": "Ты покупатель на Авито. Ты ВЕЖЛИВЫЙ и ДОБРЫЙ. Просишь скидку 10-20%, хвалишь товар: 'хорошая вещь', 'давно искал'. Если долго не отвечают — пишешь 'Извините, я ещё здесь. Жду ваш ответ :)'. НИКОГДА не говори что ты добрый. Веди себя естественно. Коротко, 1-2 предложения.",
+        "system_prompt": "Ты покупатель на Авито. Ты вежливый и добрый. Просишь скидку 10-20%, хвалишь товар: 'хорошая вещь'. Если не отвечают — пишешь 'Извините, я ещё жду :)'. НИКОГДА не говори что ты добрый. Коротко, 1-2 предложения.",
         "discount_range": (0.8, 0.9), "patience": 5, "remind_time": (180, 420)
     },
     "sly": {
         "name": "Покупатель",
-        "system_prompt": "Ты покупатель на Авито, перекупщик. Ты ХИТРЫЙ, аргументируешь цену рынком, блефуешь: 'на другом аккаунте дешевле', 'таких полно'. Сбиваешь 20-40%. Если долго не отвечают — пишешь 'Слушай, я тут ещё одно предложение нашёл. Давай решать быстрее?'. НИКОГДА не говори что ты хитрый. Веди себя естественно. Коротко, как в чате.",
+        "system_prompt": "Ты покупатель, перекупщик. Ты хитрый, аргументируешь цену рынком, блефуешь: 'на другом аккаунте дешевле'. Сбиваешь 20-40%. Если не отвечают — пишешь 'Нашёл ещё вариант. Давай решать?'. НИКОГДА не говори что ты хитрый. Коротко, 1-2 предложения.",
         "discount_range": (0.6, 0.8), "patience": 4, "remind_time": (150, 360)
     }
 }
 
 # ==================== РЕПУТАЦИЯ ====================
 REPUTATION_LEVELS = {
-    -100: {"name": "💀 Чёрный список"},
-    -50: {"name": "🔴 Ужасная"},
-    -10: {"name": "🟠 Плохая"},
-    0: {"name": "🟡 Нейтральная"},
-    25: {"name": "🟢 Хорошая"},
-    50: {"name": "🔵 Отличная"},
-    75: {"name": "🟣 Легендарная"},
-    90: {"name": "🟡 Золотая"},
-    100: {"name": "👑 Бог товарки"},
+    -100: "💀 Чёрный список",
+    -50: "🔴 Ужасная",
+    -10: "🟠 Плохая",
+    0: "🟡 Нейтральная",
+    25: "🟢 Хорошая",
+    50: "🔵 Отличная",
+    75: "🟣 Легендарная",
+    90: "🟡 Золотая",
+    100: "👑 Бог товарки",
 }
 
 ACHIEVEMENTS = [
@@ -150,7 +150,7 @@ def load_all():
 
 load_all()
 
-# ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+# ==================== ОЧИСТКА СООБЩЕНИЙ ====================
 async def delete_previous_message(user_id):
     if user_id in last_bot_message:
         try: await bot.delete_message(user_id, last_bot_message[user_id])
@@ -163,14 +163,14 @@ async def delete_user_messages(user_id):
             except: pass
         pending_messages[user_id] = []
 
-async def send_message_clean(user_id, text, parse_mode="HTML", reply_markup=None):
+async def send_clean(user_id, text, parse_mode="HTML", reply_markup=None):
     await delete_previous_message(user_id)
     await delete_user_messages(user_id)
     msg = await bot.send_message(user_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
     last_bot_message[user_id] = msg.message_id
     return msg
 
-async def edit_message_clean(message, text, parse_mode="HTML", reply_markup=None):
+async def edit_clean(message, text, parse_mode="HTML", reply_markup=None):
     await delete_user_messages(message.chat.id)
     try: await message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
     except: pass
@@ -250,14 +250,13 @@ def check_achievements(user_id, player_data=None):
 def get_player(user_id):
     if user_id not in players:
         rep = get_user_rep(user_id)
-        rep_mult = get_rep_multiplier(rep["score"])
         players[user_id] = {
             "balance": 5000, "reputation": max(0, rep["score"]),
             "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0,
             "items_sold": rep["total_sales"], "scam_times": rep["scam_survived"],
             "market_demand": {cat: 1.0 for cat in CATEGORIES},
             "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0,
-            "rep_mult": rep_mult,
+            "rep_mult": get_rep_multiplier(rep["score"]),
         }
     return players[user_id]
 
@@ -291,56 +290,42 @@ def format_demand(p):
 def get_main_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🏭 ЗАКУПИТЬСЯ", callback_data="action_buy")],
-        [InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="action_inventory")],
+        [InlineKeyboardButton(text="📦 ИНВЕНТАРЬ (продажи)", callback_data="action_inventory")],
         [InlineKeyboardButton(text="📊 СТАТИСТИКА", callback_data="action_stats"),
-         InlineKeyboardButton(text="🏆 РЕПУТАЦИЯ", callback_data="action_rep")],
-        [InlineKeyboardButton(text="📈 СПРОС", callback_data="action_demand"),
-         InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="action_ref")],
-        [InlineKeyboardButton(text="⏩ СЛЕД. ДЕНЬ", callback_data="action_nextday"),
+         InlineKeyboardButton(text="🏆 РЕПУТАЦИЯ", callback_data="action_rep_menu")],
+        [InlineKeyboardButton(text="📈 СПРОС НА РЫНКЕ", callback_data="action_demand"),
+         InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="action_ref_menu")],
+        [InlineKeyboardButton(text="⏩ СЛЕДУЮЩИЙ ДЕНЬ", callback_data="action_nextday"),
          InlineKeyboardButton(text="🏁 ЗАВЕРШИТЬ", callback_data="action_end")],
     ])
 
-# ==================== НЕЙРОКЛИЕНТЫ: ПУБЛИКАЦИЯ И ЧАТ ====================
+# ==================== НЕЙРОКЛИЕНТЫ ====================
 def generate_first_msg(client_type, item_name, price, offer):
-    """Первое сообщение от клиента — НЕ показывает характер."""
     msgs = {
         "angry": [
-            f"Здравствуйте! Увидел ваше объявление — {item_name} за {price}₽. Честно говоря, цена завышена. Готов предложить {offer}₽.",
-            f"Привет! По поводу {item_name}. {price}₽ — это дорого. Давайте {offer}₽?",
+            f"Здравствуйте! Увидел {item_name} за {price}₽. Цена завышена. Готов предложить {offer}₽.",
+            f"Привет! По поводу {item_name}. {price}₽ дорого. Давайте {offer}₽?",
         ],
         "kind": [
-            f"Добрый день! Заинтересовался вашим {item_name}. Очень хорошая вещь! Но {price}₽ дороговато. Может, {offer}₽?",
-            f"Здравствуйте! Давно ищу {item_name}. У меня бюджет {offer}₽. Возможно договоримся?",
+            f"Добрый день! Заинтересовался {item_name}. Отличная вещь! Но {price}₽ дороговато. Может {offer}₽?",
+            f"Здравствуйте! Ищу {item_name}. Бюджет {offer}₽. Договоримся?",
         ],
         "sly": [
-            f"Привет! Видел твой лот — {item_name}. Мониторил рынок — такие уходят за {offer}₽. Отдашь за эту цену?",
-            f"Здорово! По поводу {item_name}. У меня кэш {offer}₽ прямо сейчас. Забираю если согласен.",
+            f"Привет! По {item_name}. Рынок щас — {offer}₽. Отдашь за эту цену?",
+            f"Здорово! {item_name} интересен. Кэш {offer}₽ прямо сейчас. Забираю если да.",
         ]
     }
     return random.choice(msgs.get(client_type, msgs["kind"]))
 
 def generate_remind_msg(client_type, item_name, offer):
-    """Напоминание — НЕ показывает характер."""
     msgs = {
-        "angry": [
-            f"Слушайте, я жду ответ по {item_name}. Моё предложение {offer}₽. Давайте решать быстрее!",
-            f"Ну что, думаете ещё? {item_name} за {offer}₽ — хорошая цена. Решайтесь!",
-            f"Я серьёзно настроен купить {item_name} за {offer}₽. Жду ответ.",
-        ],
-        "kind": [
-            f"Извините за беспокойство! Напомню о себе — {item_name} за {offer}₽? Буду рад договориться :)",
-            f"Добрый день ещё раз! Очень заинтересован в {item_name}. {offer}₽ — моё предложение.",
-            f"Не хотел надоедать, но {item_name} всё ещё актуален? Моя цена {offer}₽.",
-        ],
-        "sly": [
-            f"Слушай, по {item_name} — нашёл ещё вариант, но твой интереснее. Давай за {offer}₽?",
-            f"Рынок меняется. Моё предложение {offer}₽ за {item_name} в силе. Решайся!",
-            f"Время — деньги. {item_name} за {offer}₽. Потом может быть поздно!",
-        ]
+        "angry": [f"Жду ответ по {item_name}. {offer}₽. Решайте быстрее!", f"Ну что? {item_name} за {offer}₽. Я серьёзно."],
+        "kind": [f"Извините за беспокойство! {item_name} за {offer}₽ ещё актуально? :)", f"Напомню о себе. {item_name}, моя цена {offer}₽."],
+        "sly": [f"По {item_name} — нашёл ещё вариант. Давай за {offer}₽?", f"Рынок меняется. {item_name} за {offer}₽. Решайся!"],
     }
     return random.choice(msgs.get(client_type, msgs["kind"]))
 
-async def send_buyer_message(user_id, buyer_id, client_type, item_name, price, is_reminder=False):
+async def send_buyer_msg(user_id, buyer_id, client_type, item_name, price, is_reminder=False):
     client = CLIENT_TYPES[client_type]
     chat_key = f"{user_id}_{buyer_id}"
     
@@ -367,24 +352,24 @@ async def send_buyer_message(user_id, buyer_id, client_type, item_name, price, i
         }
         
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💬 ОТВЕТИТЬ", callback_data=f"neuro_reply_{user_id}_{buyer_id}"),
-             InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"neuro_decline_{user_id}_{buyer_id}")],
+            [InlineKeyboardButton(text="💬 ОТВЕТИТЬ ПОКУПАТЕЛЮ", callback_data=f"neuro_reply_{user_id}_{buyer_id}")],
+            [InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"neuro_decline_{user_id}_{buyer_id}")],
         ])
         
-        await send_message_clean(
+        await send_clean(
             user_id,
-            f"📩 <b>НОВОЕ СООБЩЕНИЕ!</b>\n\n"
-            f"👤 <b>Покупатель #{buyer_id}</b>\n"
-            f"📦 По поводу: {item_name}\n\n"
+            f"📩 <b>НОВЫЙ ПОКУПАТЕЛЬ #{buyer_id}!</b>\n\n"
+            f"📦 Товар: {item_name}\n"
+            f"💰 Твоя цена: {price}₽\n\n"
             f"💬 <i>«{first_msg}»</i>\n\n"
-            f"Нажми <b>«ОТВЕТИТЬ»</b> и напиши свой ответ в чат.\n"
-            f"Торгуйся, убеждай — всё как в реальной переписке!",
+            f"👉 Нажми <b>«ОТВЕТИТЬ ПОКУПАТЕЛЮ»</b> и напиши ответ!\n"
+            f"Торгуйся, убеждай — всё как в жизни.",
             reply_markup=kb
         )
         
         if client["remind_time"]:
-            reminder_time = random.randint(*client["remind_time"])
-            task = asyncio.create_task(send_reminder(user_id, buyer_id, reminder_time))
+            t = random.randint(*client["remind_time"])
+            task = asyncio.create_task(send_reminder(user_id, buyer_id, t))
             remind_timers[chat_key] = task
     
     else:
@@ -396,14 +381,13 @@ async def send_buyer_message(user_id, buyer_id, client_type, item_name, price, i
         chat["reminders_sent"] += 1
         
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💬 ОТВЕТИТЬ", callback_data=f"neuro_reply_{user_id}_{buyer_id}"),
-             InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"neuro_decline_{user_id}_{buyer_id}")],
+            [InlineKeyboardButton(text="💬 ОТВЕТИТЬ ПОКУПАТЕЛЮ", callback_data=f"neuro_reply_{user_id}_{buyer_id}")],
+            [InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"neuro_decline_{user_id}_{buyer_id}")],
         ])
         
-        await send_message_clean(
+        await send_clean(
             user_id,
-            f"🔔 <b>НАПОМИНАНИЕ!</b>\n\n"
-            f"👤 <b>Покупатель #{buyer_id}</b>\n"
+            f"🔔 <b>НАПОМИНАНИЕ ОТ ПОКУПАТЕЛЯ #{buyer_id}</b>\n\n"
             f"📦 {item_name}\n\n"
             f"💬 <i>«{remind_msg}»</i>\n\n"
             f"Нажми <b>«ОТВЕТИТЬ»</b> и продолжи диалог!",
@@ -411,8 +395,8 @@ async def send_buyer_message(user_id, buyer_id, client_type, item_name, price, i
         )
         
         if chat["reminders_sent"] < chat["max_reminders"]:
-            next_time = random.randint(*client["remind_time"])
-            task = asyncio.create_task(send_reminder(user_id, buyer_id, next_time))
+            t = random.randint(*client["remind_time"])
+            task = asyncio.create_task(send_reminder(user_id, buyer_id, t))
             remind_timers[chat_key] = task
 
 async def send_reminder(user_id, buyer_id, delay):
@@ -420,7 +404,7 @@ async def send_reminder(user_id, buyer_id, delay):
     chat_key = f"{user_id}_{buyer_id}"
     chat = active_chats.get(chat_key)
     if chat and not chat["finished"] and chat["reminders_sent"] < chat["max_reminders"]:
-        await send_buyer_message(user_id, buyer_id, chat["client_type"], chat["item"], chat["price"], is_reminder=True)
+        await send_buyer_msg(user_id, buyer_id, chat["client_type"], chat["item"], chat["price"], is_reminder=True)
 
 async def spawn_buyers(user_id):
     await asyncio.sleep(random.randint(60, 180))
@@ -433,17 +417,17 @@ async def spawn_buyers(user_id):
     
     rep_mult = get_rep_multiplier(get_user_rep(user_id)["score"])
     base_buyers = random.randint(1, 3)
-    if rep_mult["haggle_bonus"] > 0.1:
-        base_buyers = min(3, base_buyers + 1)
+    if rep_mult["haggle_bonus"] > 0.1: base_buyers = min(3, base_buyers + 1)
     
     buyer_types = random.choices(list(CLIENT_TYPES.keys()), k=base_buyers)
     
-    await send_message_clean(
+    await send_clean(
         user_id,
         f"📱 <b>ОБЪЯВЛЕНИЕ РАБОТАЕТ!</b>\n\n"
-        f"📦 {item['name']} за {item['market_price']}₽\n"
-        f"👥 Пишут <b>{base_buyers}</b> чел.\n\n"
-        f"<i>Отвечай им в чат — торгуйся, убеждай, договаривайся!</i>"
+        f"📦 {item['name']}\n"
+        f"💰 Цена: {item['market_price']}₽\n"
+        f"👥 Пишут: <b>{base_buyers}</b> чел.\n\n"
+        f"<i>Отвечай им — торгуйся, убеждай, договаривайся!</i>"
     )
     
     pub["buyers_list"] = []
@@ -452,7 +436,7 @@ async def spawn_buyers(user_id):
         await asyncio.sleep(random.randint(5, 20))
         buyer_id = i + 1
         pub["buyers_list"].append({"id": buyer_id, "type": btype, "active": True})
-        await send_buyer_message(user_id, buyer_id, btype, item["name"], item["market_price"])
+        await send_buyer_msg(user_id, buyer_id, btype, item["name"], item["market_price"])
 
 async def complete_neuro_sale(user_id, buyer_id, message=None):
     chat_key = f"{user_id}_{buyer_id}"
@@ -473,7 +457,7 @@ async def complete_neuro_sale(user_id, buyer_id, message=None):
             break
     
     if not sold:
-        if message: await send_message_clean(user_id, "❌ Товар не найден.")
+        if message: await send_clean(user_id, "❌ Товар не найден.")
         return None
     
     profit = final_price - sold["buy_price"]
@@ -485,10 +469,8 @@ async def complete_neuro_sale(user_id, buyer_id, message=None):
     p["reputation"] = min(100, p["reputation"] + 5)
     
     add_rep(user_id, random.randint(2, 5), f"Продажа: {item_name}")
-    if chat["client_type"] == "angry":
-        get_user_rep(user_id)["angry_deals"] += 1
-    if final_price > sold["market_price"] * 0.9:
-        get_user_rep(user_id)["haggle_wins"] += 1
+    if chat["client_type"] == "angry": get_user_rep(user_id)["angry_deals"] += 1
+    if final_price > sold["market_price"] * 0.9: get_user_rep(user_id)["haggle_wins"] += 1
     
     check_achievements(user_id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"], "balance": p["balance"]})
     save_json(REPUTATION_FILE, rep_data)
@@ -500,10 +482,15 @@ async def complete_neuro_sale(user_id, buyer_id, message=None):
     chat["finished"] = True
     
     if message:
-        await send_message_clean(
+        await send_clean(
             user_id,
             f"🎉 <b>ПРОДАНО!</b>\n\n"
-            f"📦 {item_name}\n💰 Цена: {final_price}₽\n💵 Прибыль: {profit}₽\n💼 Баланс: {p['balance']}₽\n⭐ Репутация: {p['reputation']}/100"
+            f"📦 {item_name}\n"
+            f"💰 Цена продажи: {final_price}₽\n"
+            f"💵 Прибыль: {profit}₽\n"
+            f"💼 Баланс: {p['balance']}₽\n"
+            f"⭐ Репутация: {p['reputation']}/100\n\n"
+            f"<i>Закупай новые товары и публикуй снова!</i>"
         )
     
     return profit
@@ -523,67 +510,39 @@ async def start_cmd(message: types.Message, state: FSMContext):
             referral_data[referrer_id]["invited"].append(user_id)
             save_json(REFERRAL_FILE, dict(referral_data))
             if int(referrer_id) in players: players[int(referrer_id)]["balance"] += 500
-            try:
-                await bot.send_message(int(referrer_id), f"🎉 <b>НОВЫЙ РЕФЕРАЛ!</b>\n\n💰 +500₽\n👥 Всего: {len(referral_data[referrer_id]['invited'])}", parse_mode="HTML")
+            try: await bot.send_message(int(referrer_id), f"🎉 Новый реферал! +500₽\n👥 Всего: {len(referral_data[referrer_id]['invited'])}", parse_mode="HTML")
             except: pass
     
     p = players.get(user_id)
     await delete_user_messages(user_id)
     
     if p and p.get("day", 0) > 0:
-        await show_welcome_back(message, user_id, p)
+        rep = get_user_rep(user_id)
+        level = get_rep_level(rep["score"])
+        vip = is_vip(user_id)
+        txt = f"👋 <b>С ВОЗВРАЩЕНИЕМ!</b>\n\n📅 День {p['day']} | 💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])} | 📋 Продано: {p['items_sold']}\n⭐ Репутация: {level}\n{'👑 VIP!' if vip else ''}"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ ИГРУ", callback_data="continue_game")],
+            [InlineKeyboardButton(text="🔄 НАЧАТЬ ЗАНОВО", callback_data="restart_game_confirm")],
+        ])
+        await send_clean(user_id, txt, reply_markup=kb)
     else:
-        await show_welcome_new(message, user_id)
-
-async def show_welcome_new(message: types.Message, user_id: int):
-    text = (
-        "🎮 <b>ДОБРО ПОЖАЛОВАТЬ В RESELL TYCOON!</b>\n\n"
-        "Ты — перекупщик. Цель: 5 000₽ → 50 000₽.\n\n"
-        "🏭 • Закупайся у поставщиков\n"
-        "📱 • Публикуй товары на Авито\n"
-        "💬 • Общайся с покупателями в чате\n"
-        "📈 • Следи за спросом\n"
-        "⭐ • Зарабатывай репутацию\n\n"
-        "👥 Приглашай друзей — +500₽!\n\n"
-        "Готов?"
-    )
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
-        [InlineKeyboardButton(text="📖 Как играть?", callback_data="how_to_play")],
-        [InlineKeyboardButton(text="🔗 Рефералы", callback_data="ref_info")],
-        [InlineKeyboardButton(text="👑 VIP", callback_data="vip_info")],
-    ])
-    await send_message_clean(user_id, text, reply_markup=kb)
-
-async def show_welcome_back(message: types.Message, user_id: int, p: dict):
-    rep = get_user_rep(user_id)
-    level = get_rep_level(rep["score"])
-    vip = is_vip(user_id)
-    text = (
-        f"👋 <b>С ВОЗВРАЩЕНИЕМ!</b>\n\n"
-        f"📅 День: {p['day']}\n💰 Баланс: {p['balance']}₽\n"
-        f"📦 Товаров: {len(p['inventory'])} шт.\n"
-        f"📋 Продано: {p['items_sold']} шт.\n"
-        f"⭐ Репутация: {level['name']}\n"
-        f"{'👑 VIP!' if vip else ''}"
-    )
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
-        [InlineKeyboardButton(text="🔄 НАЧАТЬ ЗАНОВО", callback_data="restart_game_confirm")],
-        [InlineKeyboardButton(text="📊 Статистика", callback_data="action_stats_menu")],
-        [InlineKeyboardButton(text="🔗 Рефералы", callback_data="action_ref")],
-    ])
-    await send_message_clean(user_id, text, reply_markup=kb)
-
-@dp.message(Command('menu'))
-async def menu_cmd(message: types.Message):
-    user_id = message.from_user.id
-    p = players.get(user_id)
-    await delete_user_messages(user_id)
-    if p and p.get("day", 0) > 0:
-        await show_welcome_back(message, user_id, p)
-    else:
-        await show_welcome_new(message, user_id)
+        txt = (
+            "🎮 <b>RESELL TYCOON</b>\n\n"
+            "Ты — перекупщик. Цель: 5 000₽ → 50 000₽\n\n"
+            "📖 <b>КАК ИГРАТЬ:</b>\n"
+            "1️⃣ <b>Закупка</b> — купи товары у поставщиков\n"
+            "2️⃣ <b>Публикация</b> — зайди в ИНВЕНТАРЬ и нажми на товар\n"
+            "3️⃣ <b>Продажа</b> — жди покупателей и общайся с ними\n"
+            "4️⃣ <b>Следи за СПРОСОМ</b> — покупай что в тренде\n\n"
+            "👥 Приглашай друзей — +500₽ за каждого!"
+        )
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+            [InlineKeyboardButton(text="📖 ПОДРОБНЕЕ", callback_data="how_to_play")],
+            [InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="ref_info")],
+        ])
+        await send_clean(user_id, txt, reply_markup=kb)
 
 @dp.message(Command('play'))
 async def play_cmd(message: types.Message, state: FSMContext):
@@ -602,10 +561,21 @@ async def play_cmd(message: types.Message, state: FSMContext):
     event = generate_daily_event(); p["current_event"] = event
     if event: apply_market_event(p, event)
     await state.set_state(GameState.playing)
-    et = f"\n\n{event['text']}" if event else ""
+    et = f"\n\n📰 {event['text']}" if event else ""
     vip_txt = "\n👑 VIP!" if is_vip(user_id) else ""
     demand = format_demand(p)
-    await send_message_clean(user_id, f"🌟 <b>ДЕНЬ 1</b>\n💰 5000₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=get_main_keyboard())
+    await send_clean(
+        user_id,
+        f"🌟 <b>ДЕНЬ 1</b>\n💰 Баланс: 5 000₽{vip_txt}{et}\n\n"
+        f"📊 <b>СПРОС НА РЫНКЕ:</b>\n{demand}\n\n"
+        f"👇 <b>Что делать:</b>\n"
+        f"1. Жми 🏭 ЗАКУПИТЬСЯ\n"
+        f"2. Купи товары (смотри спрос!)\n"
+        f"3. Зайди в 📦 ИНВЕНТАРЬ\n"
+        f"4. Нажми на товар → Опубликовать\n"
+        f"5. Жди покупателей и общайся!",
+        reply_markup=get_main_keyboard()
+    )
 
 @dp.message(Command('ref'))
 async def ref_cmd(message: types.Message):
@@ -613,9 +583,10 @@ async def ref_cmd(message: types.Message):
     await delete_user_messages(user_id)
     link = get_ref_link(user_id)
     count = len(referral_data[str(user_id)]["invited"])
-    vip_user = is_vip(user_id)
-    vip_txt = "\n👑 Ты в ТОП-3! VIP открыт!" if vip_user else ""
-    await send_message_clean(user_id, f"🔗 <b>ТВОЯ ССЫЛКА:</b>\n<code>{link}</code>\n\n👥 Приглашено: {count}\n💰 Бонус: {count*500}₽{vip_txt}")
+    vip = "👑 Ты в ТОП-3! VIP открыт!" if is_vip(user_id) else ""
+    top = get_top_referrers(5)
+    top_text = "\n".join(f"{'🥇🥈🥉'[i] if i<3 else '▫️'} ID:{uid} — {c} чел." for i, (uid, c) in enumerate(top))
+    await send_clean(user_id, f"🔗 <b>РЕФЕРАЛЫ:</b>\n\n<code>{link}</code>\n\n👥 Приглашено: {count}\n💰 Бонус: {count*500}₽\n{vip}\n\n🏆 <b>ТОП-5:</b>\n{top_text}")
 
 @dp.message(Command('rep'))
 async def rep_cmd(message: types.Message):
@@ -626,11 +597,23 @@ async def rep_cmd(message: types.Message):
     new_ach = check_achievements(user_id, pd)
     user = get_user_rep(user_id)
     level = get_rep_level(user["score"])
-    card = f"🏆 <b>РЕПУТАЦИЯ: {level['name']}</b>\n📊 Очки: {user['score']}/100\n📦 Продаж: {user['total_sales']}\n💰 Прибыль: {user['total_profit']}₽"
-    if new_ach: card += "\n\n🎉 <b>НОВЫЕ!</b>\n" + "\n".join(f"{a['name']}" for a in new_ach)
-    await send_message_clean(user_id, card)
+    mult = get_rep_multiplier(user["score"])
+    bar = "█" * int((user["score"]+100)/200*10) + "░" * (10-int((user["score"]+100)/200*10))
+    txt = (
+        f"🏆 <b>РЕПУТАЦИЯ: {level}</b>\n"
+        f"📊 [{bar}] {user['score']}/100\n\n"
+        f"📦 Продаж: {user['total_sales']}\n"
+        f"💰 Прибыль: {user['total_profit']}₽\n"
+        f"🏅 Достижений: {len(user['achievements'])}/{len(ACHIEVEMENTS)}\n\n"
+        f"🎁 <b>Бонусы:</b>\n"
+        f"🏭 Скидка: {int((1-mult['supplier_discount'])*100)}%\n"
+        f"🛡️ Защита: {int((1-mult['scam_reduce'])*100)}%\n"
+        f"🗣 Торг: +{int(mult['haggle_bonus']*100)}%"
+    )
+    if new_ach: txt += "\n\n🎉 <b>НОВЫЕ!</b>\n" + "\n".join(f"{a['name']} (+{a['reward']})" for a in new_ach)
+    await send_clean(user_id, txt)
 
-# ==================== ОБРАБОТКА ЧАТА С НЕЙРОКЛИЕНТАМИ ====================
+# ==================== ОБРАБОТКА ЧАТА ====================
 @dp.callback_query(F.data.startswith("neuro_reply_"))
 async def neuro_reply_btn(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split("_")
@@ -643,27 +626,16 @@ async def neuro_reply_btn(callback: CallbackQuery, state: FSMContext):
         return
     
     chat = active_chats[chat_key]
-    
-    await send_message_clean(
-        user_id,
-        f"💬 <b>ДИАЛОГ С ПОКУПАТЕЛЕМ #{buyer_id}</b>\n"
-        f"📦 {chat['item']}\n"
-        f"💰 Твоя цена: {chat['price']}₽ | Предложение: {chat['offer']}₽\n\n"
-        f"<i>Напиши свой ответ в чат. Торгуйся, убеждай, предлагай свою цену!</i>"
-    )
-    
     await state.set_state(GameState.playing)
+    await send_clean(user_id, f"💬 <b>ДИАЛОГ С ПОКУПАТЕЛЕМ #{buyer_id}</b>\n📦 {chat['item']}\n💰 Твоя цена: {chat['price']}₽ | Предложение: {chat['offer']}₽\n\n<i>Напиши ответ в чат. Торгуйся, предлагай свою цену!</i>")
     await callback.answer()
 
 @dp.message(StateFilter(GameState.playing))
-async def handle_neuro_chat(message: types.Message, state: FSMContext):
+async def handle_chat(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
-    
-    # Сохраняем для удаления
     pending_messages[user_id].append(message.message_id)
     
-    # Ищем активный диалог
     active_dialog = None
     dialog_key = None
     for key, chat in active_chats.items():
@@ -672,8 +644,7 @@ async def handle_neuro_chat(message: types.Message, state: FSMContext):
             dialog_key = key
             break
     
-    if not active_dialog:
-        return
+    if not active_dialog: return
     
     chat = active_dialog
     chat["history"].append({"role": "user", "content": text})
@@ -681,14 +652,12 @@ async def handle_neuro_chat(message: types.Message, state: FSMContext):
     
     if chat["round"] > chat["max_rounds"]:
         chat["finished"] = True
-        msgs = {"angry": "Всё, надоело ждать. Я пошёл.", "kind": "Ладно, подумаю ещё. Спасибо за ответы!", "sly": "Хорошо, удачи. Поищу другого продавца."}
+        msgs = {"angry": "Всё, надоело. Я пошёл.", "kind": "Ладно, подумаю. Спасибо!", "sly": "Хорошо, удачи."}
         end_msg = msgs.get(chat["client_type"], "Пока.")
-        if dialog_key in remind_timers:
-            remind_timers[dialog_key].cancel()
-        await send_message_clean(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {end_msg}\n\n⚠️ Диалог завершён.")
+        if dialog_key in remind_timers: remind_timers[dialog_key].cancel()
+        await send_clean(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {end_msg}\n\n⚠️ Диалог завершён.")
         return
     
-    # DeepSeek
     try:
         resp = client_openai.chat.completions.create(
             model="deepseek-chat", messages=chat["history"],
@@ -696,80 +665,60 @@ async def handle_neuro_chat(message: types.Message, state: FSMContext):
         )
         ai_msg = resp.choices[0].message.content
     except:
-        fallbacks = {
-            "angry": [f"Короче, {chat['offer']}₽. Берёшь или нет?!"],
-            "kind": [f"Ну пожалуйста, может уступите? У меня только {chat['offer']}₽."],
-            "sly": [f"Рынок падает. {chat['offer']}₽ — хорошая цена."]
-        }
-        ai_msg = random.choice(fallbacks.get(chat["client_type"], [f"Моё предложение {chat['offer']}₽."]))
+        ai_msg = f"Моё предложение {chat['offer']}₽. Берёшь?"
     
     chat["history"].append({"role": "assistant", "content": ai_msg})
     
-    # Проверка завершения
     finished = False; result = None
     ml = ai_msg.lower()
-    agree_words = ["беру", "договорились", "по рукам", "забираю", "согласен", "давай", "идёт"]
-    for w in agree_words:
+    for w in ["беру", "договорились", "по рукам", "забираю", "согласен", "давай", "идёт"]:
         if w in ml and "?" not in ml: finished = True; result = "sold"; break
     if not finished:
-        decline_words = ["нет", "не буду", "ушёл", "пошёл", "пока", "до свидания", "удачи"]
-        for w in decline_words:
+        for w in ["нет", "не буду", "ушёл", "пошёл", "пока", "до свидания"]:
             if w in ml: finished = True; result = "lost"; break
     
     if finished:
         chat["finished"] = True
-        if dialog_key in remind_timers:
-            remind_timers[dialog_key].cancel()
+        if dialog_key in remind_timers: remind_timers[dialog_key].cancel()
         if result == "sold":
             await complete_neuro_sale(user_id, chat["buyer_id"], message)
         else:
-            await send_message_clean(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {ai_msg}\n\n👋 Клиент ушёл.")
+            await send_clean(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {ai_msg}\n\n👋 Клиент ушёл.")
     else:
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="💬 ПРОДОЛЖИТЬ ДИАЛОГ", callback_data=f"neuro_reply_{user_id}_{chat['buyer_id']}"),
-             InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"neuro_decline_{user_id}_{chat['buyer_id']}")],
+            [InlineKeyboardButton(text="💬 ПРОДОЛЖИТЬ ДИАЛОГ", callback_data=f"neuro_reply_{user_id}_{chat['buyer_id']}")],
+            [InlineKeyboardButton(text="❌ ОТКЛОНИТЬ", callback_data=f"neuro_decline_{user_id}_{chat['buyer_id']}")],
         ])
-        await send_message_clean(
+        await send_clean(
             user_id,
             f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {ai_msg}\n\n"
-            f"<i>Раунд {chat['round']}/{chat['max_rounds']} | Его предложение: {chat['offer']}₽</i>\n\n"
-            f"Напиши ответ или нажми кнопку:",
+            f"<i>Раунд {chat['round']}/{chat['max_rounds']} | Предложение: {chat['offer']}₽</i>\nНапиши ответ или жми кнопку:",
             reply_markup=kb
         )
 
 @dp.callback_query(F.data.startswith("neuro_accept_"))
-async def neuro_accept_callback(callback: CallbackQuery):
+async def neuro_accept_cb(callback: CallbackQuery):
     parts = callback.data.split("_")
-    user_id = int(parts[2])
-    buyer_id = int(parts[3])
+    user_id = int(parts[2]); buyer_id = int(parts[3])
     chat_key = f"{user_id}_{buyer_id}"
-    
-    if chat_key not in active_chats or active_chats[chat_key]["finished"]:
-        return await callback.answer("Диалог завершён")
-    
-    chat = active_chats[chat_key]
-    chat["history"].append({"role": "user", "content": f"Согласен на {chat['offer']}₽"})
-    chat["finished"] = True
-    
-    await complete_neuro_sale(user_id, buyer_id, callback.message)
+    if chat_key in active_chats and not active_chats[chat_key]["finished"]:
+        active_chats[chat_key]["history"].append({"role": "user", "content": f"Согласен на {active_chats[chat_key]['offer']}₽"})
+        active_chats[chat_key]["finished"] = True
+        await complete_neuro_sale(user_id, buyer_id, callback.message)
     await callback.answer("Продано!")
 
 @dp.callback_query(F.data.startswith("neuro_decline_"))
-async def neuro_decline_callback(callback: CallbackQuery):
+async def neuro_decline_cb(callback: CallbackQuery):
     parts = callback.data.split("_")
-    user_id = int(parts[2])
-    buyer_id = int(parts[3])
+    user_id = int(parts[2]); buyer_id = int(parts[3])
     chat_key = f"{user_id}_{buyer_id}"
-    
     if chat_key in active_chats:
         active_chats[chat_key]["finished"] = True
-        if chat_key in remind_timers:
-            remind_timers[chat_key].cancel()
-    
-    await send_message_clean(user_id, "❌ Вы отказались. Клиент ушёл.")
+        if chat_key in remind_timers: remind_timers[chat_key].cancel()
+    await send_clean(user_id, "❌ Вы отказались. Клиент ушёл.")
     await callback.answer()
 
-# ==================== ОСТАЛЬНЫЕ CALLBACK-ОБРАБОТЧИКИ ====================
+# ==================== CALLBACK-ОБРАБОТЧИКИ ====================
 @dp.callback_query(F.data == "start_new_game")
 async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
@@ -786,10 +735,10 @@ async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     event = generate_daily_event(); p["current_event"] = event
     if event: apply_market_event(p, event)
     await state.set_state(GameState.playing)
-    et = f"\n\n{event['text']}" if event else ""
+    et = f"\n\n📰 {event['text']}" if event else ""
     vip_txt = "\n👑 VIP!" if is_vip(user_id) else ""
     demand = format_demand(p)
-    await edit_message_clean(callback.message, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n\n🌟 День 1\n💰 5 000₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nЦель: 50 000₽!", reply_markup=get_main_keyboard())
+    await edit_clean(callback.message, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n\n🌟 День 1 | 💰 5 000₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\n👇 1. Закупись → 2. Инвентарь → 3. Опубликуй!", reply_markup=get_main_keyboard())
     await callback.answer("🚀")
 
 @dp.callback_query(F.data == "continue_game")
@@ -801,84 +750,81 @@ async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
     et = f"\n\n{p['current_event']['text']}" if p.get("current_event") else ""
     vip_txt = "\n👑 VIP" if is_vip(user_id) else ""
     demand = format_demand(p)
-    await edit_message_clean(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=get_main_keyboard())
+    await edit_clean(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери действие:", reply_markup=get_main_keyboard())
     await callback.answer("🎮")
 
 @dp.callback_query(F.data == "restart_game_confirm")
-async def restart_game_confirm_btn(callback: CallbackQuery):
+async def restart_confirm(callback: CallbackQuery):
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="⚠️ ДА, СБРОСИТЬ", callback_data="restart_game_yes")],
         [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")],
     ])
-    await edit_message_clean(callback.message, "⚠️ <b>СБРОСИТЬ?</b>\n\nБаланс и инвентарь потеряются!\nРепутация и рефералы сохранятся.", reply_markup=kb)
+    await edit_clean(callback.message, "⚠️ <b>СБРОСИТЬ ПРОГРЕСС?</b>\n\nБаланс и инвентарь потеряются. Репутация сохранится.", reply_markup=kb)
 
 @dp.callback_query(F.data == "restart_game_yes")
-async def restart_game_yes_btn(callback: CallbackQuery, state: FSMContext):
+async def restart_yes(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     if user_id in players: del players[user_id]
     await start_new_game_btn(callback, state)
 
 @dp.callback_query(F.data == "how_to_play")
-async def how_to_play_btn(callback: CallbackQuery):
-    text = (
+async def how_to_play(callback: CallbackQuery):
+    txt = (
         "📖 <b>КАК ИГРАТЬ:</b>\n\n"
-        "1️⃣ <b>Закупка</b> — купи у поставщиков\n"
-        "2️⃣ <b>Публикация</b> — жми «📱 Опубликовать»\n"
-        "3️⃣ <b>Чат</b> — жми «💬 ОТВЕТИТЬ» и пиши ответ\n"
-        "   • Торгуйся словами как с живым!\n"
-        "   • Убеждай, предлагай цену\n"
-        "   • Характер не виден — узнавай по общению\n"
-        "4️⃣ <b>Репутация</b> — растёт от продаж\n"
-        "5️⃣ <b>Рефералы</b> — /ref, +500₽ за друга"
+        "<b>1️⃣ ЗАКУПКА</b> — жми 🏭 ЗАКУПИТЬСЯ\n"
+        "• Выбирай поставщика (рейтинг = надёжность)\n"
+        "• Смотри на СПРОС — покупай что в тренде 🔥\n\n"
+        "<b>2️⃣ ПУБЛИКАЦИЯ</b> — жми 📦 ИНВЕНТАРЬ\n"
+        "• Нажми на купленный товар\n"
+        "• Он опубликуется на Авито\n\n"
+        "<b>3️⃣ ПРОДАЖА</b> — жди 1-3 минуты\n"
+        "• Придут покупатели (1-3 чел.)\n"
+        "• Жми 💬 ОТВЕТИТЬ и пиши ответ\n"
+        "• Торгуйся, убеждай — как в жизни!\n"
+        "• Они напомнят о себе если не отвечаешь\n\n"
+        "<b>4️⃣ РЕПУТАЦИЯ</b> — растёт от продаж\n"
+        "• Выше репутация = лучше цены\n\n"
+        "<b>5️⃣ РЕФЕРАЛЫ</b> — /ref\n"
+        "• +500₽ за друга\n"
+        "• Топ-3 → VIP-поставщик 👑"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")],
-        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
+        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_start")],
     ])
-    await edit_message_clean(callback.message, text, reply_markup=kb)
+    await edit_clean(callback.message, txt, reply_markup=kb)
 
 @dp.callback_query(F.data == "ref_info")
-async def ref_info_btn(callback: CallbackQuery):
+async def ref_info(callback: CallbackQuery):
     user_id = callback.from_user.id
     link = get_ref_link(user_id)
-    text = f"🔗 <b>РЕФЕРАЛЫ:</b>\n\n<code>{link}</code>\n\n💰 +500₽ за друга\n👑 Топ-3 — VIP"
+    txt = f"🔗 <b>РЕФЕРАЛЫ:</b>\n\nТвоя ссылка:\n<code>{link}</code>\n\n💰 +500₽ за друга\n👑 Топ-3 → VIP\n\nОтправь другу — он нажмёт /start и ты получишь бонус!"
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")],
-        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
+        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_start")],
     ])
-    await edit_message_clean(callback.message, text, reply_markup=kb)
+    await edit_clean(callback.message, txt, reply_markup=kb)
 
-@dp.callback_query(F.data == "vip_info")
-async def vip_info_btn(callback: CallbackQuery):
-    text = "👑 <b>VIP:</b>\n\nТоп-3 реферера — PremiumStock!\n🌟 Цены +5%\n🛡️ 0% кидалова\n⭐ Рейтинг 10/10"
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")],
-        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
-    ])
-    await edit_message_clean(callback.message, text, reply_markup=kb)
-
-@dp.callback_query(F.data == "back_to_welcome")
-async def back_to_welcome_btn(callback: CallbackQuery):
+@dp.callback_query(F.data == "back_to_start")
+async def back_to_start(callback: CallbackQuery):
     user_id = callback.from_user.id
     p = players.get(user_id)
     if p and p.get("day", 0) > 0:
-        await show_welcome_back(callback.message, user_id, p)
+        rep = get_user_rep(user_id)
+        level = get_rep_level(rep["score"])
+        vip = is_vip(user_id)
+        txt = f"👋 <b>С ВОЗВРАЩЕНИЕМ!</b>\n\n📅 День {p['day']} | 💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])} | 📋 Продано: {p['items_sold']}\n⭐ Репутация: {level}\n{'👑 VIP!' if vip else ''}"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
+            [InlineKeyboardButton(text="🔄 НАЧАТЬ ЗАНОВО", callback_data="restart_game_confirm")],
+        ])
+        await edit_clean(callback.message, txt, reply_markup=kb)
     else:
-        await show_welcome_new(callback.message, user_id)
-
-@dp.callback_query(F.data == "action_stats_menu")
-async def stats_menu_btn(callback: CallbackQuery):
-    user_id = callback.from_user.id
-    p = players.get(user_id)
-    if not p: return await callback.answer("Нет игры")
-    ref_n = len(referral_data[str(user_id)]["invited"])
-    vip = "👑 ДА" if is_vip(user_id) else "❌ Нет"
-    text = f"📊 <b>СТАТИСТИКА:</b>\n\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Заработано: {p['total_earned']}₽\n👥 Рефералы: {ref_n}\n👑 VIP: {vip}"
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
-        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="back_to_welcome")],
-    ])
-    await edit_message_clean(callback.message, text, reply_markup=kb)
+        txt = "🎮 <b>RESELL TYCOON</b>\n\nГотов начать?\n\n1. Закупка → 2. Инвентарь → 3. Опубликовать → 4. Общаться с покупателями!"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        ])
+        await edit_clean(callback.message, txt, reply_markup=kb)
 
 @dp.callback_query(F.data == "action_buy", StateFilter(GameState.playing))
 async def show_suppliers(callback: CallbackQuery):
@@ -887,10 +833,10 @@ async def show_suppliers(callback: CallbackQuery):
     if is_vip(user_id): supps.insert(0, VIP_SUPPLIER)
     kb = []
     for s in supps:
-        kb.append([InlineKeyboardButton(text=f"{s['emoji']} {s['name']} | ⭐{s['rating']} | Кид:{s['scam_chance']}%", callback_data=f"supplier_{supps.index(s)}")])
-    kb.append([InlineKeyboardButton(text="🔙 Меню", callback_data="action_back")])
-    vip_txt = "\n👑 VIP доступен!" if is_vip(user_id) else ""
-    await edit_message_clean(callback.message, f"🏭 <b>ПОСТАВЩИКИ:</b>{vip_txt}\nРейтинг ↑ = надёжнее.", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+        kb.append([InlineKeyboardButton(text=f"{s['emoji']} {s['name']} | ⭐{s['rating']}/10 | Кид:{s['scam_chance']}%", callback_data=f"supplier_{supps.index(s)}")])
+    kb.append([InlineKeyboardButton(text="🔙 В МЕНЮ", callback_data="action_back")])
+    vip_txt = "\n👑 VIP-поставщик доступен!" if is_vip(user_id) else ""
+    await edit_clean(callback.message, f"🏭 <b>ВЫБЕРИ ПОСТАВЩИКА:</b>{vip_txt}\n\n⭐ Рейтинг ↑ = надёжнее, но дороже\n⚠️ Шанс кидка — могут взять деньги и пропасть!", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("supplier_"), StateFilter(GameState.playing))
 async def show_supplier_items(callback: CallbackQuery, state: FSMContext):
@@ -900,14 +846,15 @@ async def show_supplier_items(callback: CallbackQuery, state: FSMContext):
     if is_vip(user_id): supps.insert(0, VIP_SUPPLIER)
     sup = supps[idx]
     items = random.sample(BASE_ITEMS, min(4, len(BASE_ITEMS)))
+    p = get_player(user_id)
     kb = []
     for i, it in enumerate(items):
-        kb.append([InlineKeyboardButton(text=f"{it['cat']} {it['name']} — {get_item_price(it['base_price'], sup)}₽", callback_data=f"buyitem_{i}")])
-    kb.append([InlineKeyboardButton(text="🔄 Обновить", callback_data=f"supplier_{idx}")])
-    kb.append([InlineKeyboardButton(text="🔙 Поставщики", callback_data="action_buy")])
-    kb.append([InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")])
+        price = int(get_item_price(it["base_price"], sup) * p["rep_mult"]["supplier_discount"])
+        kb.append([InlineKeyboardButton(text=f"{it['cat']} {it['name']} — {price}₽ (рынок ~{get_market_price(it['base_price'], p['market_demand'].get(it['cat'], 1.0))}₽)", callback_data=f"buyitem_{i}")])
+    kb.append([InlineKeyboardButton(text="🔄 ОБНОВИТЬ ТОВАРЫ", callback_data=f"supplier_{idx}")])
+    kb.append([InlineKeyboardButton(text="🔙 К ПОСТАВЩИКАМ", callback_data="action_buy")])
     await state.update_data(current_supplier_idx=idx, supplier_items=items)
-    await edit_message_clean(callback.message, f"{sup['emoji']} <b>{sup['name']}</b>\n⭐{sup['rating']}/10 | ⚠️Кид:{sup['scam_chance']}%\nВыбери:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await edit_clean(callback.message, f"{sup['emoji']} <b>{sup['name']}</b>\n⭐ Рейтинг: {sup['rating']}/10\n⚠️ Шанс кидка: {sup['scam_chance']}%\n\nВыбери товар (цена закупа → рынок):", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("buyitem_"), StateFilter(GameState.playing))
 async def buy_item(callback: CallbackQuery, state: FSMContext):
@@ -923,13 +870,13 @@ async def buy_item(callback: CallbackQuery, state: FSMContext):
     item = items[item_idx]
     p = get_player(user_id)
     price = int(get_item_price(item["base_price"], sup) * p["rep_mult"]["supplier_discount"])
-    if p["balance"] < price: return await callback.answer("❌ Мало денег!")
+    if p["balance"] < price: return await callback.answer("❌ Недостаточно денег!")
     eff_scam = int(sup["scam_chance"] * p["rep_mult"]["scam_reduce"])
     if random.randint(1, 100) <= eff_scam:
         p["balance"] -= price; p["total_spent"] += price; p["scam_times"] += 1
         p["reputation"] = max(0, p["reputation"] - 5)
         add_rep(user_id, -5, f"Кинул {sup['name']}")
-        await edit_message_clean(callback.message, f"💀 <b>КИНУЛИ!</b>\n-{price}₽ | Баланс: {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")]]))
+        await edit_clean(callback.message, f"💀 <b>КИНУЛИ!</b>\n{sup['name']} пропал с деньгами.\nПотеряно: {price}₽\n💼 Баланс: {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
         return
     p["balance"] -= price; p["total_spent"] += price
     demand = p["market_demand"].get(item["cat"], 1.0)
@@ -938,22 +885,47 @@ async def buy_item(callback: CallbackQuery, state: FSMContext):
     if sup["rating"] >= 8: add_rep(user_id, 1, "Надёжный поставщик")
     check_achievements(user_id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"], "balance": p["balance"]})
     save_json(REPUTATION_FILE, rep_data)
-    await edit_message_clean(callback.message, f"✅ <b>КУПЛЕНО!</b>\n📦 {item['cat']} {item['name']}\n💰 Закуп: {price}₽\n📊 Рынок: ~{market_price}₽\n💼 Баланс: {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 Ещё", callback_data=f"supplier_{sup_idx}")], [InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")]]))
+    await edit_clean(
+        callback.message,
+        f"✅ <b>ТОВАР КУПЛЕН!</b>\n\n"
+        f"📦 {item['cat']} {item['name']}\n"
+        f"💰 Закуп: {price}₽ | 📊 Рынок: ~{market_price}₽\n"
+        f"💼 Баланс: {p['balance']}₽\n\n"
+        f"👇 <b>ЧТО ДАЛЬШЕ?</b>\n"
+        f"👉 Зайди в 📦 <b>ИНВЕНТАРЬ</b>\n"
+        f"👉 Нажми на товар → <b>Опубликовать</b>\n"
+        f"👉 Жди покупателей и общайся!",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📦 ПЕРЕЙТИ В ИНВЕНТАРЬ", callback_data="action_inventory")],
+            [InlineKeyboardButton(text="🔄 Купить ещё", callback_data=f"supplier_{sup_idx}")],
+            [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+        ])
+    )
 
 @dp.callback_query(F.data == "action_inventory", StateFilter(GameState.playing))
 async def show_inventory(callback: CallbackQuery):
     user_id = callback.from_user.id
     p = get_player(user_id)
     if not p["inventory"]:
-        return await edit_message_clean(callback.message, "📦 Инвентарь пуст.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏭 Закупиться", callback_data="action_buy")], [InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")]]))
+        return await edit_clean(callback.message,
+            "📦 <b>ИНВЕНТАРЬ ПУСТ</b>\n\nТут будут твои товары.\nСначала закупись у поставщиков! 👇",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🏭 ЗАКУПИТЬСЯ", callback_data="action_buy")],
+                [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+            ]))
     kb = []
     for i, it in enumerate(p["inventory"]):
-        status = "📢 Опубликован" if user_id in published_items and published_items[user_id] and published_items[user_id]["item"]["name"] == it["name"] else "📱 Опубликовать"
-        kb.append([InlineKeyboardButton(text=f"{it['name']} | Закуп:{it['buy_price']}₽ | ~{it['market_price']}₽ | {status}", callback_data=f"inventory_{i}")])
-    kb.append([InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")])
-    txt = "📦 <b>ИНВЕНТАРЬ:</b>\n" + "\n".join(f"{i+1}. {it['name']} | Закуп: {it['buy_price']}₽ | Рынок: ~{it['market_price']}₽" for i, it in enumerate(p["inventory"]))
-    txt += "\n\nНажми на товар, чтобы опубликовать!"
-    await edit_message_clean(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+        pub = user_id in published_items and published_items[user_id] and published_items[user_id]["item"]["name"] == it["name"]
+        status = "📢 ОПУБЛИКОВАН (жди)" if pub else "📱 ОПУБЛИКОВАТЬ НА АВИТО"
+        kb.append([InlineKeyboardButton(text=f"{it['name']} | Закуп: {it['buy_price']}₽ | Рынок: ~{it['market_price']}₽ | {status}", callback_data=f"inventory_{i}")])
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    txt = "📦 <b>ТВОЙ ИНВЕНТАРЬ:</b>\n\n"
+    for i, it in enumerate(p["inventory"]):
+        pub = user_id in published_items and published_items[user_id] and published_items[user_id]["item"]["name"] == it["name"]
+        s = "📢 Опубликован" if pub else "📱 Нажми чтобы опубликовать"
+        txt += f"{i+1}. {it['name']}\n   Закуп: {it['buy_price']}₽ | Рынок: ~{it['market_price']}₽ | {s}\n\n"
+    txt += "👇 <b>Нажми на товар чтобы опубликовать его на Авито и начать продавать!</b>"
+    await edit_clean(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("inventory_"), StateFilter(GameState.playing))
 async def publish_item(callback: CallbackQuery):
@@ -965,9 +937,20 @@ async def publish_item(callback: CallbackQuery):
     if user_id in published_items and published_items[user_id] and published_items[user_id]["item"]["name"] == item["name"]:
         return await callback.answer("Уже опубликован!")
     published_items[user_id] = {"item": item.copy(), "buyers_list": []}
-    await edit_message_clean(callback.message, f"📢 <b>ОПУБЛИКОВАНО!</b>\n📦 {item['name']}\n💰 {item['market_price']}₽\n\n⏳ Жди покупателей 1-3 мин...\nОни напишут в чат!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="📦 Инвентарь", callback_data="action_inventory")], [InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")]]))
+    await edit_clean(callback.message,
+        f"📢 <b>ТОВАР ОПУБЛИКОВАН НА АВИТО!</b>\n\n"
+        f"📦 {item['name']}\n"
+        f"💰 Цена: {item['market_price']}₽\n\n"
+        f"⏳ <b>Жди 1-3 минуты</b> — придут покупатели!\n"
+        f"💬 Они напишут тебе в этот чат.\n"
+        f"📱 Отвечай им, торгуйся, договаривайся!\n\n"
+        f"<i>Покупатели будут напоминать о себе если не отвечать.</i>",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📦 В ИНВЕНТАРЬ", callback_data="action_inventory")],
+            [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+        ]))
     asyncio.create_task(spawn_buyers(user_id))
-    await callback.answer("Опубликовано!")
+    await callback.answer("Опубликовано! Жди покупателей 📱")
 
 @dp.callback_query(F.data == "action_stats", StateFilter(GameState.playing))
 async def show_stats(callback: CallbackQuery):
@@ -975,32 +958,41 @@ async def show_stats(callback: CallbackQuery):
     p = get_player(user_id)
     ref_n = len(referral_data[str(user_id)]["invited"])
     vip = "👑 ДА" if is_vip(user_id) else "❌ Нет"
-    await edit_message_clean(callback.message, f"📊 <b>СТАТИСТИКА:</b>\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Заработано: {p['total_earned']}₽\n👥 Рефералы: {ref_n}\n👑 VIP: {vip}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")]]))
+    await edit_clean(callback.message,
+        f"📊 <b>СТАТИСТИКА:</b>\n\n"
+        f"💰 Баланс: {p['balance']}₽\n"
+        f"📦 Товаров: {len(p['inventory'])}\n"
+        f"📅 День: {p['day']}\n"
+        f"📋 Продано: {p['items_sold']}\n"
+        f"💸 Прибыль: {p['total_earned']}₽\n"
+        f"🛒 Потрачено: {p['total_spent']}₽\n"
+        f"👥 Рефералы: {ref_n}\n"
+        f"👑 VIP: {vip}",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
-@dp.callback_query(F.data == "action_rep")
-async def rep_btn(callback: CallbackQuery):
+@dp.callback_query(F.data == "action_rep_menu")
+async def rep_menu_btn(callback: CallbackQuery):
     await rep_cmd(callback.message)
 
-@dp.callback_query(F.data == "action_ref")
-async def ref_btn(callback: CallbackQuery):
+@dp.callback_query(F.data == "action_ref_menu")
+async def ref_menu_btn(callback: CallbackQuery):
     await ref_cmd(callback.message)
 
 @dp.callback_query(F.data == "action_demand", StateFilter(GameState.playing))
 async def show_demand(callback: CallbackQuery):
     user_id = callback.from_user.id
     p = get_player(user_id)
-    demand_lines = []
-    tips = []
+    lines = []; tips = []
     for cat, mult in p["market_demand"].items():
-        if mult >= 1.5: emoji = "🔥"; status = "Ажиотаж!"; tips.append(f"💡 {cat} в хайпе — продавай дороже!")
-        elif mult >= 1.2: emoji = "📈"; status = "Растёт"
-        elif mult >= 0.8: emoji = "➡️"; status = "Стабильно"
-        elif mult >= 0.5: emoji = "📉"; status = "Падает"; tips.append(f"⚠️ {cat} падает — покупай дёшево")
-        else: emoji = "💀"; status = "Мёртвый"; tips.append(f"🚫 {cat} не покупай")
-        demand_lines.append(f"{emoji} <b>{cat}</b>: x{mult:.1f} ({status})")
-    event_text = f"\n\n📰 <b>Событие:</b>\n{p['current_event']['text']}" if p.get("current_event") else ""
-    tips_text = "\n\n".join(tips) if tips else ""
-    await edit_message_clean(callback.message, f"📊 <b>РЫНОК — День {p['day']}</b>\n\n" + "\n".join(demand_lines) + event_text + (f"\n\n💡 <b>Советы:</b>\n{tips_text}" if tips_text else ""), reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 Меню", callback_data="action_back")]]))
+        if mult >= 1.5: emoji = "🔥"; s = "Ажиотаж!"; tips.append(f"💡 {cat}: продавай дороже!")
+        elif mult >= 1.2: emoji = "📈"; s = "Растёт"
+        elif mult >= 0.8: emoji = "➡️"; s = "Стабильно"
+        elif mult >= 0.5: emoji = "📉"; s = "Падает"; tips.append(f"⚠️ {cat}: покупай дёшево")
+        else: emoji = "💀"; s = "Мёртвый"; tips.append(f"🚫 {cat}: не покупай")
+        lines.append(f"{emoji} <b>{cat}</b>: x{mult:.1f} ({s})")
+    et = f"\n\n📰 <b>Событие:</b>\n{p['current_event']['text']}" if p.get("current_event") else ""
+    tt = "\n\n".join(tips) if tips else ""
+    await edit_clean(callback.message, f"📊 <b>РЫНОК — День {p['day']}</b>\n\n"+"\n".join(lines)+et+(f"\n\n💡 <b>Советы:</b>\n{tt}" if tt else ""), reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_nextday", StateFilter(GameState.playing))
 async def next_day(callback: CallbackQuery):
@@ -1014,25 +1006,24 @@ async def next_day(callback: CallbackQuery):
     et = f"\n\n📰 {event['text']}" if event else ""
     if p["inventory"] and random.random() < 0.2:
         for it in p["inventory"]: it["market_price"] = int(it["market_price"] * random.uniform(0.7, 0.95))
-        et += "\n⚠️ Товары залежались — потеря в цене."
-    vip_txt = "\n👑 VIP" if is_vip(user_id) else ""
+        et += "\n⚠️ Залежавшиеся товары подешевели."
     if user_id in published_items: published_items[user_id] = None
     check_achievements(user_id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"], "balance": p["balance"]})
     save_json(REPUTATION_FILE, rep_data)
     demand = format_demand(p)
-    await edit_message_clean(callback.message, f"{summary}\n\n☀️ <b>ДЕНЬ {p['day']}</b>{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=get_main_keyboard())
+    await edit_clean(callback.message, f"{summary}\n\n☀️ <b>ДЕНЬ {p['day']}</b>{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=get_main_keyboard())
 
 @dp.callback_query(F.data == "action_end", StateFilter(GameState.playing))
 async def end_game(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     p = get_player(user_id)
     await state.clear()
-    if p["balance"] >= 50000: result = "🏆 <b>ПОБЕДА!</b>"
-    elif p["balance"] <= 0: result = "💀 <b>БАНКРОТ!</b>"
-    else: result = "🎮 Игра окончена."
+    if p["balance"] >= 50000: r = "🏆 <b>ПОБЕДА!</b> Ты заработал 50 000₽!"
+    elif p["balance"] <= 0: r = "💀 <b>БАНКРОТ!</b>"
+    else: r = "🎮 Игра окончена."
     check_achievements(user_id, {"items_sold": p["items_sold"], "total_earned": p["total_earned"], "balance": p["balance"]})
     save_json(REPUTATION_FILE, rep_data)
-    await edit_message_clean(callback.message, f"{result}\n💰 {p['balance']}₽\n📦 Продаж: {p['items_sold']}\n\nРеальные продажи → {CHANNEL_LINK}\n/play — ещё раз", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 Ещё раз", callback_data="restart_game")]]))
+    await edit_clean(callback.message, f"{r}\n\n💰 {p['balance']}₽ | 📋 Продаж: {p['items_sold']}\n\n👉 {CHANNEL_LINK} — реальные продажи!\n/play — ещё раз", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")]]))
 
 @dp.callback_query(F.data == "restart_game")
 async def restart_game(callback: CallbackQuery):
@@ -1047,7 +1038,7 @@ async def back_to_menu(callback: CallbackQuery):
     et = f"\n\n{p['current_event']['text']}" if p.get("current_event") else ""
     vip_txt = "\n👑 VIP" if is_vip(user_id) else ""
     demand = format_demand(p)
-    await edit_message_clean(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери:", reply_markup=get_main_keyboard())
+    await edit_clean(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽{vip_txt}{et}\n\n📊 <b>СПРОС:</b>\n{demand}\n\nВыбери действие:", reply_markup=get_main_keyboard())
 
 # ==================== ЗАПУСК ====================
 async def main():
