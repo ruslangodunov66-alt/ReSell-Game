@@ -744,13 +744,22 @@ async def show_avatar_options(callback: CallbackQuery):
 @dp.callback_query(F.data.startswith("set_avatar_"))
 async def set_avatar_part(callback: CallbackQuery):
     user_id = callback.from_user.id
+    # set_avatar_face_smile → parts = ["set", "avatar", "face", "smile"]
     parts = callback.data.split("_")
-    part_key = parts[2]
-    opt_key = "_".join(parts[3:])
     
-    update_avatar_part(user_id, part_key, opt_key)
-    await callback.answer("✅ Обновлено!")
-    await show_avatar_options(callback)
+    # part_key = "face", opt_key = "smile"
+    # Для ключей с несколькими словами: set_avatar_accessory_sunglasses
+    # parts = ["set", "avatar", "accessory", "sunglasses"] или ["set", "avatar", "accessory", "dark", "glasses"]
+    
+    if len(parts) >= 4:
+        part_key = parts[2]  # "face", "hair", "clothes", "accessory", "background"
+        opt_key = "_".join(parts[3:])  # "smile", "dark_glasses" и т.д.
+        
+        update_avatar_part(user_id, part_key, opt_key)
+        await callback.answer("✅ Обновлено!")
+        await show_avatar_options(callback)
+    else:
+        await callback.answer("❌ Ошибка данных")
 
 # ==================== ПОДРАБОТКИ ====================
 # 1. Сначала функция анимации
