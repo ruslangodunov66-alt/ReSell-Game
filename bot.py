@@ -629,7 +629,7 @@ async def show_chats(callback: CallbackQuery):
     for key, chat in al:
         txt += f"👤 #{chat['buyer_id']} | {chat['item']} | {chat['offer']}₽\n"
         kb.append([InlineKeyboardButton(text=f"💬 Ответить #{chat['buyer_id']}", callback_data=f"open_chat_{user_id}_{chat['buyer_id']}")])
-   kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="menu_page_1")])
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="menu_page_1")])
     await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
