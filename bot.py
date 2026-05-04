@@ -19,7 +19,7 @@ from openai import OpenAI
 # ==================== КОНФИГ ====================
 API_TOKEN = '8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4'
 CHANNEL_LINK = '@vintagedrop61'
-BOT_USERNAME = 'R-Game'
+BOT_USERNAME = 'buygame61_bot'
 DEEPSEEK_API_KEY = "sk-8d6e9d7c39c84ec6a0ecba379674346d"
 ADMIN_ID = 1475910449  # ← ЗАМЕНИ НА СВОЙ TELEGRAM ID (узнать можно через @userinfobot)
 
@@ -462,41 +462,41 @@ async def start_cmd(message: types.Message):
         ref_code = args[1][4:]
         for uid in referral_data:
             if gen_ref(uid) == ref_code and uid != str(user_id):
-                referral_data[uid]["invited"].append(user_id)
-                save_json(REFERRAL_FILE, dict(referral_data))
-                if int(uid) in players: players[int(uid)]["balance"] += 500
-                try: await bot.send_message(int(uid), "🎉 Новый реферал! +500₽", parse_mode="HTML")
-                except: pass
+                if user_id not in referral_data[uid]["invited"]:
+                    referral_data[uid]["invited"].append(user_id)
+                    save_json(REFERRAL_FILE, dict(referral_data))
+                    
+                    if int(uid) in players:
+                        players[int(uid)]["balance"] += 10000
+                        add_rep(int(uid), 5)
+                    
+                    try:
+                        await bot.send_message(
+                            int(uid),
+                            "🎉 <b>НОВЫЙ РЕФЕРАЛ!</b>\n\n"
+                            "По твоей ссылке новый игрок!\n"
+                            "💰 Ты получил: +10 000₽\n"
+                            "⭐ Репутация: +5\n"
+                            f"👥 Всего: {len(referral_data[uid]['invited'])} чел.",
+                            parse_mode="HTML"
+                        )
+                    except: pass
+                    
+                    await del_user_msgs(user_id)
+                    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+                    await send_msg(
+                        user_id,
+                        "🎁 <b>РЕФЕРАЛЬНЫЙ БОНУС!</b>\n\n"
+                        "Ты перешёл по ссылке и получишь +5 000₽ при старте!\n\n"
+                        f"Твой скин: {skin['emoji']} {skin['name']}\n\n"
+                        "<i>Приглашай друзей — 10 000₽ за каждого!</i>",
+                        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+                            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+                        ])
+                    )
+                    return
                 break
-    await del_user_msgs(user_id)
-    # Выдаём creator скин админу
-    if user_id == ADMIN_ID and get_player_skin(user_id) != "creator":
-        buy_skin(user_id, "creator")
-    for skin in check_rep_skins(user_id):
-        buy_skin(user_id, skin["id"])
-        await send_msg(user_id, f"🎉 <b>НОВЫЙ СКИН!</b>\n{skin['emoji']} {skin['name']} — за репутацию {rep_level(get_rep(user_id)['score'])}!")
-    p = players.get(user_id)
-    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    if p and p.get("day", 0) > 0:
-        txt = f"👋 <b>С ВОЗВРАЩЕНИЕМ!</b>\n📅 День {p['day']} | 💰 {p['balance']}₽\n👤 Скин: {skin['emoji']} {skin['name']}"
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
-            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
-            [InlineKeyboardButton(text="🔄 ЗАНОВО", callback_data="restart_game_confirm")],
-        ])
-    else:
-        txt = f"🎮 <b>RESELL TYCOON</b>\n\nТвой скин: {skin['emoji']} {skin['name']}\n\nРедкие товары • Скины • Аукцион\nЛидеры • Магазин • Подработки"
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
-            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
-        ])
-    if skin.get("image_url"):
-        try:
-            msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=kb)
-            last_bot_message[user_id] = msg.message_id
-        except: await send_msg(user_id, txt, reply_markup=kb)
-    else: await send_msg(user_id, txt, reply_markup=kb)
-
 # ==================== АДМИН-КОМАНДЫ ====================
 @dp.message(Command('admin'))
 async def admin_cmd(message: types.Message):
