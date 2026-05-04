@@ -497,6 +497,35 @@ async def start_cmd(message: types.Message):
                     )
                     return
                 break
+    # Стандартное приветствие для всех
+    await del_user_msgs(user_id)
+    if user_id == ADMIN_ID and get_player_skin(user_id) != "creator":
+        buy_skin(user_id, "creator")
+    for skin in check_rep_skins(user_id):
+        buy_skin(user_id, skin["id"])
+        await send_msg(user_id, f"🎉 <b>НОВЫЙ СКИН!</b>\n{skin['emoji']} {skin['name']} — за репутацию {rep_level(get_rep(user_id)['score'])}!")
+    p = players.get(user_id)
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    if p and p.get("day", 0) > 0:
+        txt = f"👋 <b>С ВОЗВРАЩЕНИЕМ!</b>\n📅 День {p['day']} | 💰 {p['balance']}₽\n👤 Скин: {skin['emoji']} {skin['name']}"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
+            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+            [InlineKeyboardButton(text="🔄 ЗАНОВО", callback_data="restart_game_confirm")],
+        ])
+    else:
+        txt = f"🎮 <b>RESELL TYCOON</b>\n\nТвой скин: {skin['emoji']} {skin['name']}\n\nРедкие товары • Скины • Аукцион\nЛидеры • Магазин • Подработки"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+        ])
+    if skin.get("image_url"):
+        try:
+            msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=kb)
+            last_bot_message[user_id] = msg.message_id
+        except: await send_msg(user_id, txt, reply_markup=kb)
+    else: await send_msg(user_id, txt, reply_markup=kb)
+
 # ==================== АДМИН-КОМАНДЫ ====================
 @dp.message(Command('admin'))
 async def admin_cmd(message: types.Message):
