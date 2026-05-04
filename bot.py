@@ -45,7 +45,7 @@ SKINS = [
     {"id": "gold", "name": "Золотой барыга", "price": 150000, "rarity": "legendary", "rep_required": 0, "emoji": "🥇", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDJmn4w8_mwnpx1Ms388hYBj68KUW2AAMZaxvG28BLntt7LmTTjtwBAAMCAAN5AAM7BA"},
 ]
 
-# ==================== ОБЩИЕ ТОВАРЫ У ПОСТАВЩИКОВ ====================
+# ==================== ОБЩИЕ ТОВАРЫ ====================
 SUPPLIER_ITEM_RARITIES = {
     "common": {"name": "Обычный", "color": "⬜", "price_mult_min": 0.8, "price_mult_max": 1.3, "chance": 55},
     "rare": {"name": "Редкий", "color": "🟦", "price_mult_min": 1.5, "price_mult_max": 2.5, "chance": 25},
@@ -77,6 +77,7 @@ def generate_supplier_items():
         })
     supplier_stock["items"] = items
     supplier_stock["last_update"] = time_module.time()
+    save_json(SUPPLIER_ITEMS_FILE, supplier_stock)
 
 def check_supplier_update():
     if time_module.time() - supplier_stock.get("last_update", 0) >= 300 or not supplier_stock.get("items"):
@@ -84,6 +85,7 @@ def check_supplier_update():
         return True
     if supplier_stock.get("items"):
         supplier_stock["items"] = [i for i in supplier_stock["items"] if i["end_time"] > time_module.time()]
+        save_json(SUPPLIER_ITEMS_FILE, supplier_stock)
     return False
 
 # ==================== ОСТАЛЬНЫЕ ДАННЫЕ ====================
@@ -166,7 +168,8 @@ leaderboard_data = {}
 
 # ==================== ЗАГРУЗКА ====================
 def load_json(filename, default):
-    if os.path.exists(filename): return json.load(open(filename, "r", encoding="utf-8"))
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f: return json.load(f)
     return default
 
 def save_json(filename, data):
@@ -208,9 +211,12 @@ async def send_msg(user_id, text, parse_mode="HTML", reply_markup=None):
 async def edit_msg(message, text, parse_mode="HTML", reply_markup=None):
     await del_user_msgs(message.chat.id)
     try: await message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
-    except: pass
+    except Exception as e:
+        print(f"Edit error: {e}")
+        # Отправляем новое сообщение если не можем отредактировать
+        await send_msg(message.chat.id, text, parse_mode=parse_mode, reply_markup=reply_markup)
 
-# ==================== РЕФЕРАЛЫ/РЕПУТАЦИЯ ====================
+# ==================== РЕФЕРАЛЫ ====================
 def gen_ref(user_id): return hashlib.md5(str(user_id).encode()).hexdigest()[:8]
 def ref_link(user_id): return f"https://t.me/{BOT_USERNAME}?start=ref_{gen_ref(user_id)}"
 def is_vip(user_id):
@@ -218,6 +224,7 @@ def is_vip(user_id):
     s.sort(key=lambda x: x[1], reverse=True)
     return str(user_id) in [str(uid) for uid, _ in s[:3]]
 
+# ==================== РЕПУТАЦИЯ ====================
 def get_rep(user_id):
     uid = str(user_id)
     if uid not in rep_data: rep_data[uid] = {"score": 0, "total_sales": 0, "total_profit": 0, "achievements": []}
@@ -238,6 +245,7 @@ def update_leaderboard(user_id, profit, sales):
         leaderboard_data[uid] = {"total_profit": 0, "total_sales": 0, "week": week}
     leaderboard_data[uid]["total_profit"] += profit
     leaderboard_data[uid]["total_sales"] += sales
+    save_json(LEADERBOARD_FILE, leaderboard_data)
 
 def get_top_players(limit=10):
     top = [(int(uid), d["total_profit"], d["total_sales"]) for uid, d in leaderboard_data.items()]
@@ -255,7 +263,7 @@ def buy_skin(user_id, skin_id):
     if not skin: return False, "Не найден"
     if get_player_skin(user_id) == skin_id: return False, "Уже есть!"
     p = get_player(user_id)
-    if skin["price"] > 0 and p["balance"] < skin["price"]: return False, "Недостаточно денег!"
+    if skin["price"] > 0 and p["balance"] < skin["price"]: return False, "Недостаточно!"
     if skin["price"] > 0: p["balance"] -= skin["price"]
     player_skins[str(user_id)] = skin_id
     save_json(SKINS_FILE, player_skins)
@@ -268,7 +276,7 @@ def check_rep_skins(user_id):
 def get_avatar_url(avatar_config):
     return f"https://api.dicebear.com/7.x/pixel-art/svg?seed={hashlib.md5(str(avatar_config).encode()).hexdigest()[:10]}"
 
-# ==================== НЕДВИЖИМОСТЬ/МАГАЗИН ====================
+# ==================== НЕДВИЖИМОСТЬ ====================
 def get_player_house(user_id):
     uid = str(user_id)
     if uid not in player_houses: player_houses[uid] = "room"
@@ -284,6 +292,7 @@ def buy_house(user_id, house_id):
     save_json(HOUSES_FILE, player_houses)
     return True, f"✅ {house['name']}!"
 
+# ==================== МАГАЗИН ====================
 def get_player_shop(user_id):
     uid = str(user_id)
     if uid not in player_shops: player_shops[uid] = {"level": "none", "last_collect": time_module.time()}
@@ -331,10 +340,7 @@ def fmt_demand(p):
 def get_active_buyers_count(user_id):
     return sum(1 for c in active_chats.values() if c["user_id"] == user_id and not c["finished"])
 
-# ==================== МЕНЮ (ПРОСТОЕ, 2 СТРАНИЦЫ) ====================
-def menu_btn_row():
-    return [InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="action_back")]
-
+# ==================== МЕНЮ ====================
 def main_kb(page=1, user_id=None):
     if page == 1:
         bc = get_active_buyers_count(user_id) if user_id else 0
@@ -348,7 +354,7 @@ def main_kb(page=1, user_id=None):
              InlineKeyboardButton(text="📈 СПРОС", callback_data="action_demand")],
             [InlineKeyboardButton(text="⏩ ДЕНЬ ВПЕРЁД", callback_data="action_nextday")],
             [InlineKeyboardButton(text="➡️ ВКЛАДКА 2", callback_data="menu_page_2")],
-            menu_btn_row(),
+            [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
         ])
     else:
         return InlineKeyboardMarkup(inline_keyboard=[
@@ -361,7 +367,7 @@ def main_kb(page=1, user_id=None):
             [InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="action_ref_menu")],
             [InlineKeyboardButton(text="⬅️ ВКЛАДКА 1", callback_data="menu_page_1"),
              InlineKeyboardButton(text="🏁 КОНЕЦ", callback_data="action_end")],
-            menu_btn_row(),
+            [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
         ])
 
 # ==================== ОЦЕНКА ОПИСАНИЯ ====================
@@ -392,11 +398,7 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
     client = CLIENT_TYPES[client_type]
     chat_key = f"{user_id}_{buyer_id}"
     if not is_reminder:
-        rm = {"haggle_bonus": 0}
-        discount = random.uniform(*client["discount_range"]) + rm.get("haggle_bonus", 0)
-        discount = max(0.3, min(0.95, discount))
-        desc_data = item_descriptions.get(user_id, {}).get(item_name, {})
-        discount += get_quality_bonus(desc_data.get("quality", 5))["buyers_bonus"] * 0.05
+        discount = random.uniform(*client["discount_range"])
         discount = max(0.3, min(0.95, discount))
         offer = int(price * discount); offer = (offer // 100) * 100 + 99
         if offer < 100: offer = price // 2
@@ -407,15 +409,14 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
         chat = active_chats.get(chat_key)
         if chat and not chat["finished"]:
             chat["history"].append({"role": "assistant", "content": f"Жду ответ по {item_name}."})
-            await send_msg(user_id, f"🔔 <b>Покупатель #{buyer_id}</b>\n📦 {item_name}")
+            await send_msg(user_id, f"🔔 <b>Покупатель #{buyer_id}</b>")
 
 async def spawn_buyers(user_id):
     await asyncio.sleep(random.randint(60, 180))
     if user_id not in published_items or not published_items[user_id]: return
     pub = published_items[user_id]; item = pub["item"]
     if item["name"] in sold_items[user_id]: return
-    n = random.randint(1, 3) + get_quality_bonus(item_descriptions.get(user_id, {}).get(item["name"], {}).get("quality", 5))["buyers_bonus"]
-    n = max(1, min(6, n))
+    n = random.randint(1, 3)
     types = random.choices(list(CLIENT_TYPES.keys()), k=n)
     await send_msg(user_id, f"📱 <b>ОБЪЯВЛЕНИЕ!</b>\n📦 {item['name']}\n💰 {item['market_price']}₽\n👥 Пишут: <b>{n}</b> чел.")
     for i, bt in enumerate(types):
@@ -451,6 +452,8 @@ async def complete_sale(user_id, buyer_id, message=None):
 @dp.message(Command('start'))
 async def start_cmd(message: types.Message):
     user_id = message.from_user.id; args = message.text.split()
+    
+    # Обработка рефералов
     if len(args) > 1 and args[1].startswith("ref_"):
         ref_code = args[1][4:]
         for uid in referral_data:
@@ -472,20 +475,21 @@ async def start_cmd(message: types.Message):
     p = players.get(user_id)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
     
-    # Фото скина на главном меню
     if p and p.get("day", 0) > 0:
         txt = f"👋 <b>С ВОЗВРАЩЕНИЕМ!</b>\n📅 День {p['day']} | 💰 {p['balance']}₽\n👤 Скин: {skin['emoji']} {skin['name']}"
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
             [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+            [InlineKeyboardButton(text="🔄 ЗАНОВО", callback_data="restart_game_confirm")],
         ])
     else:
-        txt = f"🎮 <b>RESELL TYCOON</b>\n\nТвой скин: {skin['emoji']} {skin['name']}\n\nРедкие товары • Скины • Аукцион"
+        txt = f"🎮 <b>RESELL TYCOON</b>\n\nТвой скин: {skin['emoji']} {skin['name']}\n\nРедкие товары • Скины • Аукцион\nЛидеры • Магазин • Подработки"
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")],
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
             [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
         ])
     
+    # Отправляем фото скина
     if skin.get("image_url"):
         try:
             msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=kb)
@@ -498,12 +502,14 @@ async def start_cmd(message: types.Message):
 @dp.message(Command('play'))
 async def play_cmd(message: types.Message, state: FSMContext):
     user_id = message.from_user.id; await del_user_msgs(user_id)
-    players[user_id] = {"balance": 5000, "reputation": max(0, get_rep(user_id)["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": get_rep(user_id)["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
+    r = get_rep(user_id)
+    players[user_id] = {"balance": 5000, "reputation": max(0, r["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": r["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
     p = players[user_id]
     event = daily_event(); p["current_event"] = event
     if event: apply_event(p, event)
     await state.set_state(GameState.playing)
-    await send_msg(user_id, f"🌟 <b>ДЕНЬ 1</b>\n💰 5 000₽\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    await send_msg(user_id, f"🌟 <b>ДЕНЬ 1</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
 
 # ==================== ЧАТ С ПОКУПАТЕЛЯМИ ====================
 @dp.message(StateFilter(GameState.playing))
@@ -512,6 +518,7 @@ async def handle_message(message: types.Message, state: FSMContext):
     user_id = message.from_user.id; text = message.text.strip()
     pending_messages[user_id].append(message.message_id)
     
+    # Продажа
     for w in ["продано", "продаю", "согласен", "договорились", "по рукам", "забирай", "отдаю", "продам", "бери", "ок", "давай"]:
         if w in text.lower():
             target = None
@@ -528,6 +535,7 @@ async def handle_message(message: types.Message, state: FSMContext):
                 await complete_sale(user_id, target["buyer_id"], message)
                 return
     
+    # Диалог
     chat_key = None
     if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats:
         chat_key = active_chat_for_user[user_id]
@@ -572,13 +580,14 @@ async def handle_message(message: types.Message, state: FSMContext):
 async def show_chats(callback: CallbackQuery):
     user_id = callback.from_user.id
     active_list = [(k, c) for k, c in active_chats.items() if c["user_id"] == user_id and not c["finished"]]
-    if not active_list: return await edit_msg(callback.message, "💬 Нет диалогов.\nОпубликуй товар в 📦 Инвентаре!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[menu_btn_row()]))
+    if not active_list:
+        return await edit_msg(callback.message, "💬 Нет диалогов.\nОпубликуй товар в 📦 Инвентаре!")
     txt = f"💬 <b>ДИАЛОГИ ({len(active_list)}):</b>\n\n"
     kb = []
     for key, chat in active_list:
         txt += f"👤 #{chat['buyer_id']} | {chat['item']} | {chat['offer']}₽\n"
         kb.append([InlineKeyboardButton(text=f"💬 Ответить #{chat['buyer_id']}", callback_data=f"open_chat_{user_id}_{chat['buyer_id']}")])
-    kb.append(menu_btn_row())
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("open_chat_"))
@@ -625,7 +634,7 @@ async def show_skins_shop(callback: CallbackQuery):
             else:
                 txt += f"❌ {skin['emoji']} {skin['name']} — {skin['price']}₽\n"
     
-    kb.append(menu_btn_row())
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     
     current_skin_data = next((s for s in SKINS if s["id"] == current_skin), SKINS[0])
     if current_skin_data.get("image_url"):
@@ -662,15 +671,15 @@ async def show_suppliers(callback: CallbackQuery):
     kb = []
     p = get_player(user_id)
     
-    for item in items[:8]:  # Показываем только 8 товаров
+    for item in items[:8]:
         time_left = max(0, int(item["end_time"] - time_module.time()))
-        mins, secs = divmod(time_left, 60)
+        mins = time_left // 60
         txt += f"{item['rarity_color']} {item['name']} — {item['buy_price']}₽ ({mins}м)\n"
         if p["balance"] >= item["buy_price"]:
             kb.append([InlineKeyboardButton(text=f"{item['rarity_color']} {item['name']} — {item['buy_price']}₽", callback_data=f"buy_supplier_{item['id']}")])
     
     kb.append([InlineKeyboardButton(text="🔄 ОБНОВИТЬ", callback_data="action_buy")])
-    kb.append(menu_btn_row())
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("buy_supplier_"), StateFilter(GameState.playing))
@@ -687,10 +696,10 @@ async def buy_supplier_item(callback: CallbackQuery):
     supplier_stock["items"] = [it for it in supplier_stock.get("items", []) if it["id"] != item_id]
     save_json(SUPPLIER_ITEMS_FILE, supplier_stock)
     
-    await callback.answer(f"✅ Куплен {item['rarity_name']} товар!")
+    await callback.answer(f"✅ Куплен!")
     await send_msg(user_id, f"🛒 <b>КУПЛЕНО!</b>\n📦 {item['name']}\n💰 Закуп: {item['buy_price']}₽\n📊 Рынок: ~{item['market_price']}₽\n👇 📦 Инвентарь → Опубликовать!")
 
-# ==================== МАГАЗИН/АУКЦИОН/ПУБЛИКАЦИЯ/ПОДРАБОТКИ ====================
+# ==================== МАГАЗИН ====================
 @dp.callback_query(F.data == "action_shop", StateFilter(GameState.playing))
 async def show_shop(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -705,8 +714,18 @@ async def show_shop(callback: CallbackQuery):
     for s in SHOP_LEVELS:
         if s["price"] > shop["price"] and p["balance"] >= s["price"]:
             kb.append([InlineKeyboardButton(text=f"🛒 {s['name']} — {s['price']}₽", callback_data=f"buy_shop_{s['id']}")])
-    kb.append(menu_btn_row())
-    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    
+    if shop.get("image_url"):
+        try:
+            msg = await bot.send_photo(user_id, shop["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+            await del_prev(user_id); last_bot_message[user_id] = msg.message_id
+            try: await callback.message.delete()
+            except: pass
+        except:
+            await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    else:
+        await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data == "collect_shop_income", StateFilter(GameState.playing))
 async def collect_shop_income_btn(callback: CallbackQuery):
@@ -720,12 +739,14 @@ async def buy_shop_btn(callback: CallbackQuery):
     if success: await callback.answer(msg); await show_shop(callback)
     else: await callback.answer(msg, show_alert=True)
 
+# ==================== АУКЦИОН ====================
 @dp.callback_query(F.data == "action_auction", StateFilter(GameState.playing))
 async def show_auction(callback: CallbackQuery):
     active_items = [item for item in auction_data.get("items", []) if item.get("active", True)]
     if not active_items:
-        return await edit_msg(callback.message, "🔨 <b>АУКЦИОН</b>\n\nНет лотов.\nВыстави свой товар!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📤 ВЫСТАВИТЬ", callback_data="auction_sell")], menu_btn_row()]))
+        return await edit_msg(callback.message, "🔨 <b>АУКЦИОН</b>\n\nНет лотов.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📤 ВЫСТАВИТЬ", callback_data="auction_sell")],
+            [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
     txt = "🔨 <b>АУКЦИОН</b>\n\n"
     kb = []
     for i, item in enumerate(active_items):
@@ -735,7 +756,7 @@ async def show_auction(callback: CallbackQuery):
         if item["seller_id"] != callback.from_user.id:
             kb.append([InlineKeyboardButton(text=f"💰 СТАВКА (мин. {int(item.get('current_bid', item['start_price']) * 1.1)}₽)", callback_data=f"auction_bid_{i}")])
     kb.append([InlineKeyboardButton(text="📤 ВЫСТАВИТЬ", callback_data="auction_sell")])
-    kb.append(menu_btn_row())
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data == "auction_sell", StateFilter(GameState.playing))
@@ -746,6 +767,7 @@ async def auction_sell_menu(callback: CallbackQuery):
     if not kb: return await callback.answer("Нечего выставить!")
     await edit_msg(callback.message, "📤 <b>ВЫСТАВИТЬ НА АУКЦИОН</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
+# ==================== ПУБЛИКАЦИЯ ====================
 @dp.callback_query(F.data.startswith("inv_"), StateFilter(GameState.playing))
 async def publish_item(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id; item_idx = int(callback.data.split("_")[1])
@@ -772,39 +794,41 @@ async def handle_description(message: types.Message, state: FSMContext):
     await send_msg(user_id, f"📢 <b>ОПУБЛИКОВАНО!</b>\n📦 {item['name']}\n💰 {item['market_price']}₽\n📝 Качество: {get_quality_bonus(quality)['name']} ({quality}/10)\n⏳ Жди 1-3 минуты!")
     asyncio.create_task(spawn_buyers(user_id))
 
+# ==================== ПОДРАБОТКИ ====================
 @dp.callback_query(F.data == "action_job", StateFilter(GameState.playing))
 async def show_jobs(callback: CallbackQuery):
-    kb = [[InlineKeyboardButton(text=f"{j['emoji']} {j['name']} — {j['reward']}₽", callback_data=f"start_job_{i}")] for i, j in enumerate(JOBS)]
-    kb.append(menu_btn_row())
-    await edit_msg(callback.message, "💼 <b>ПОДРАБОТКИ</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    kb = [[InlineKeyboardButton(text=f"{j['emoji']} {j['name']} — {j['reward']}₽ ({j['duration']}с)", callback_data=f"start_job_{i}")] for i, j in enumerate(JOBS)]
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    await edit_msg(callback.message, "💼 <b>ПОДРАБОТКИ</b>\n\nВыбери работу:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("start_job_"))
 async def start_job(callback: CallbackQuery):
     user_id = callback.from_user.id; job_idx = int(callback.data.split("_")[2])
-    side_jobs[user_id] = {"job_type": job_idx, "start_time": time_module.time(), "done": False}
     job = JOBS[job_idx]
-    await send_msg(user_id, f"💼 <b>РАБОТАЕМ!</b>\n{job['emoji']} {job['name']}\n💰 {job['reward']}₽\n⏱ {job['duration']} сек.\n\n<i>Бот пришлёт деньги когда закончишь!</i>")
+    side_jobs[user_id] = {"job_type": job_idx, "start_time": time_module.time(), "done": False}
+    await send_msg(user_id, f"💼 <b>РАБОТАЕМ!</b>\n{job['emoji']} {job['name']}\n💰 {job['reward']}₽\n⏱ {job['duration']} сек.")
+    await callback.answer("Приступил!")
     asyncio.create_task(finish_job(user_id, job_idx))
 
 async def finish_job(user_id, job_idx):
-    job = JOBS[job_idx]
-    await asyncio.sleep(job["duration"])
+    await asyncio.sleep(JOBS[job_idx]["duration"])
     if user_id in side_jobs and not side_jobs[user_id].get("done", True):
         side_jobs[user_id]["done"] = True
-        if user_id in players: players[user_id]["balance"] += job["reward"]
-        await send_msg(user_id, f"✅ <b>ГОТОВО!</b>\n💰 +{job['reward']}₽\n💼 Баланс: {players[user_id]['balance']}₽")
+        if user_id in players: players[user_id]["balance"] += JOBS[job_idx]["reward"]
+        try: await send_msg(user_id, f"✅ <b>ГОТОВО!</b>\n💰 +{JOBS[job_idx]['reward']}₽\n💼 Баланс: {players[user_id]['balance']}₽")
+        except: pass
 
-# ==================== ОСТАЛЬНЫЕ CALLBACK-ОБРАБОТЧИКИ ====================
+# ==================== ОСТАЛЬНЫЕ CALLBACK ====================
 @dp.callback_query(F.data == "action_leaderboard", StateFilter(GameState.playing))
 async def show_leaderboard(callback: CallbackQuery):
     top = get_top_players(10)
-    if not top: return await edit_msg(callback.message, "🏆 Пока нет данных.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[menu_btn_row()]))
+    if not top: return await edit_msg(callback.message, "🏆 Пока нет данных.")
     txt = "🏆 <b>ТОП-10 ПРОДАВЦОВ</b>\n\n"
     for i, (uid, profit, sales) in enumerate(top):
         try: name = (await bot.get_chat(uid)).first_name or f"ID:{uid}"
         except: name = f"ID:{uid}"
         txt += f"{['🥇','🥈','🥉'][i] if i<3 else f'{i+1}.'} {name} — {profit}₽\n"
-    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[menu_btn_row()]))
+    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_houses", StateFilter(GameState.playing))
 async def show_houses_catalog(callback: CallbackQuery, page: int = 0):
@@ -814,14 +838,14 @@ async def show_houses_catalog(callback: CallbackQuery, page: int = 0):
     house = HOUSES[page]; owned = current_id == house["id"]
     status_text = "✅ ТВОЁ" if owned else (f"💰 {house['price']}₽" if p["balance"] >= house["price"] else f"💰 {house['price']}₽ (не хватает)")
     action_btn = InlineKeyboardButton("🛒 КУПИТЬ", callback_data=f"buy_house_{house['id']}") if not owned and p["balance"] >= house["price"] else None
-    txt = f"🏠 <b>НЕДВИЖИМОСТЬ</b> {page+1}/{len(HOUSES)}\n\n{house['name']}\n{status_text}"
+    txt = f"🏠 <b>ЖИЛЬЁ</b> {page+1}/{len(HOUSES)}\n\n{house['name']}\n{status_text}"
     nav = []
     if page > 0: nav.append(InlineKeyboardButton("⬅️", callback_data=f"house_page_{page-1}"))
     if page < len(HOUSES)-1: nav.append(InlineKeyboardButton("➡️", callback_data=f"house_page_{page+1}"))
     kb = []
     if nav: kb.append(nav)
     if action_btn: kb.append([action_btn])
-    kb.append(menu_btn_row())
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("house_page_"), StateFilter(GameState.playing))
@@ -844,10 +868,14 @@ async def menu_page_2(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "start_new_game")
 async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
-    user_id = callback.from_user.id
-    players[user_id] = {"balance": 5000, "reputation": max(0, get_rep(user_id)["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": get_rep(user_id)["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
+    user_id = callback.from_user.id; r = get_rep(user_id)
+    players[user_id] = {"balance": 5000, "reputation": max(0, r["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": r["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
+    p = players[user_id]
+    event = daily_event(); p["current_event"] = event
+    if event: apply_event(p, event)
     await state.set_state(GameState.playing)
-    await edit_msg(callback.message, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n💰 5 000₽", reply_markup=main_kb(1, user_id))
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    await edit_msg(callback.message, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
 
 @dp.callback_query(F.data == "continue_game")
 async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
@@ -855,49 +883,56 @@ async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
     p = players.get(user_id)
     
     if not p:
-        # Если игра не найдена — создаём новую
+        # Создаём новую игру если нет
         r = get_rep(user_id)
         players[user_id] = {"balance": 5000, "reputation": max(0, r["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": r["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
         p = players[user_id]
-    
-    await state.set_state(GameState.playing)
-    
-    if p.get("day", 1) == 1 and not p.get("current_event"):
-        event = daily_event()
-        p["current_event"] = event
+        event = daily_event(); p["current_event"] = event
         if event: apply_event(p, event)
     
+    await state.set_state(GameState.playing)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    
-    await edit_msg(callback.message, 
-        f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 Скин: {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}",
-        reply_markup=main_kb(1, user_id))
+    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
     await callback.answer("Продолжаем! 🎮")
+
+@dp.callback_query(F.data == "restart_game_confirm")
+async def restart_confirm(callback: CallbackQuery):
+    await edit_msg(callback.message, "⚠️ <b>СБРОСИТЬ ПРОГРЕСС?</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⚠️ ДА", callback_data="restart_game_yes")],
+        [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")],
+    ]))
+
+@dp.callback_query(F.data == "restart_game_yes")
+async def restart_yes(callback: CallbackQuery, state: FSMContext):
+    if callback.from_user.id in players: del players[callback.from_user.id]
+    await start_new_game_btn(callback, state)
 
 @dp.callback_query(F.data == "action_stats", StateFilter(GameState.playing))
 async def show_stats(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
-    await edit_msg(callback.message, f"📊 <b>СТАТИСТИКА</b>\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[menu_btn_row()]))
+    house = next((h for h in HOUSES if h["id"] == get_player_house(callback.from_user.id)), HOUSES[0])
+    shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(callback.from_user.id)["level"]), SHOP_LEVELS[0])
+    await edit_msg(callback.message, f"📊 <b>СТАТИСТИКА</b>\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n🏠 {house['name']}\n🏪 {shop['name']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_demand", StateFilter(GameState.playing))
 async def show_demand(callback: CallbackQuery):
-    await edit_msg(callback.message, f"📊 <b>РЫНОК</b>\n\n{fmt_demand(get_player(callback.from_user.id))}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[menu_btn_row()]))
+    await edit_msg(callback.message, f"📊 <b>РЫНОК</b>\n\n{fmt_demand(get_player(callback.from_user.id))}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_rep_menu")
 async def rep_menu_callback(callback: CallbackQuery):
     u = get_rep(callback.from_user.id)
-    await edit_msg(callback.message, f"🏅 <b>РЕПУТАЦИЯ: {rep_level(u['score'])}</b>\n📊 {u['score']}/100\n📦 Продаж: {u['total_sales']}\n💰 Прибыль: {u['total_profit']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[menu_btn_row()]))
+    await edit_msg(callback.message, f"🏅 <b>РЕПУТАЦИЯ: {rep_level(u['score'])}</b>\n📊 {u['score']}/100\n📦 Продаж: {u['total_sales']}\n💰 Прибыль: {u['total_profit']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_ref_menu")
 async def ref_menu_callback(callback: CallbackQuery):
-    await edit_msg(callback.message, f"🔗 <b>РЕФЕРАЛЫ</b>\n\n<code>{ref_link(callback.from_user.id)}</code>\n\n💰 +500₽ за друга", reply_markup=InlineKeyboardMarkup(inline_keyboard=[menu_btn_row()]))
+    await edit_msg(callback.message, f"🔗 <b>РЕФЕРАЛЫ</b>\n\n<code>{ref_link(callback.from_user.id)}</code>\n\n💰 +500₽ за друга", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "action_inventory", StateFilter(GameState.playing))
 async def show_inventory(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
-    if not p["inventory"]: return await edit_msg(callback.message, "📦 <b>ПУСТО</b>\n\nКупи товары у поставщиков!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="action_buy")], menu_btn_row()]))
+    if not p["inventory"]: return await edit_msg(callback.message, "📦 <b>ПУСТО</b>\n\nКупи товары у поставщиков!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="action_buy")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
     kb = [[InlineKeyboardButton(text=f"{it['name']} | {it['buy_price']}₽ → ~{it['market_price']}₽", callback_data=f"inv_{i}")] for i, it in enumerate(p["inventory"])]
-    kb.append(menu_btn_row())
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     await edit_msg(callback.message, "📦 <b>ИНВЕНТАРЬ</b>\n\n" + "\n".join(f"{i+1}. {it['name']} | Закуп: {it['buy_price']}₽ | Рынок: ~{it['market_price']}₽" for i, it in enumerate(p["inventory"])) + "\n\n👇 Нажми чтобы опубликовать!", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data == "action_nextday", StateFilter(GameState.playing))
@@ -908,67 +943,64 @@ async def next_day(callback: CallbackQuery):
     shop_income = collect_shop_income(user_id)
     p["balance"] += bonus; p["day"] += 1
     for c in CATEGORIES: p["market_demand"][c] = max(0.3, min(3.0, p["market_demand"][c] * random.uniform(0.85, 1.15)))
+    event = daily_event(); p["current_event"] = event
+    if event: apply_event(p, event)
     if user_id in published_items: published_items[user_id] = None
     sold_items[user_id].clear()
-    await edit_msg(callback.message, f"☀️ <b>ДЕНЬ {p['day']}</b> | 💰 {p['balance']}₽\n🏠 +{bonus}₽{f' | 🏪 +{shop_income}₽' if shop_income > 0 else ''}", reply_markup=main_kb(1, user_id))
+    await edit_msg(callback.message, f"☀️ <b>ДЕНЬ {p['day']}</b> | 💰 {p['balance']}₽\n🏠 +{bonus}₽{f' | 🏪 +{shop_income}₽' if shop_income > 0 else ''}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
 
 @dp.callback_query(F.data == "action_end", StateFilter(GameState.playing))
 async def end_game(callback: CallbackQuery, state: FSMContext):
     p = get_player(callback.from_user.id); await state.clear()
     r = "🏆 <b>ПОБЕДА!</b>" if p["balance"] >= 50000 else "💀 <b>БАНКРОТ!</b>" if p["balance"] <= 0 else "🎮 Игра окончена."
-    await edit_msg(callback.message, f"{r}\n💰 {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")]]))
+    await edit_msg(callback.message, f"{r}\n💰 {p['balance']}₽\n📦 Продаж: {p['items_sold']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
 
 @dp.callback_query(F.data == "restart_game")
 async def restart_game(callback: CallbackQuery):
     if callback.from_user.id in players: del players[callback.from_user.id]
     await callback.message.edit_text("🔄 Напиши /play")
 
-# Обработчик для кнопки МЕНЮ когда игра не запущена
-@dp.callback_query(F.data == "action_back")
-async def back_to_menu_nostate(callback: CallbackQuery):
-    """Кнопка МЕНЮ без состояния игры (для стартового экрана)."""
-    user_id = callback.from_user.id
-    p = players.get(user_id)
-    
-    if p and p.get("day", 0) > 0:
-        skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-        txt = f"👋 <b>МЕНЮ</b>\n📅 День {p['day']} | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}"
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
-            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
-        ])
-    else:
-        skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-        txt = f"🎮 <b>RESELL TYCOON</b>\n\n👤 {skin['emoji']} {skin['name']}"
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")],
-            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
-        ])
-    
-    if skin.get("image_url"):
-        try:
-            msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=kb)
-            last_bot_message[user_id] = msg.message_id
-        except:
-            await edit_msg(callback.message, txt, reply_markup=kb)
-    else:
-        await edit_msg(callback.message, txt, reply_markup=kb)
-    await callback.answer()
-
 @dp.callback_query(F.data == "action_back", StateFilter(GameState.playing))
 async def back_to_menu(callback: CallbackQuery):
-    p = get_player(callback.from_user.id)
-    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, callback.from_user.id))
+    user_id = callback.from_user.id; p = get_player(user_id)
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
 
 @dp.callback_query(F.data == "back_to_start")
 async def back_start(callback: CallbackQuery):
-    await edit_msg(callback.message, "🎮 <b>RESELL TYCOON</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")]]))
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(callback.from_user.id)), SKINS[0])
+    await edit_msg(callback.message, f"🎮 <b>RESELL TYCOON</b>\n👤 {skin['emoji']} {skin['name']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")]]))
 
 @dp.callback_query(F.data == "action_learn")
 async def learn_btn(callback: CallbackQuery):
-    kb = [[InlineKeyboardButton(text=f"{'✅' if l['id'] in get_learning(callback.from_user.id)['completed'] else '📖'} {l['title']}", callback_data=f"lesson_{l['id']}")] for l in LESSONS]
-    kb.append([InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="back_to_start")])
+    l = get_learning(callback.from_user.id)
+    kb = [[InlineKeyboardButton(text=f"{'✅' if lesson['id'] in l['completed'] else '📖'} {lesson['title']}", callback_data=f"lesson_{lesson['id']}")] for lesson in LESSONS]
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="back_to_start")])
     await edit_msg(callback.message, "📚 <b>ОБУЧЕНИЕ</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+
+def complete_lesson(user_id, lesson_id):
+    if lesson_id not in get_learning(user_id)["completed"]:
+        get_learning(user_id)["completed"].append(lesson_id)
+        save_json(LEARNING_FILE, learning_data)
+        if user_id in players: players[user_id]["balance"] += next((l["reward"] for l in LESSONS if l["id"] == lesson_id), 0)
+        return True
+    return False
+
+@dp.callback_query(F.data.startswith("lesson_"))
+async def show_lesson(callback: CallbackQuery):
+    lesson = next((l for l in LESSONS if l["id"] == int(callback.data.split("_")[1])), None)
+    if not lesson: return await callback.answer("Не найден")
+    done = lesson["id"] in get_learning(callback.from_user.id)["completed"]
+    kb = []
+    if not done: kb.append([InlineKeyboardButton(text="✅ ЗАВЕРШИТЬ (+₽)", callback_data=f"complete_lesson_{lesson['id']}")])
+    kb.append([InlineKeyboardButton(text="🔙 К УРОКАМ", callback_data="action_learn")])
+    await edit_msg(callback.message, lesson["text"] + (f"\n\n💰 +{lesson['reward']}₽" if not done else "\n✅ Пройден!"), reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+
+@dp.callback_query(F.data.startswith("complete_lesson_"))
+async def complete_lesson_btn(callback: CallbackQuery):
+    if complete_lesson(callback.from_user.id, int(callback.data.split("_")[2])):
+        await callback.answer("Урок пройден!"); await learn_btn(callback)
+    else: await callback.answer("Уже пройден")
 
 # ==================== ЗАПУСК ====================
 async def main():
