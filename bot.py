@@ -37,15 +37,25 @@ SUPPLIER_ITEMS_FILE = "supplier_items.json"
 
 # ==================== СКИНЫ ====================
 SKINS = [
-    {"id": "default", "name": "Новичок", "price": 0, "rarity": "common", "rep_required": 0, "emoji": "👶", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE"},
-    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "common", "rep_required": 25, "emoji": "😎", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ"},
-    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "common", "rep_required": 50, "emoji": "🕴", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ"},
-    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "rare", "rep_required": 0, "emoji": "💻", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ"},
-    {"id": "legend", "name": "Бог товарки", "price": 50000, "rarity": "legendary", "rep_required": 0, "emoji": "👑", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ"},
-    {"id": "gold", "name": "Золотой барыга", "price": 150000, "rarity": "legendary", "rep_required": 0, "emoji": "🥇", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDJmn4w8_mwnpx1Ms388hYBj68KUW2AAMZaxvG28BLntt7LmTTjtwBAAMCAAN5AAM7BA"},
+    # Бесплатные (за репутацию)
+    {"id": "default", "name": "Новичок", "price": 0, "rarity": "common", "rep_required": 0, "emoji": "👶", "description": "Базовый скин. Выдаётся всем.", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE"},
+    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "common", "rep_required": 25, "emoji": "😎", "description": "Выдаётся при репутации 🟢 Хорошая (25).", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ"},
+    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "common", "rep_required": 50, "emoji": "🕴", "description": "Выдаётся при репутации 🔵 Отличная (50).", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ"},
+    # Платные
+    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "rare", "rep_required": 0, "emoji": "💻", "description": "Редкий скин. Сидит в кофемании и продаёт.", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ"},
+    {"id": "cyber", "name": "Кибер-барыга", "price": 80000, "rarity": "epic", "rep_required": 0, "emoji": "🤖", "description": "Эпический скин. Из будущего.", "avatar_config": {"face": "surprised", "hair": "none", "clothes": "hoodie", "accessory": "headphones", "background": "blue"}, "image_url": ""},
+    {"id": "legend", "name": "Бог товарки", "price": 150000, "rarity": "legendary", "rep_required": 0, "emoji": "👑", "description": "Легендарный скин. Вершина товарки.", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ"},
+    {"id": "gold", "name": "Золотой барыга", "price": 300000, "rarity": "legendary", "rep_required": 0, "emoji": "🥇", "description": "Легендарный скин. Чистое золото.", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDJmn4w8_mwnpx1Ms388hYBj68KUW2AAMZaxvG28BLntt7LmTTjtwBAAMCAAN5AAM7BA"},
 ]
 
-# ==================== ОБЩИЕ ТОВАРЫ ====================
+RARITY_COLORS = {
+    "common": "⬜",
+    "rare": "🟦",
+    "epic": "🟪",
+    "legendary": "🟨",
+}
+
+# ==================== ОСТАЛЬНЫЕ ДАННЫЕ ====================
 SUPPLIER_ITEM_RARITIES = {
     "common": {"name": "Обычный", "color": "⬜", "price_mult_min": 0.8, "price_mult_max": 1.3, "chance": 55},
     "rare": {"name": "Редкий", "color": "🟦", "price_mult_min": 1.5, "price_mult_max": 2.5, "chance": 25},
@@ -88,7 +98,6 @@ def check_supplier_update():
         save_json(SUPPLIER_ITEMS_FILE, supplier_stock)
     return False
 
-# ==================== ОСТАЛЬНЫЕ ДАННЫЕ ====================
 BASE_ITEMS = [
     {"cat": "👖 Джинсы", "name": "Levi's 501 Vintage", "base_price": 2000},
     {"cat": "👖 Джинсы", "name": "Carhartt WIP Denim", "base_price": 3500},
@@ -129,15 +138,14 @@ HOUSES = [
 ]
 
 SHOP_LEVELS = [
-    {"id": "none", "name": "Нет магазина", "price": 0, "income_per_hour": 0, "image_url": ""},
-    {"id": "stall", "name": "🛍 Лавка", "price": 5000, "income_per_hour": 100, "image_url": ""},
-    {"id": "container", "name": "📦 Контейнер", "price": 15000, "income_per_hour": 300, "image_url": ""},
-    {"id": "store", "name": "🏬 Магазин", "price": 50000, "income_per_hour": 800, "image_url": ""},
-    {"id": "boutique", "name": "👑 Бутик", "price": 150000, "income_per_hour": 2000, "image_url": ""},
+    {"id": "none", "name": "Нет магазина", "price": 0, "income_per_hour": 0},
+    {"id": "stall", "name": "🛍 Лавка", "price": 5000, "income_per_hour": 100},
+    {"id": "container", "name": "📦 Контейнер", "price": 15000, "income_per_hour": 300},
+    {"id": "store", "name": "🏬 Магазин", "price": 50000, "income_per_hour": 800},
+    {"id": "boutique", "name": "👑 Бутик", "price": 150000, "income_per_hour": 2000},
 ]
 
 REPUTATION_LEVELS = {-100: "💀 ЧС", -50: "🔴 Ужасная", 0: "🟡 Нейтральная", 25: "🟢 Хорошая", 50: "🔵 Отличная", 75: "🟣 Легенда", 100: "👑 Бог товарки"}
-LESSONS = [{"id": 1, "title": "🚀 Основы", "text": "📚 Основы товарки", "reward": 500}, {"id": 2, "title": "📊 Рынок", "text": "📚 Анализ рынка", "reward": 500}]
 
 # ==================== БОТ ====================
 bot = Bot(token=API_TOKEN)
@@ -213,7 +221,6 @@ async def edit_msg(message, text, parse_mode="HTML", reply_markup=None):
     try: await message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
     except Exception as e:
         print(f"Edit error: {e}")
-        # Отправляем новое сообщение если не можем отредактировать
         await send_msg(message.chat.id, text, parse_mode=parse_mode, reply_markup=reply_markup)
 
 # ==================== РЕФЕРАЛЫ ====================
@@ -340,7 +347,23 @@ def fmt_demand(p):
 def get_active_buyers_count(user_id):
     return sum(1 for c in active_chats.values() if c["user_id"] == user_id and not c["finished"])
 
-# ==================== МЕНЮ ====================
+# ==================== МЕНЮ С ФОТО СКИНА ====================
+async def send_menu_with_skin(user_id, text, page=1):
+    """Отправляет меню с фото скина."""
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    kb = main_kb(page, user_id)
+    
+    if skin.get("image_url"):
+        try:
+            msg = await bot.send_photo(user_id, skin["image_url"], caption=text, parse_mode="HTML", reply_markup=kb)
+            await del_prev(user_id)
+            last_bot_message[user_id] = msg.message_id
+            return
+        except:
+            pass
+    
+    await send_msg(user_id, text, reply_markup=kb)
+
 def main_kb(page=1, user_id=None):
     if page == 1:
         bc = get_active_buyers_count(user_id) if user_id else 0
@@ -398,8 +421,7 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
     client = CLIENT_TYPES[client_type]
     chat_key = f"{user_id}_{buyer_id}"
     if not is_reminder:
-        discount = random.uniform(*client["discount_range"])
-        discount = max(0.3, min(0.95, discount))
+        discount = random.uniform(*client["discount_range"]); discount = max(0.3, min(0.95, discount))
         offer = int(price * discount); offer = (offer // 100) * 100 + 99
         if offer < 100: offer = price // 2
         msg = first_msg(client_type, item_name, price, offer)
@@ -452,8 +474,6 @@ async def complete_sale(user_id, buyer_id, message=None):
 @dp.message(Command('start'))
 async def start_cmd(message: types.Message):
     user_id = message.from_user.id; args = message.text.split()
-    
-    # Обработка рефералов
     if len(args) > 1 and args[1].startswith("ref_"):
         ref_code = args[1][4:]
         for uid in referral_data:
@@ -467,7 +487,6 @@ async def start_cmd(message: types.Message):
     
     await del_user_msgs(user_id)
     
-    # Проверяем скины за репутацию
     for skin in check_rep_skins(user_id):
         buy_skin(user_id, skin["id"])
         await send_msg(user_id, f"🎉 <b>НОВЫЙ СКИН!</b>\n{skin['emoji']} {skin['name']} — за репутацию {rep_level(get_rep(user_id)['score'])}!")
@@ -489,7 +508,6 @@ async def start_cmd(message: types.Message):
             [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
         ])
     
-    # Отправляем фото скина
     if skin.get("image_url"):
         try:
             msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=kb)
@@ -509,7 +527,7 @@ async def play_cmd(message: types.Message, state: FSMContext):
     if event: apply_event(p, event)
     await state.set_state(GameState.playing)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await send_msg(user_id, f"🌟 <b>ДЕНЬ 1</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
+    await send_menu_with_skin(user_id, f"🌟 <b>ДЕНЬ 1</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
 
 # ==================== ЧАТ С ПОКУПАТЕЛЯМИ ====================
 @dp.message(StateFilter(GameState.playing))
@@ -518,7 +536,6 @@ async def handle_message(message: types.Message, state: FSMContext):
     user_id = message.from_user.id; text = message.text.strip()
     pending_messages[user_id].append(message.message_id)
     
-    # Продажа
     for w in ["продано", "продаю", "согласен", "договорились", "по рукам", "забирай", "отдаю", "продам", "бери", "ок", "давай"]:
         if w in text.lower():
             target = None
@@ -535,7 +552,6 @@ async def handle_message(message: types.Message, state: FSMContext):
                 await complete_sale(user_id, target["buyer_id"], message)
                 return
     
-    # Диалог
     chat_key = None
     if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats:
         chat_key = active_chat_for_user[user_id]
@@ -569,7 +585,6 @@ async def handle_message(message: types.Message, state: FSMContext):
     for w in ["беру", "договорились", "по рукам", "забираю", "согласен"]:
         if w in ai_msg.lower() and "?" not in ai_msg.lower():
             chat["finished"] = True
-            if user_id in active_chat_for_user: del active_chat_for_user[user_id]
             await complete_sale(user_id, chat["buyer_id"], message)
             return
     
@@ -580,8 +595,7 @@ async def handle_message(message: types.Message, state: FSMContext):
 async def show_chats(callback: CallbackQuery):
     user_id = callback.from_user.id
     active_list = [(k, c) for k, c in active_chats.items() if c["user_id"] == user_id and not c["finished"]]
-    if not active_list:
-        return await edit_msg(callback.message, "💬 Нет диалогов.\nОпубликуй товар в 📦 Инвентаре!")
+    if not active_list: return await edit_msg(callback.message, "💬 Нет диалогов.\nОпубликуй товар в 📦 Инвентаре!")
     txt = f"💬 <b>ДИАЛОГИ ({len(active_list)}):</b>\n\n"
     kb = []
     for key, chat in active_list:
@@ -600,46 +614,60 @@ async def open_chat(callback: CallbackQuery, state: FSMContext):
     await state.set_state(GameState.playing)
     await send_msg(user_id, f"💬 <b>ДИАЛОГ #{buyer_id}</b>\nПиши «продано» чтобы продать!")
 
-# ==================== СКИНЫ ====================
+# ==================== КАТАЛОГ СКИНОВ (ЛИСТАНИЕ) ====================
 @dp.callback_query(F.data == "action_skins")
-async def show_skins_shop(callback: CallbackQuery):
+async def show_skins_catalog(callback: CallbackQuery, page: int = 0):
     user_id = callback.from_user.id
-    current_skin = get_player_skin(user_id)
+    if page < 0: page = 0
+    if page >= len(SKINS): page = len(SKINS) - 1
+    
+    skin = SKINS[page]
+    current_skin_id = get_player_skin(user_id)
+    owned = current_skin_id == skin["id"]
     p = get_player(user_id)
     rep_score = get_rep(user_id)["score"]
     
-    txt = f"👤 <b>СКИНЫ</b>\n⭐ Репутация: {rep_score}/100 ({rep_level(rep_score)})\n💼 Баланс: {p['balance']}₽\n\n"
-    txt += "<b>Бесплатные (за репутацию):</b>\n"
+    rarity_color = RARITY_COLORS.get(skin["rarity"], "⬜")
+    
+    txt = f"👤 <b>КАТАЛОГ СКИНОВ</b>\n📄 {page + 1}/{len(SKINS)}\n\n"
+    txt += f"{skin['emoji']} <b>{skin['name']}</b>\n"
+    txt += f"{rarity_color} Редкость: {skin['rarity'].upper()}\n"
+    txt += f"📝 {skin['description']}\n"
+    
+    if owned:
+        txt += "\n✅ <b>ЭТО ТВОЙ СКИН</b>"
+        action_btn = None
+    elif skin["rep_required"] > 0:
+        if rep_score >= skin["rep_required"]:
+            txt += f"\n🎁 <b>ДОСТУПЕН БЕСПЛАТНО!</b>"
+            action_btn = InlineKeyboardButton(text="🎁 ПОЛУЧИТЬ БЕСПЛАТНО", callback_data=f"buy_skin_{skin['id']}")
+        else:
+            txt += f"\n🔒 Нужно {skin['rep_required']} репутации (у тебя {rep_score})"
+            action_btn = None
+    else:
+        if p["balance"] >= skin["price"]:
+            txt += f"\n💰 Цена: {skin['price']}₽"
+            action_btn = InlineKeyboardButton(text=f"🛒 КУПИТЬ ЗА {skin['price']}₽", callback_data=f"buy_skin_{skin['id']}")
+        else:
+            txt += f"\n❌ Цена: {skin['price']}₽ (не хватает {skin['price'] - p['balance']}₽)"
+            action_btn = None
+    
+    txt += f"\n\n💼 Баланс: {p['balance']}₽ | ⭐ Репутация: {rep_score}/100"
+    
+    # Кнопки навигации
+    nav = []
+    if page > 0: nav.append(InlineKeyboardButton(text="⬅️ НАЗАД", callback_data=f"skin_page_{page - 1}"))
+    if page < len(SKINS) - 1: nav.append(InlineKeyboardButton(text="ВПЕРЁД ➡️", callback_data=f"skin_page_{page + 1}"))
+    
     kb = []
-    
-    for skin in SKINS:
-        owned = current_skin == skin["id"]
-        if owned:
-            txt += f"✅ {skin['emoji']} {skin['name']} — ТВОЙ\n"
-        elif skin["rep_required"] > 0:
-            if rep_score >= skin["rep_required"]:
-                txt += f"🎁 {skin['emoji']} {skin['name']} — ДОСТУПЕН!\n"
-                kb.append([InlineKeyboardButton(text=f"🎁 {skin['emoji']} {skin['name']} — ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}")])
-            else:
-                txt += f"🔒 {skin['emoji']} {skin['name']} — нужно {skin['rep_required']} реп.\n"
-    
-    txt += "\n<b>Платные:</b>\n"
-    for skin in SKINS:
-        owned = current_skin == skin["id"]
-        if skin["rep_required"] == 0 and skin["price"] > 0:
-            if owned:
-                txt += f"✅ {skin['emoji']} {skin['name']} — ТВОЙ\n"
-            elif p["balance"] >= skin["price"]:
-                kb.append([InlineKeyboardButton(text=f"💰 {skin['emoji']} {skin['name']} — {skin['price']}₽", callback_data=f"buy_skin_{skin['id']}")])
-            else:
-                txt += f"❌ {skin['emoji']} {skin['name']} — {skin['price']}₽\n"
-    
+    if nav: kb.append(nav)
+    if action_btn: kb.append([action_btn])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
     
-    current_skin_data = next((s for s in SKINS if s["id"] == current_skin), SKINS[0])
-    if current_skin_data.get("image_url"):
+    # Отправляем фото скина
+    if skin.get("image_url"):
         try:
-            msg = await bot.send_photo(user_id, current_skin_data["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+            msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
             await del_prev(user_id); last_bot_message[user_id] = msg.message_id
             try: await callback.message.delete()
             except: pass
@@ -647,6 +675,11 @@ async def show_skins_shop(callback: CallbackQuery):
             await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     else:
         await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+
+@dp.callback_query(F.data.startswith("skin_page_"))
+async def skin_page_btn(callback: CallbackQuery):
+    page = int(callback.data.split("_")[2])
+    await show_skins_catalog(callback, page)
 
 @dp.callback_query(F.data.startswith("buy_skin_"))
 async def buy_skin_btn(callback: CallbackQuery):
@@ -656,8 +689,13 @@ async def buy_skin_btn(callback: CallbackQuery):
     if skin["rep_required"] > 0 and get_rep(user_id)["score"] < skin["rep_required"]:
         return await callback.answer(f"Нужно {skin['rep_required']} репутации!")
     success, msg = buy_skin(user_id, skin_id)
-    if success: await callback.answer(msg); await show_skins_shop(callback)
-    else: await callback.answer(msg, show_alert=True)
+    if success:
+        await callback.answer(msg)
+        # Обновляем каталог на той же странице
+        current_page = next((i for i, s in enumerate(SKINS) if s["id"] == skin_id), 0)
+        await show_skins_catalog(callback, current_page)
+    else:
+        await callback.answer(msg, show_alert=True)
 
 # ==================== ЗАКУПКА ====================
 @dp.callback_query(F.data == "action_buy", StateFilter(GameState.playing))
@@ -715,17 +753,7 @@ async def show_shop(callback: CallbackQuery):
         if s["price"] > shop["price"] and p["balance"] >= s["price"]:
             kb.append([InlineKeyboardButton(text=f"🛒 {s['name']} — {s['price']}₽", callback_data=f"buy_shop_{s['id']}")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    
-    if shop.get("image_url"):
-        try:
-            msg = await bot.send_photo(user_id, shop["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-            await del_prev(user_id); last_bot_message[user_id] = msg.message_id
-            try: await callback.message.delete()
-            except: pass
-        except:
-            await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-    else:
-        await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data == "collect_shop_income", StateFilter(GameState.playing))
 async def collect_shop_income_btn(callback: CallbackQuery):
@@ -761,7 +789,7 @@ async def show_auction(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "auction_sell", StateFilter(GameState.playing))
 async def auction_sell_menu(callback: CallbackQuery):
-    user_id = callback.from_user.id; p = get_player(user_id)
+    p = get_player(callback.from_user.id)
     kb = [[InlineKeyboardButton(text=f"📦 {item['name']} (~{item['market_price']}₽)", callback_data=f"auction_put_{i}")] for i, item in enumerate(p["inventory"])]
     kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_auction")])
     if not kb: return await callback.answer("Нечего выставить!")
@@ -860,11 +888,19 @@ async def buy_house_btn(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "menu_page_1")
 async def menu_page_1(callback: CallbackQuery):
-    await edit_msg(callback.message, "📅 <b>МЕНЮ 1/2</b>", reply_markup=main_kb(1, callback.from_user.id))
+    p = get_player(callback.from_user.id)
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(callback.from_user.id)), SKINS[0])
+    await send_menu_with_skin(callback.from_user.id, f"📅 <b>МЕНЮ 1/2</b>\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", 1)
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "menu_page_2")
 async def menu_page_2(callback: CallbackQuery):
-    await edit_msg(callback.message, "📅 <b>МЕНЮ 2/2</b>", reply_markup=main_kb(2, callback.from_user.id))
+    p = get_player(callback.from_user.id)
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(callback.from_user.id)), SKINS[0])
+    await send_menu_with_skin(callback.from_user.id, f"📅 <b>МЕНЮ 2/2</b>\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", 2)
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "start_new_game")
 async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
@@ -875,15 +911,14 @@ async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     if event: apply_event(p, event)
     await state.set_state(GameState.playing)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await edit_msg(callback.message, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
+    await send_menu_with_skin(user_id, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
+    await callback.answer("🚀")
 
 @dp.callback_query(F.data == "continue_game")
 async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     p = players.get(user_id)
-    
     if not p:
-        # Создаём новую игру если нет
         r = get_rep(user_id)
         players[user_id] = {"balance": 5000, "reputation": max(0, r["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": r["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
         p = players[user_id]
@@ -892,8 +927,8 @@ async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
     
     await state.set_state(GameState.playing)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
-    await callback.answer("Продолжаем! 🎮")
+    await send_menu_with_skin(user_id, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
+    await callback.answer("🎮")
 
 @dp.callback_query(F.data == "restart_game_confirm")
 async def restart_confirm(callback: CallbackQuery):
@@ -912,20 +947,20 @@ async def show_stats(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
     house = next((h for h in HOUSES if h["id"] == get_player_house(callback.from_user.id)), HOUSES[0])
     shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(callback.from_user.id)["level"]), SHOP_LEVELS[0])
-    await edit_msg(callback.message, f"📊 <b>СТАТИСТИКА</b>\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n🏠 {house['name']}\n🏪 {shop['name']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"📊 <b>СТАТИСТИКА</b>\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n🏠 {house['name']}\n🏪 {shop['name']}")
 
 @dp.callback_query(F.data == "action_demand", StateFilter(GameState.playing))
 async def show_demand(callback: CallbackQuery):
-    await edit_msg(callback.message, f"📊 <b>РЫНОК</b>\n\n{fmt_demand(get_player(callback.from_user.id))}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"📊 <b>РЫНОК</b>\n\n{fmt_demand(get_player(callback.from_user.id))}")
 
 @dp.callback_query(F.data == "action_rep_menu")
 async def rep_menu_callback(callback: CallbackQuery):
     u = get_rep(callback.from_user.id)
-    await edit_msg(callback.message, f"🏅 <b>РЕПУТАЦИЯ: {rep_level(u['score'])}</b>\n📊 {u['score']}/100\n📦 Продаж: {u['total_sales']}\n💰 Прибыль: {u['total_profit']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"🏅 <b>РЕПУТАЦИЯ: {rep_level(u['score'])}</b>\n📊 {u['score']}/100\n📦 Продаж: {u['total_sales']}\n💰 Прибыль: {u['total_profit']}₽")
 
 @dp.callback_query(F.data == "action_ref_menu")
 async def ref_menu_callback(callback: CallbackQuery):
-    await edit_msg(callback.message, f"🔗 <b>РЕФЕРАЛЫ</b>\n\n<code>{ref_link(callback.from_user.id)}</code>\n\n💰 +500₽ за друга", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"🔗 <b>РЕФЕРАЛЫ</b>\n\n<code>{ref_link(callback.from_user.id)}</code>\n\n💰 +500₽ за друга")
 
 @dp.callback_query(F.data == "action_inventory", StateFilter(GameState.playing))
 async def show_inventory(callback: CallbackQuery):
@@ -947,13 +982,14 @@ async def next_day(callback: CallbackQuery):
     if event: apply_event(p, event)
     if user_id in published_items: published_items[user_id] = None
     sold_items[user_id].clear()
-    await edit_msg(callback.message, f"☀️ <b>ДЕНЬ {p['day']}</b> | 💰 {p['balance']}₽\n🏠 +{bonus}₽{f' | 🏪 +{shop_income}₽' if shop_income > 0 else ''}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    await send_menu_with_skin(user_id, f"☀️ <b>ДЕНЬ {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n🏠 +{bonus}₽{f' | 🏪 +{shop_income}₽' if shop_income > 0 else ''}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
 
 @dp.callback_query(F.data == "action_end", StateFilter(GameState.playing))
 async def end_game(callback: CallbackQuery, state: FSMContext):
     p = get_player(callback.from_user.id); await state.clear()
     r = "🏆 <b>ПОБЕДА!</b>" if p["balance"] >= 50000 else "💀 <b>БАНКРОТ!</b>" if p["balance"] <= 0 else "🎮 Игра окончена."
-    await edit_msg(callback.message, f"{r}\n💰 {p['balance']}₽\n📦 Продаж: {p['items_sold']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    await edit_msg(callback.message, f"{r}\n💰 {p['balance']}₽\n📦 Продаж: {p['items_sold']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")]]))
 
 @dp.callback_query(F.data == "restart_game")
 async def restart_game(callback: CallbackQuery):
@@ -964,7 +1000,7 @@ async def restart_game(callback: CallbackQuery):
 async def back_to_menu(callback: CallbackQuery):
     user_id = callback.from_user.id; p = get_player(user_id)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", reply_markup=main_kb(1, user_id))
+    await send_menu_with_skin(user_id, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
 
 @dp.callback_query(F.data == "back_to_start")
 async def back_start(callback: CallbackQuery):
@@ -974,33 +1010,9 @@ async def back_start(callback: CallbackQuery):
 @dp.callback_query(F.data == "action_learn")
 async def learn_btn(callback: CallbackQuery):
     l = get_learning(callback.from_user.id)
-    kb = [[InlineKeyboardButton(text=f"{'✅' if lesson['id'] in l['completed'] else '📖'} {lesson['title']}", callback_data=f"lesson_{lesson['id']}")] for lesson in LESSONS]
+    kb = [[InlineKeyboardButton(text=f"{'✅' if lesson['id'] in l['completed'] else '📖'} {lesson['title']}", callback_data=f"lesson_{lesson['id']}")] for lesson in [{"id": 1, "title": "🚀 Основы", "text": "📚 Основы товарки", "reward": 500}, {"id": 2, "title": "📊 Рынок", "text": "📚 Анализ рынка", "reward": 500}]]
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="back_to_start")])
     await edit_msg(callback.message, "📚 <b>ОБУЧЕНИЕ</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-
-def complete_lesson(user_id, lesson_id):
-    if lesson_id not in get_learning(user_id)["completed"]:
-        get_learning(user_id)["completed"].append(lesson_id)
-        save_json(LEARNING_FILE, learning_data)
-        if user_id in players: players[user_id]["balance"] += next((l["reward"] for l in LESSONS if l["id"] == lesson_id), 0)
-        return True
-    return False
-
-@dp.callback_query(F.data.startswith("lesson_"))
-async def show_lesson(callback: CallbackQuery):
-    lesson = next((l for l in LESSONS if l["id"] == int(callback.data.split("_")[1])), None)
-    if not lesson: return await callback.answer("Не найден")
-    done = lesson["id"] in get_learning(callback.from_user.id)["completed"]
-    kb = []
-    if not done: kb.append([InlineKeyboardButton(text="✅ ЗАВЕРШИТЬ (+₽)", callback_data=f"complete_lesson_{lesson['id']}")])
-    kb.append([InlineKeyboardButton(text="🔙 К УРОКАМ", callback_data="action_learn")])
-    await edit_msg(callback.message, lesson["text"] + (f"\n\n💰 +{lesson['reward']}₽" if not done else "\n✅ Пройден!"), reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-
-@dp.callback_query(F.data.startswith("complete_lesson_"))
-async def complete_lesson_btn(callback: CallbackQuery):
-    if complete_lesson(callback.from_user.id, int(callback.data.split("_")[2])):
-        await callback.answer("Урок пройден!"); await learn_btn(callback)
-    else: await callback.answer("Уже пройден")
 
 # ==================== ЗАПУСК ====================
 async def main():
