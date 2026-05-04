@@ -1131,6 +1131,20 @@ async def get_photo_links(message: types.Message):
     file = await bot.get_file(file_id)
     await message.answer(f"✅ <b>ID:</b>\n<code>{file_id}</code>", parse_mode="HTML")
 
+# ==================== ПОЛУЧЕНИЕ FILE_ID ДЛЯ СКИНОВ ====================
+@dp.message(F.photo)
+async def get_photo_id(message: types.Message):
+    """Присылаешь фото — бот выдаёт file_id, который можно вставить в код."""
+    photo = message.photo[-1]  # Берём самое большое разрешение
+    file_id = photo.file_id
+    
+    await message.answer(
+        f"✅ <b>File ID получен!</b>\n\n"
+        f"<code>{file_id}</code>\n\n"
+        f"<i>Скопируй этот ID и вставь в список SKINS в поле 'image_url'</i>",
+        parse_mode="HTML"
+    )
+
 # ==================== ЗАПУСК ====================
 async def main():
     print("🎮 ReSell Tycoon + Редкие товары запущен!")
