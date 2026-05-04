@@ -21,6 +21,7 @@ API_TOKEN = '8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4'
 CHANNEL_LINK = '@vintagedrop61'
 BOT_USERNAME = 'R-Game'
 DEEPSEEK_API_KEY = "sk-8d6e9d7c39c84ec6a0ecba379674346d"
+ADMIN_ID = 1475910449  # ← ЗАМЕНИ НА СВОЙ TELEGRAM ID (узнать можно через @userinfobot)
 
 client_openai = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
@@ -35,18 +36,24 @@ LEADERBOARD_FILE = "leaderboard.json"
 SKINS_FILE = "player_skins.json"
 SUPPLIER_ITEMS_FILE = "supplier_items.json"
 
-# ==================== СКИНЫ (8 ШТУК, РЕДКОСТИ НА РУССКОМ) ====================
 SKINS = [
-    {"id": "default", "name": "Новичок", "price": 0, "rarity": "обычный", "rep_required": 0, "emoji": "👶", "description": "Базовый скин. Выдаётся всем.", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE"},
-    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "обычный", "rep_required": 25, "emoji": "😎", "description": "Выдаётся при репутации 🟢 Хорошая (25).", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ"},
-    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "обычный", "rep_required": 50, "emoji": "🕴", "description": "Выдаётся при репутации 🔵 Отличная (50).", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ"},
-    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "редкий", "rep_required": 0, "emoji": "💻", "description": "Редкий скин. Сидит в кофемании.", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ"},
-    {"id": "cyber", "name": "Кибер-барыга", "price": 80000, "rarity": "эпический", "rep_required": 0, "emoji": "🤖", "description": "Эпический скин. Из будущего.", "avatar_config": {"face": "surprised", "hair": "none", "clothes": "hoodie", "accessory": "headphones", "background": "blue"}, "image_url": ""},
-    {"id": "legend", "name": "Бог товарки", "price": 150000, "rarity": "легендарный", "rep_required": 0, "emoji": "👑", "description": "Легендарный скин. Вершина.", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ"},
-    {"id": "gold", "name": "Золотой барыга", "price": 300000, "rarity": "легендарный", "rep_required": 0, "emoji": "🥇", "description": "Легендарный золотой скин.", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDJmn4w8_mwnpx1Ms388hYBj68KUW2AAMZaxvG28BLntt7LmTTjtwBAAMCAAN5AAM7BA"},
+    # Бесплатные (за репутацию)
+    {"id": "default", "name": "Новичок", "price": 0, "rarity": "обычный", "rep_required": 0, "emoji": "👶", "description": "Базовый скин.", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE", "limited": False, "max_count": 0},
+    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "обычный", "rep_required": 25, "emoji": "😎", "description": "Репутация 🟢 Хорошая (25).", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "обычный", "rep_required": 50, "emoji": "🕴", "description": "Репутация 🔵 Отличная (50).", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    # Платные
+    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "редкий", "rep_required": 0, "emoji": "💻", "description": "Редкий скин.", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "cyber", "name": "Кибер-барыга", "price": 80000, "rarity": "эпический", "rep_required": 0, "emoji": "🤖", "description": "Эпический скин.", "avatar_config": {"face": "surprised", "hair": "none", "clothes": "hoodie", "accessory": "headphones", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDxWn45SvUS8m2sFIRTRarzV3ylymgAAJGFGsbRxXISwzuA4OGtBJyAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "casual", "name": "Кэжуал барыга", "price": 5000, "rarity": "обычный", "rep_required": 0, "emoji": "👕", "description": "Обычный скин. Повседневный стиль.", "avatar_config": {"face": "default", "hair": "short", "clothes": "hoodie", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDyWn45lfPG9qMGWwqqtVvghaY-OpXAAJPFGsbRxXIS30JjvcuwnwHAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "cyberpunk", "name": "Барыга-киберпанк", "price": 120000, "rarity": "эпический", "rep_required": 0, "emoji": "🦾", "description": "Эпический скин в стиле киберпанк.", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDy2n45wzQNDGj-mZOhvUo3ToyI8MVAAJTFGsbRxXIS-Qrt13FcYnwAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "legend", "name": "Бог товарки", "price": 150000, "rarity": "легендарный", "rep_required": 0, "emoji": "👑", "description": "Легендарный скин.", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "oldmoney", "name": "Олд мани барыга", "price": 180000, "rarity": "эпический", "rep_required": 0, "emoji": "🎩", "description": "Эпический скин в стиле old money.", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDzWn457hhlWHg6jBASBq0EcTDmWEpAAJUFGsbRxXIS1Xa-QcoURaAAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "bazaar", "name": "Базарный барыга", "price": 35000, "rarity": "редкий", "rep_required": 0, "emoji": "🗣", "description": "Редкий скин. Настоящий базарный.", "avatar_config": {"face": "angry", "hair": "cap", "clothes": "jacket", "accessory": "chain", "background": "gray"}, "image_url": "AgACAgIAAxkBAAID0Wn46ouAFjuzjq1yQyOG4FahoM-CAAJlFGsbRxXIS-9X56WNZeVnAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    # Лимитированный мифический
+    {"id": "creator", "name": "Создатель", "price": 0, "rarity": "мифический", "rep_required": 0, "emoji": "💎", "description": "💎 МИФИЧЕСКИЙ СКИН. Лимит: 3 шт. Только для избранных.", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDz2n46ShGgxc6Z-mfB73cEzOvS74oAAJjFGsbRxXIS67XdFNB5viXAQADAgADeQADOwQ", "limited": True, "max_count": 3},
 ]
 
-RARITY_COLORS = {"обычный": "⬜", "редкий": "🟦", "эпический": "🟪", "легендарный": "🟨"}
+RARITY_COLORS = {"обычный": "⬜", "редкий": "🟦", "эпический": "🟪", "легендарный": "🟨", "мифический": "💎"}
 
 # ==================== ОБЩИЕ ТОВАРЫ У ПОСТАВЩИКОВ ====================
 SUPPLIER_ITEM_RARITIES = {
@@ -121,7 +128,7 @@ JOBS = [
 ]
 
 HOUSES = [
-    {"id": "room", "name": "🏚 Комната в общаге", "price": 0, "income_bonus": 0, "description": "Бесплатное жильё.", "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"},
+    {"id": "room", "name": "🏚 Комната в общаге", "price": 0, "income_bonus": 0, "description": "Бесплатное жильё.", "image_url": "AgACAgIAAxkBAAIDw2n45KI6ja7rOv30n_8DdrWCFQwyAAI-FGsbRxXIS4VB50007zQ3AQADAgADeQADOwQ"},
     {"id": "flat", "name": "🏢 Квартира", "price": 10000, "income_bonus": 150, "description": "Уютная квартира. +150₽/день.", "image_url": "AgACAgIAAxkBAAIBeGn3hGvVcFktYFQJP-YNnKti48v1AAKYGWsbUNy4SzN3yqU-dPZwAQADAgADeQADOwQ"},
     {"id": "house", "name": "🏠 Одноэтажный дом", "price": 35000, "income_bonus": 400, "description": "Дом с гаражом. +400₽/день.", "image_url": "AgACAgIAAxkBAAIBemn3hKeq-IxdQ6l6jB7sD10pQPbHAAKUGGsbaAW5S4jG5ecluTqMAQADAgADeQADOwQ"},
     {"id": "villa", "name": "🏰 Богатая вилла", "price": 100000, "income_bonus": 1200, "description": "Вилла с бассейном. +1200₽/день.", "image_url": "AgACAgIAAxkBAAIBfGn3hME0a5rsH1wos1Qyy1AhsYAnAAKVGGsbaAW5SzyFR-E8--65AQADAgADeQADOwQ"},
@@ -249,6 +256,13 @@ def buy_skin(user_id, skin_id):
     skin = next((s for s in SKINS if s["id"] == skin_id), None)
     if not skin: return False, "Не найден"
     if get_player_skin(user_id) == skin_id: return False, "Уже есть!"
+    
+    # Проверка лимитированных скинов
+    if skin.get("limited"):
+        count = sum(1 for uid, s in player_skins.items() if s == skin_id)
+        if count >= skin["max_count"]:
+            return False, f"Лимит исчерпан! ({skin['max_count']} шт.)"
+    
     p = get_player(user_id)
     if skin["price"] > 0 and p["balance"] < skin["price"]: return False, "Недостаточно!"
     if skin["price"] > 0: p["balance"] -= skin["price"]
@@ -450,6 +464,9 @@ async def start_cmd(message: types.Message):
                 except: pass
                 break
     await del_user_msgs(user_id)
+    # Выдаём creator скин админу
+    if user_id == ADMIN_ID and get_player_skin(user_id) != "creator":
+        buy_skin(user_id, "creator")
     for skin in check_rep_skins(user_id):
         buy_skin(user_id, skin["id"])
         await send_msg(user_id, f"🎉 <b>НОВЫЙ СКИН!</b>\n{skin['emoji']} {skin['name']} — за репутацию {rep_level(get_rep(user_id)['score'])}!")
@@ -474,6 +491,68 @@ async def start_cmd(message: types.Message):
             last_bot_message[user_id] = msg.message_id
         except: await send_msg(user_id, txt, reply_markup=kb)
     else: await send_msg(user_id, txt, reply_markup=kb)
+
+# ==================== АДМИН-КОМАНДЫ ====================
+@dp.message(Command('admin'))
+async def admin_cmd(message: types.Message):
+    user_id = message.from_user.id
+    if user_id != ADMIN_ID:
+        return await message.answer("❌ Нет доступа!")
+    
+    args = message.text.split()
+    
+    if len(args) < 2:
+        return await message.answer(
+            "🔑 <b>АДМИН-ПАНЕЛЬ</b>\n\n"
+            "<b>Команды:</b>\n"
+            "/admin players — список игроков\n"
+            "/admin give [ID] [сумма] — выдать деньги\n"
+            "/admin skin [ID] [skin_id] — выдать скин\n"
+            "/admin reset [ID] — сбросить игрока",
+            parse_mode="HTML"
+        )
+    
+    cmd = args[1]
+    
+    if cmd == "players":
+        txt = "👥 <b>ИГРОКИ:</b>\n\n"
+        for uid, p in players.items():
+            try:
+                user = await bot.get_chat(uid)
+                name = user.first_name or f"ID:{uid}"
+            except:
+                name = f"ID:{uid}"
+            txt += f"🆔 {name} (ID: {uid})\n💰 {p['balance']}₽ | 📅 День {p['day']} | 📋 Продано: {p['items_sold']}\n\n"
+        await message.answer(txt or "Нет активных игроков.", parse_mode="HTML")
+    
+    elif cmd == "give" and len(args) >= 4:
+        target_id = int(args[2])
+        amount = int(args[3])
+        if target_id in players:
+            players[target_id]["balance"] += amount
+            await message.answer(f"✅ Выдано {amount}₽ игроку ID:{target_id}")
+            try:
+                await bot.send_message(target_id, f"💰 <b>Админ выдал {amount}₽!</b>\n💼 Новый баланс: {players[target_id]['balance']}₽", parse_mode="HTML")
+            except: pass
+        else:
+            await message.answer("❌ Игрок не найден.")
+    
+    elif cmd == "reset" and len(args) >= 3:
+        target_id = int(args[2])
+        if target_id in players:
+            del players[target_id]
+            await message.answer(f"✅ Игрок ID:{target_id} сброшен.")
+        else:
+            await message.answer("❌ Игрок не найден.")
+    
+    elif cmd == "skin" and len(args) >= 4:
+        target_id = int(args[2])
+        skin_id = args[3]
+        if target_id in players:
+            success, msg = buy_skin(target_id, skin_id)
+            await message.answer(f"{'✅' if success else '❌'} {msg}")
+        else:
+            await message.answer("❌ Игрок не найден.")
 
 @dp.message(Command('play'))
 async def play_cmd(message: types.Message, state: FSMContext):
@@ -574,8 +653,19 @@ async def show_skins_catalog(callback: CallbackQuery, page: int = 0):
         if rep_score >= skin["rep_required"]: txt += "\n🎁 <b>ДОСТУПЕН!</b>"; act = InlineKeyboardButton(text="🎁 ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}")
         else: txt += f"\n🔒 Нужно {skin['rep_required']} реп. (у тебя {rep_score})"; act = None
     else:
-        if p["balance"] >= skin["price"]: txt += f"\n💰 Цена: {skin['price']}₽"; act = InlineKeyboardButton(text=f"🛒 КУПИТЬ", callback_data=f"buy_skin_{skin['id']}")
-        else: txt += f"\n❌ {skin['price']}₽ (не хватает {skin['price']-p['balance']}₽)"; act = None
+        # Проверка лимита
+        if skin.get("limited"):
+            skin_id = skin["id"]
+            count = sum(1 for uid, s in player_skins.items() if s == skin_id)
+            available = skin["max_count"] - count
+            if available <= 0:
+                txt += f"\n💎 <b>ЛИМИТ ИСЧЕРПАН ({skin['max_count']} из {skin['max_count']})</b>"; act = None
+            else:
+                txt += f"\n💎 <b>МИФИЧЕСКИЙ! Доступно: {available} из {skin['max_count']}</b>"
+                act = InlineKeyboardButton(text="💎 ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}") if skin["price"] == 0 or p["balance"] >= skin["price"] else None
+        else:
+            if p["balance"] >= skin["price"]: txt += f"\n💰 Цена: {skin['price']}₽"; act = InlineKeyboardButton(text=f"🛒 КУПИТЬ", callback_data=f"buy_skin_{skin['id']}")
+            else: txt += f"\n❌ {skin['price']}₽ (не хватает {skin['price']-p['balance']}₽)"; act = None
     txt += f"\n\n💼 {p['balance']}₽ | ⭐ {rep_score}/100"
     nav = []
     if page > 0: nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"skin_page_{page-1}"))
