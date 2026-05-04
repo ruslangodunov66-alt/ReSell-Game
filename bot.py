@@ -34,26 +34,26 @@ LEADERBOARD_FILE = "leaderboard.json"
 SKINS_FILE = "player_skins.json"
 SUPPLIER_ITEMS_FILE = "supplier_items.json"
 
-# ==================== СКИНЫ ====================
+# ==================== СКИНЫ (8 ШТУК, РЕДКОСТИ НА РУССКОМ) ====================
 SKINS = [
-    {"id": "default", "name": "Новичок", "price": 0, "rarity": "common", "rep_required": 0, "emoji": "👶", "description": "Базовый скин.", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE"},
-    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "common", "rep_required": 25, "emoji": "😎", "description": "Репутация 🟢 Хорошая (25).", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ"},
-    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "common", "rep_required": 50, "emoji": "🕴", "description": "Репутация 🔵 Отличная (50).", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ"},
-    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "rare", "rep_required": 0, "emoji": "💻", "description": "Редкий скин.", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ"},
-    {"id": "cyber", "name": "Кибер-барыга", "price": 80000, "rarity": "epic", "rep_required": 0, "emoji": "🤖", "description": "Эпический скин.", "avatar_config": {"face": "surprised", "hair": "none", "clothes": "hoodie", "accessory": "headphones", "background": "blue"}, "image_url": ""},
-    {"id": "legend", "name": "Бог товарки", "price": 150000, "rarity": "legendary", "rep_required": 0, "emoji": "👑", "description": "Легендарный.", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ"},
-    {"id": "gold", "name": "Золотой барыга", "price": 300000, "rarity": "legendary", "rep_required": 0, "emoji": "🥇", "description": "Легендарный золотой.", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDJmn4w8_mwnpx1Ms388hYBj68KUW2AAMZaxvG28BLntt7LmTTjtwBAAMCAAN5AAM7BA"},
+    {"id": "default", "name": "Новичок", "price": 0, "rarity": "обычный", "rep_required": 0, "emoji": "👶", "description": "Базовый скин. Выдаётся всем.", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE"},
+    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "обычный", "rep_required": 25, "emoji": "😎", "description": "Выдаётся при репутации 🟢 Хорошая (25).", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ"},
+    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "обычный", "rep_required": 50, "emoji": "🕴", "description": "Выдаётся при репутации 🔵 Отличная (50).", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ"},
+    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "редкий", "rep_required": 0, "emoji": "💻", "description": "Редкий скин. Сидит в кофемании.", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ"},
+    {"id": "cyber", "name": "Кибер-барыга", "price": 80000, "rarity": "эпический", "rep_required": 0, "emoji": "🤖", "description": "Эпический скин. Из будущего.", "avatar_config": {"face": "surprised", "hair": "none", "clothes": "hoodie", "accessory": "headphones", "background": "blue"}, "image_url": ""},
+    {"id": "legend", "name": "Бог товарки", "price": 150000, "rarity": "легендарный", "rep_required": 0, "emoji": "👑", "description": "Легендарный скин. Вершина.", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ"},
+    {"id": "gold", "name": "Золотой барыга", "price": 300000, "rarity": "легендарный", "rep_required": 0, "emoji": "🥇", "description": "Легендарный золотой скин.", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDJmn4w8_mwnpx1Ms388hYBj68KUW2AAMZaxvG28BLntt7LmTTjtwBAAMCAAN5AAM7BA"},
 ]
 
-RARITY_COLORS = {"common": "⬜", "rare": "🟦", "epic": "🟪", "legendary": "🟨"}
+RARITY_COLORS = {"обычный": "⬜", "редкий": "🟦", "эпический": "🟪", "легендарный": "🟨"}
 
-# ==================== ОБЩИЕ ТОВАРЫ ====================
+# ==================== ОБЩИЕ ТОВАРЫ У ПОСТАВЩИКОВ ====================
 SUPPLIER_ITEM_RARITIES = {
-    "common": {"name": "Обычный", "color": "⬜", "price_mult_min": 0.8, "price_mult_max": 1.3, "chance": 55},
-    "rare": {"name": "Редкий", "color": "🟦", "price_mult_min": 1.5, "price_mult_max": 2.5, "chance": 25},
-    "epic": {"name": "Эпик", "color": "🟪", "price_mult_min": 2.5, "price_mult_max": 5.0, "chance": 12},
-    "legendary": {"name": "Легендарный", "color": "🟨", "price_mult_min": 5.0, "price_mult_max": 12.0, "chance": 6},
-    "mythic": {"name": "Мифик", "color": "🟥", "price_mult_min": 10.0, "price_mult_max": 30.0, "chance": 2},
+    "обычный": {"name": "Обычный", "color": "⬜", "price_mult_min": 0.8, "price_mult_max": 1.3, "chance": 55},
+    "редкий": {"name": "Редкий", "color": "🟦", "price_mult_min": 1.5, "price_mult_max": 2.5, "chance": 25},
+    "эпический": {"name": "Эпический", "color": "🟪", "price_mult_min": 2.5, "price_mult_max": 5.0, "chance": 12},
+    "легендарный": {"name": "Легендарный", "color": "🟨", "price_mult_min": 5.0, "price_mult_max": 12.0, "chance": 6},
+    "мифический": {"name": "Мифический", "color": "🟥", "price_mult_min": 10.0, "price_mult_max": 30.0, "chance": 2},
 }
 
 supplier_stock = {"items": [], "last_update": 0}
@@ -108,31 +108,31 @@ MARKET_EVENTS = [
 ]
 
 CLIENT_TYPES = {
-    "angry": {"system_prompt": "Ты покупатель. Торгуешься. 1-3 предл.", "discount_range": (0.6, 0.8), "patience": 4},
-    "kind": {"system_prompt": "Ты покупатель. Вежливый. 1-3 предл.", "discount_range": (0.85, 0.95), "patience": 6},
-    "sly": {"system_prompt": "Ты перекупщик. 1-3 предл.", "discount_range": (0.7, 0.85), "patience": 5},
+    "angry": {"system_prompt": "Ты покупатель. Торгуешься. 1-3 предложения.", "discount_range": (0.6, 0.8), "patience": 4},
+    "kind": {"system_prompt": "Ты покупатель. Вежливый. 1-3 предложения.", "discount_range": (0.85, 0.95), "patience": 6},
+    "sly": {"system_prompt": "Ты перекупщик. 1-3 предложения.", "discount_range": (0.7, 0.85), "patience": 5},
 }
 
 JOBS = [
-    {"id": "flyers", "name": "📦 Расклейка", "duration": 60, "reward": 200, "emoji": "📦"},
-    {"id": "delivery", "name": "🚗 Доставка", "duration": 120, "reward": 500, "emoji": "🚗"},
-    {"id": "freelance", "name": "💻 Фриланс", "duration": 300, "reward": 1200, "emoji": "💻"},
+    {"id": "flyers", "name": "📦 Расклейка объявлений", "duration": 60, "reward": 200, "emoji": "📦"},
+    {"id": "delivery", "name": "🚗 Доставка заказов", "duration": 120, "reward": 500, "emoji": "🚗"},
+    {"id": "freelance", "name": "💻 Фриланс (дизайн)", "duration": 300, "reward": 1200, "emoji": "💻"},
 ]
 
 HOUSES = [
-    {"id": "room", "name": "🏚 Комната в общаге", "price": 0, "income_bonus": 0, "image_url": ""},
-    {"id": "flat", "name": "🏢 Квартира", "price": 10000, "income_bonus": 150, "image_url": ""},
-    {"id": "house", "name": "🏠 Дом", "price": 35000, "income_bonus": 400, "image_url": ""},
-    {"id": "villa", "name": "🏰 Вилла", "price": 100000, "income_bonus": 1200, "image_url": ""},
-    {"id": "yacht", "name": "🛥 Яхта", "price": 250000, "income_bonus": 3000, "image_url": ""},
+    {"id": "room", "name": "🏚 Комната в общаге", "price": 0, "income_bonus": 0, "description": "Бесплатное жильё.", "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"},
+    {"id": "flat", "name": "🏢 Квартира", "price": 10000, "income_bonus": 150, "description": "Уютная квартира. +150₽/день.", "image_url": "AgACAgIAAxkBAAIBeGn3hGvVcFktYFQJP-YNnKti48v1AAKYGWsbUNy4SzN3yqU-dPZwAQADAgADeQADOwQ"},
+    {"id": "house", "name": "🏠 Одноэтажный дом", "price": 35000, "income_bonus": 400, "description": "Дом с гаражом. +400₽/день.", "image_url": "AgACAgIAAxkBAAIBemn3hKeq-IxdQ6l6jB7sD10pQPbHAAKUGGsbaAW5S4jG5ecluTqMAQADAgADeQADOwQ"},
+    {"id": "villa", "name": "🏰 Богатая вилла", "price": 100000, "income_bonus": 1200, "description": "Вилла с бассейном. +1200₽/день.", "image_url": "AgACAgIAAxkBAAIBfGn3hME0a5rsH1wos1Qyy1AhsYAnAAKVGGsbaAW5SzyFR-E8--65AQADAgADeQADOwQ"},
+    {"id": "yacht", "name": "🛥 Яхта", "price": 250000, "income_bonus": 3000, "description": "Яхта у причала. +3000₽/день.", "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"},
 ]
 
 SHOP_LEVELS = [
     {"id": "none", "name": "Нет магазина", "price": 0, "income_per_hour": 0},
-    {"id": "stall", "name": "🛍 Лавка", "price": 5000, "income_per_hour": 100},
-    {"id": "container", "name": "📦 Контейнер", "price": 15000, "income_per_hour": 300},
-    {"id": "store", "name": "🏬 Магазин", "price": 50000, "income_per_hour": 800},
-    {"id": "boutique", "name": "👑 Бутик", "price": 150000, "income_per_hour": 2000},
+    {"id": "stall", "name": "🛍 Лавка на рынке", "price": 5000, "income_per_hour": 100},
+    {"id": "container", "name": "📦 Контейнер на Садоводе", "price": 15000, "income_per_hour": 300},
+    {"id": "store", "name": "🏬 Магазин в ТЦ", "price": 50000, "income_per_hour": 800},
+    {"id": "boutique", "name": "👑 Бутик в центре", "price": 150000, "income_per_hour": 2000},
 ]
 
 REPUTATION_LEVELS = {-100: "💀 ЧС", -50: "🔴 Ужасная", 0: "🟡 Нейтральная", 25: "🟢 Хорошая", 50: "🔵 Отличная", 75: "🟣 Легенда", 100: "👑 Бог товарки"}
@@ -206,18 +206,9 @@ async def send_msg(user_id, text, parse_mode="HTML", reply_markup=None):
     last_bot_message[user_id] = msg.message_id
     return msg
 
-async def edit_msg(message, text, parse_mode="HTML", reply_markup=None):
-    await del_user_msgs(message.chat.id)
-    try: await message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
-    except: pass
-
 # ==================== РЕФЕРАЛЫ ====================
 def gen_ref(user_id): return hashlib.md5(str(user_id).encode()).hexdigest()[:8]
 def ref_link(user_id): return f"https://t.me/{BOT_USERNAME}?start=ref_{gen_ref(user_id)}"
-def is_vip(user_id):
-    s = [(uid, len(d["invited"])) for uid, d in referral_data.items()]
-    s.sort(key=lambda x: x[1], reverse=True)
-    return str(user_id) in [str(uid) for uid, _ in s[:3]]
 
 # ==================== РЕПУТАЦИЯ ====================
 def get_rep(user_id):
@@ -240,6 +231,7 @@ def update_leaderboard(user_id, profit, sales):
         leaderboard_data[uid] = {"total_profit": 0, "total_sales": 0, "week": week}
     leaderboard_data[uid]["total_profit"] += profit
     leaderboard_data[uid]["total_sales"] += sales
+    save_json(LEADERBOARD_FILE, leaderboard_data)
 
 def get_top_players(limit=10):
     top = [(int(uid), d["total_profit"], d["total_sales"]) for uid, d in leaderboard_data.items()]
@@ -266,9 +258,6 @@ def buy_skin(user_id, skin_id):
 def check_rep_skins(user_id):
     rep_score = get_rep(user_id)["score"]
     return [s for s in SKINS if s["rep_required"] > 0 and rep_score >= s["rep_required"] and get_player_skin(user_id) != s["id"]]
-
-def get_avatar_url(avatar_config):
-    return f"https://api.dicebear.com/7.x/pixel-art/svg?seed={hashlib.md5(str(avatar_config).encode()).hexdigest()[:10]}"
 
 # ==================== НЕДВИЖИМОСТЬ ====================
 def get_player_house(user_id):
@@ -378,10 +367,10 @@ def rate_description(desc):
     return min(10, max(1, score))
 
 def get_quality_bonus(q):
-    if q >= 9: return {"name": "🔥", "buyers_bonus": 3}
-    elif q >= 7: return {"name": "⭐", "buyers_bonus": 2}
-    elif q >= 5: return {"name": "👍", "buyers_bonus": 1}
-    return {"name": "👌", "buyers_bonus": 0}
+    if q >= 9: return {"name": "🔥 Легендарное", "buyers_bonus": 3}
+    elif q >= 7: return {"name": "⭐ Отличное", "buyers_bonus": 2}
+    elif q >= 5: return {"name": "👍 Хорошее", "buyers_bonus": 1}
+    return {"name": "👌 Обычное", "buyers_bonus": 0}
 
 # ==================== НЕЙРОКЛИЕНТЫ ====================
 def first_msg(client_type, item_name, price, offer):
@@ -473,7 +462,7 @@ async def start_cmd(message: types.Message):
             [InlineKeyboardButton(text="🔄 ЗАНОВО", callback_data="restart_game_confirm")],
         ])
     else:
-        txt = f"🎮 <b>RESELL TYCOON</b>\n\nТвой скин: {skin['emoji']} {skin['name']}\n\nРедкие товары • Скины • Аукцион"
+        txt = f"🎮 <b>RESELL TYCOON</b>\n\nТвой скин: {skin['emoji']} {skin['name']}\n\nРедкие товары • Скины • Аукцион\nЛидеры • Магазин • Подработки"
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
             [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
@@ -549,14 +538,16 @@ async def handle_message(message: types.Message, state: FSMContext):
 async def show_chats(callback: CallbackQuery):
     user_id = callback.from_user.id
     al = [(k, c) for k, c in active_chats.items() if c["user_id"] == user_id and not c["finished"]]
-    if not al: return await edit_msg(callback.message, "💬 Нет диалогов.\nОпубликуй товар в 📦 Инвентаре!")
+    if not al: return await send_msg(user_id, "💬 Нет диалогов.\nОпубликуй товар в 📦 Инвентаре!")
     txt = f"💬 <b>ДИАЛОГИ ({len(al)}):</b>\n\n"
     kb = []
     for key, chat in al:
         txt += f"👤 #{chat['buyer_id']} | {chat['item']} | {chat['offer']}₽\n"
         kb.append([InlineKeyboardButton(text=f"💬 Ответить #{chat['buyer_id']}", callback_data=f"open_chat_{user_id}_{chat['buyer_id']}")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data.startswith("open_chat_"))
 async def open_chat(callback: CallbackQuery, state: FSMContext):
@@ -598,8 +589,8 @@ async def show_skins_catalog(callback: CallbackQuery, page: int = 0):
             await del_prev(user_id); last_bot_message[user_id] = msg.message_id
             try: await callback.message.delete()
             except: pass
-        except: await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-    else: await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+        except: await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    else: await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("skin_page_"))
 async def skin_page_btn(callback: CallbackQuery):
@@ -621,7 +612,7 @@ async def show_suppliers(callback: CallbackQuery):
     user_id = callback.from_user.id; check_supplier_update()
     items = supplier_stock.get("items", [])
     if not items: generate_supplier_items(); items = supplier_stock.get("items", [])
-    txt = "🏭 <b>ПОСТАВЩИКИ</b>\n<i>Обновление каждые 5 мин.</i>\n\n"
+    txt = "🏭 <b>ПОСТАВЩИКИ</b>\n<i>Обновление каждые 5 мин. Общие для всех!</i>\n\n"
     kb = []; p = get_player(user_id)
     for item in items[:8]:
         tl = max(0, int(item["end_time"] - time_module.time())); mins = tl // 60
@@ -629,7 +620,9 @@ async def show_suppliers(callback: CallbackQuery):
         if p["balance"] >= item["buy_price"]: kb.append([InlineKeyboardButton(text=f"{item['rarity_color']} {item['name']} — {item['buy_price']}₽", callback_data=f"buy_supplier_{item['id']}")])
     kb.append([InlineKeyboardButton(text="🔄 ОБНОВИТЬ", callback_data="action_buy")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data.startswith("buy_supplier_"), StateFilter(GameState.playing))
 async def buy_supplier_item(callback: CallbackQuery):
@@ -654,13 +647,15 @@ async def show_shop(callback: CallbackQuery):
     elapsed = time_module.time() - get_player_shop(user_id)["last_collect"]
     income = int(shop["income_per_hour"] * (elapsed / 3600))
     p = get_player(user_id)
-    txt = f"🏪 <b>МАГАЗИН</b>\n\nТвой: {shop['name']}\n💰 Доход: {shop['income_per_hour']}₽/час\n💵 Накоплено: {income}₽\n💼 Баланс: {p['balance']}₽"
+    txt = f"🏪 <b>МАГАЗИН ОДЕЖДЫ</b>\n\nТвой: {shop['name']}\n💰 Доход: {shop['income_per_hour']}₽/час\n💵 Накоплено: {income}₽\n💼 Баланс: {p['balance']}₽"
     kb = []
     if income > 0: kb.append([InlineKeyboardButton(text=f"💰 СОБРАТЬ +{income}₽", callback_data="collect_shop_income")])
     for s in SHOP_LEVELS:
         if s["price"] > shop["price"] and p["balance"] >= s["price"]: kb.append([InlineKeyboardButton(text=f"🛒 {s['name']} — {s['price']}₽", callback_data=f"buy_shop_{s['id']}")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "collect_shop_income", StateFilter(GameState.playing))
 async def collect_shop_income_btn(callback: CallbackQuery):
@@ -678,7 +673,7 @@ async def buy_shop_btn(callback: CallbackQuery):
 @dp.callback_query(F.data == "action_auction", StateFilter(GameState.playing))
 async def show_auction(callback: CallbackQuery):
     ai = [item for item in auction_data.get("items", []) if item.get("active", True)]
-    if not ai: return await edit_msg(callback.message, "🔨 <b>АУКЦИОН</b>\n\nНет лотов.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="📤 ВЫСТАВИТЬ", callback_data="auction_sell")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    if not ai: return await send_msg(callback.from_user.id, "🔨 <b>АУКЦИОН</b>\n\nНет лотов.\nВыстави свой товар!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="📤 ВЫСТАВИТЬ", callback_data="auction_sell")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
     txt = "🔨 <b>АУКЦИОН</b>\n\n"; kb = []
     for i, item in enumerate(ai):
         tl = max(0, int(item.get("end_time", 0) - time_module.time())); h, m = divmod(tl, 3600)
@@ -686,7 +681,9 @@ async def show_auction(callback: CallbackQuery):
         if item["seller_id"] != callback.from_user.id: kb.append([InlineKeyboardButton(text=f"💰 СТАВКА (мин. {int(item.get('current_bid', item['start_price']) * 1.1)}₽)", callback_data=f"auction_bid_{i}")])
     kb.append([InlineKeyboardButton(text="📤 ВЫСТАВИТЬ", callback_data="auction_sell")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "auction_sell", StateFilter(GameState.playing))
 async def auction_sell_menu(callback: CallbackQuery):
@@ -694,7 +691,9 @@ async def auction_sell_menu(callback: CallbackQuery):
     kb = [[InlineKeyboardButton(text=f"📦 {item['name']} (~{item['market_price']}₽)", callback_data=f"auction_put_{i}")] for i, item in enumerate(p["inventory"])]
     kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_auction")])
     if not kb: return await callback.answer("Нечего выставить!")
-    await edit_msg(callback.message, "📤 <b>ВЫСТАВИТЬ</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_msg(callback.from_user.id, "📤 <b>ВЫСТАВИТЬ НА АУКЦИОН</b>\n\nВыбери товар:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 # ==================== ПУБЛИКАЦИЯ ====================
 @dp.callback_query(F.data.startswith("inv_"), StateFilter(GameState.playing))
@@ -727,7 +726,9 @@ async def handle_description(message: types.Message, state: FSMContext):
 async def show_jobs(callback: CallbackQuery):
     kb = [[InlineKeyboardButton(text=f"{j['emoji']} {j['name']} — {j['reward']}₽ ({j['duration']}с)", callback_data=f"start_job_{i}")] for i, j in enumerate(JOBS)]
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, "💼 <b>ПОДРАБОТКИ</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_msg(callback.from_user.id, "💼 <b>ПОДРАБОТКИ</b>\n\nВыбери работу:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data.startswith("start_job_"))
 async def start_job(callback: CallbackQuery):
@@ -750,13 +751,15 @@ async def finish_job(user_id, job_idx):
 @dp.callback_query(F.data == "action_leaderboard", StateFilter(GameState.playing))
 async def show_leaderboard(callback: CallbackQuery):
     top = get_top_players(10)
-    if not top: return await edit_msg(callback.message, "🏆 Пока нет данных.")
-    txt = "🏆 <b>ТОП-10 ПРОДАВЦОВ</b>\n\n"
+    if not top: return await send_msg(callback.from_user.id, "🏆 Пока нет данных.")
+    txt = "🏆 <b>ТОП-10 ПРОДАВЦОВ НЕДЕЛИ</b>\n\n"
     for i, (uid, profit, sales) in enumerate(top):
         try: name = (await bot.get_chat(uid)).first_name or f"ID:{uid}"
         except: name = f"ID:{uid}"
-        txt += f"{['🥇','🥈','🥉'][i] if i<3 else f'{i+1}.'} {name} — {profit}₽\n"
-    await edit_msg(callback.message, txt)
+        txt += f"{['🥇','🥈','🥉'][i] if i<3 else f'{i+1}.'} {name} — {profit}₽ ({sales} прод.)\n"
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "action_houses", StateFilter(GameState.playing))
 async def show_houses_catalog(callback: CallbackQuery, page: int = 0):
@@ -764,9 +767,9 @@ async def show_houses_catalog(callback: CallbackQuery, page: int = 0):
     if page < 0: page = 0
     if page >= len(HOUSES): page = len(HOUSES) - 1
     house = HOUSES[page]; owned = current_id == house["id"]
-    st = "✅ ТВОЁ" if owned else (f"💰 {house['price']}₽" if p["balance"] >= house["price"] else f"💰 {house['price']}₽ (не хватает)")
+    st = "✅ ТВОЁ" if owned else (f"💰 {house['price']}₽" if p["balance"] >= house["price"] else f"💰 {house['price']}₽ (не хватает {house['price']-p['balance']}₽)")
     act = InlineKeyboardButton(text="🛒 КУПИТЬ", callback_data=f"buy_house_{house['id']}") if not owned and p["balance"] >= house["price"] else None
-    txt = f"🏠 <b>ЖИЛЬЁ</b> {page+1}/{len(HOUSES)}\n\n{house['name']}\n{st}"
+    txt = f"🏠 <b>НЕДВИЖИМОСТЬ</b>\n📄 {page+1}/{len(HOUSES)}\n\n{house['name']}\n{house.get('description', '')}\n{st}\n\n💼 Баланс: {p['balance']}₽"
     nav = []
     if page > 0: nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"house_page_{page-1}"))
     if page < len(HOUSES)-1: nav.append(InlineKeyboardButton(text="➡️", callback_data=f"house_page_{page+1}"))
@@ -774,7 +777,18 @@ async def show_houses_catalog(callback: CallbackQuery, page: int = 0):
     if nav: kb.append(nav)
     if act: kb.append([act])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    # Отправляем фото
+    if house.get("image_url"):
+        try:
+            msg = await bot.send_photo(user_id, house["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+            await del_prev(user_id); last_bot_message[user_id] = msg.message_id
+            try: await callback.message.delete()
+            except: pass
+            return
+        except: pass
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data.startswith("house_page_"), StateFilter(GameState.playing))
 async def house_page_btn(callback: CallbackQuery):
@@ -824,7 +838,9 @@ async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == "restart_game_confirm")
 async def restart_confirm(callback: CallbackQuery):
-    await edit_msg(callback.message, "⚠️ <b>СБРОСИТЬ?</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⚠️ ДА", callback_data="restart_game_yes")], [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")]]))
+    await send_msg(callback.from_user.id, "⚠️ <b>СБРОСИТЬ ПРОГРЕСС?</b>\nБаланс и инвентарь потеряются.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="⚠️ ДА", callback_data="restart_game_yes")], [InlineKeyboardButton(text="❌ НЕТ", callback_data="continue_game")]]))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "restart_game_yes")
 async def restart_yes(callback: CallbackQuery, state: FSMContext):
@@ -836,53 +852,86 @@ async def show_stats(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
     house = next((h for h in HOUSES if h["id"] == get_player_house(callback.from_user.id)), HOUSES[0])
     shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(callback.from_user.id)["level"]), SHOP_LEVELS[0])
-    await edit_msg(callback.message, f"📊 <b>СТАТЫ</b>\n💰 {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n🏠 {house['name']}\n🏪 {shop['name']}")
+    await send_msg(callback.from_user.id, f"📊 <b>СТАТИСТИКА</b>\n💰 Баланс: {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n🛒 Потрачено: {p['total_spent']}₽\n🏠 Жильё: {house['name']}\n🏪 Магазин: {shop['name']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "action_demand", StateFilter(GameState.playing))
 async def show_demand(callback: CallbackQuery):
-    await edit_msg(callback.message, f"📊 <b>РЫНОК</b>\n\n{fmt_demand(get_player(callback.from_user.id))}")
+    p = get_player(callback.from_user.id)
+    txt = "📊 <b>СПРОС НА РЫНКЕ</b>\n\n" + fmt_demand(p) + "\n\n💡 <b>Совет:</b> Покупай что в тренде 🔥, продавай дороже!"
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "action_rep_menu")
 async def rep_menu_callback(callback: CallbackQuery):
     u = get_rep(callback.from_user.id)
-    await edit_msg(callback.message, f"🏅 <b>РЕПУТАЦИЯ: {rep_level(u['score'])}</b>\n📊 {u['score']}/100\n📦 Продаж: {u['total_sales']}\n💰 Прибыль: {u['total_profit']}₽")
+    lvl = rep_level(u['score'])
+    bar = "█" * int((u['score']+100)/200*10) + "░" * (10-int((u['score']+100)/200*10))
+    txt = f"🏅 <b>РЕПУТАЦИЯ: {lvl}</b>\n📊 [{bar}] {u['score']}/100\n\n📦 Всего продаж: {u['total_sales']}\n💰 Общая прибыль: {u['total_profit']}₽\n\n<i>Повышай репутацию — получай скины!</i>"
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "action_ref_menu")
 async def ref_menu_callback(callback: CallbackQuery):
-    await edit_msg(callback.message, f"🔗 <b>РЕФЕРАЛЫ</b>\n\n<code>{ref_link(callback.from_user.id)}</code>\n\n💰 +500₽ за друга")
+    user_id = callback.from_user.id
+    count = len(referral_data[str(user_id)]["invited"])
+    txt = f"🔗 <b>РЕФЕРАЛЬНАЯ СИСТЕМА</b>\n\nТвоя ссылка:\n<code>{ref_link(user_id)}</code>\n\n👥 Приглашено: {count} чел.\n💰 Заработано: {count*500}₽\n\n<i>Отправь другу — получи +500₽!</i>"
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    try: await callback.message.delete()
+    except: pass
 
+# ==================== ИНВЕНТАРЬ ====================
 @dp.callback_query(F.data == "action_inventory", StateFilter(GameState.playing))
 async def show_inventory(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
-    if not p["inventory"]: return await edit_msg(callback.message, "📦 <b>ПУСТО</b>\n\nКупи товары у поставщиков!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="action_buy")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    if not p["inventory"]: return await send_msg(callback.from_user.id, "📦 <b>ИНВЕНТАРЬ ПУСТ</b>\n\nКупи товары у поставщиков! 👇", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="action_buy")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
     kb = [[InlineKeyboardButton(text=f"{it['name']} | {it['buy_price']}₽ → ~{it['market_price']}₽", callback_data=f"inv_{i}")] for i, it in enumerate(p["inventory"])]
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
-    await edit_msg(callback.message, "📦 <b>ИНВЕНТАРЬ</b>\n\n" + "\n".join(f"{i+1}. {it['name']} | Закуп: {it['buy_price']}₽ | Рынок: ~{it['market_price']}₽" for i, it in enumerate(p["inventory"])) + "\n\n👇 Нажми чтобы опубликовать!", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    txt = "📦 <b>ИНВЕНТАРЬ</b>\n\n" + "\n".join(f"{i+1}. {it['name']}\n   Закуп: {it['buy_price']}₽ | Рынок: ~{it['market_price']}₽" for i, it in enumerate(p["inventory"]))
+    txt += "\n\n👇 <b>Нажми на товар чтобы опубликовать!</b>"
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
+# ==================== СЛЕДУЮЩИЙ ДЕНЬ ====================
 @dp.callback_query(F.data == "action_nextday", StateFilter(GameState.playing))
 async def next_day(callback: CallbackQuery):
     user_id = callback.from_user.id; p = get_player(user_id)
     house = next((h for h in HOUSES if h["id"] == get_player_house(user_id)), HOUSES[0])
     bonus = house["income_bonus"]; shop_income = collect_shop_income(user_id)
     p["balance"] += bonus; p["day"] += 1
+    # Обновляем спрос
     for c in CATEGORIES: p["market_demand"][c] = max(0.3, min(3.0, p["market_demand"][c] * random.uniform(0.85, 1.15)))
     event = daily_event(); p["current_event"] = event
     if event: apply_event(p, event)
+    # Залежавшиеся товары теряют в цене
+    if p["inventory"] and random.random() < 0.2:
+        for it in p["inventory"]: it["market_price"] = int(it["market_price"] * random.uniform(0.7, 0.95))
     if user_id in published_items: published_items[user_id] = None
     sold_items[user_id].clear()
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await send_menu_with_skin(user_id, f"☀️ <b>ДЕНЬ {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n🏠 +{bonus}₽{f' | 🏪 +{shop_income}₽' if shop_income > 0 else ''}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
+    txt = f"☀️ <b>ДЕНЬ {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n🏠 Доход от {house['name']}: +{bonus}₽"
+    if shop_income > 0: txt += f"\n🏪 Магазин: +{shop_income}₽"
+    txt += f"\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}"
+    await send_menu_with_skin(user_id, txt)
 
+# ==================== ЗАВЕРШЕНИЕ ИГРЫ ====================
 @dp.callback_query(F.data == "action_end", StateFilter(GameState.playing))
 async def end_game(callback: CallbackQuery, state: FSMContext):
     p = get_player(callback.from_user.id); await state.clear()
-    r = "🏆 <b>ПОБЕДА!</b>" if p["balance"] >= 50000 else "💀 <b>БАНКРОТ!</b>" if p["balance"] <= 0 else "🎮 Игра окончена."
-    await edit_msg(callback.message, f"{r}\n💰 {p['balance']}₽", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 ЕЩЁ РАЗ", callback_data="restart_game")]]))
+    r = "🏆 <b>ПОБЕДА!</b> Ты раскрутился до 50 000₽!" if p["balance"] >= 50000 else "💀 <b>БАНКРОТ!</b> Ты потерял все деньги." if p["balance"] <= 0 else "🎮 <b>ИГРА ОКОНЧЕНА</b>"
+    txt = f"{r}\n\n💰 Баланс: {p['balance']}₽\n📦 Продано товаров: {p['items_sold']}\n💸 Всего заработано: {p['total_earned']}₽\n\n/play — начать заново!"
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔄 НАЧАТЬ ЗАНОВО", callback_data="restart_game")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    try: await callback.message.delete()
+    except: pass
 
 @dp.callback_query(F.data == "restart_game")
 async def restart_game(callback: CallbackQuery):
     if callback.from_user.id in players: del players[callback.from_user.id]
-    await callback.message.edit_text("🔄 Напиши /play")
+    await send_msg(callback.from_user.id, "🔄 Напиши /play чтобы начать новую игру!")
 
 @dp.callback_query(F.data == "action_back", StateFilter(GameState.playing))
 async def back_to_menu(callback: CallbackQuery):
@@ -893,22 +942,20 @@ async def back_to_menu(callback: CallbackQuery):
 @dp.callback_query(F.data == "back_to_start")
 async def back_start(callback: CallbackQuery):
     skin = next((s for s in SKINS if s["id"] == get_player_skin(callback.from_user.id)), SKINS[0])
-    await edit_msg(callback.message, f"🎮 <b>RESELL TYCOON</b>\n👤 {skin['emoji']} {skin['name']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")]]))
+    await send_msg(callback.from_user.id, f"🎮 <b>RESELL TYCOON</b>\n👤 {skin['emoji']} {skin['name']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")]]))
 
 @dp.callback_query(F.data == "action_learn")
 async def learn_btn(callback: CallbackQuery):
-    kb = [[InlineKeyboardButton(text=f"{'✅' if l['id'] in get_learning(callback.from_user.id)['completed'] else '📖'} {l['title']}", callback_data=f"lesson_{l['id']}")] for l in [{"id": 1, "title": "🚀 Основы", "text": "Основы товарки", "reward": 500}, {"id": 2, "title": "📊 Рынок", "text": "Анализ рынка", "reward": 500}]]
+    l = get_learning(callback.from_user.id)
+    kb = [[InlineKeyboardButton(text=f"{'✅' if lesson['id'] in l['completed'] else '📖'} {lesson['title']}", callback_data=f"lesson_{lesson['id']}")] for lesson in [{"id": 1, "title": "🚀 Основы", "text": "Основы товарного бизнеса", "reward": 500}, {"id": 2, "title": "📊 Рынок", "text": "Анализ рынка и спрос", "reward": 500}]]
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="back_to_start")])
-    await edit_msg(callback.message, "📚 <b>ОБУЧЕНИЕ</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-
-# ==================== ФОТО ID ====================
-@dp.message(F.photo)
-async def get_photo_links(message: types.Message):
-    await message.answer(f"✅ <b>ID:</b>\n<code>{message.photo[-1].file_id}</code>", parse_mode="HTML")
+    await send_msg(callback.from_user.id, "📚 <b>ОБУЧЕНИЕ ТОВАРНОМУ БИЗНЕСУ</b>\n\nИзучай уроки и получай бонусы!", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
 
 # ==================== ЗАПУСК ====================
 async def main():
-    print("🎮 ReSell Tycoon запущен!")
+    print("🎮 ReSell Tycoon FULL запущен!")
     await dp.start_polling(bot, skip_updates=True)
 
 if __name__ == '__main__':
