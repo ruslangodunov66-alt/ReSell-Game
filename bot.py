@@ -905,6 +905,38 @@ async def restart_game(callback: CallbackQuery):
     if callback.from_user.id in players: del players[callback.from_user.id]
     await callback.message.edit_text("🔄 Напиши /play")
 
+# Обработчик для кнопки МЕНЮ когда игра не запущена
+@dp.callback_query(F.data == "action_back")
+async def back_to_menu_nostate(callback: CallbackQuery):
+    """Кнопка МЕНЮ без состояния игры (для стартового экрана)."""
+    user_id = callback.from_user.id
+    p = players.get(user_id)
+    
+    if p and p.get("day", 0) > 0:
+        skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+        txt = f"👋 <b>МЕНЮ</b>\n📅 День {p['day']} | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🎮 ПРОДОЛЖИТЬ", callback_data="continue_game")],
+            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+        ])
+    else:
+        skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+        txt = f"🎮 <b>RESELL TYCOON</b>\n\n👤 {skin['emoji']} {skin['name']}"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ", callback_data="start_new_game")],
+            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+        ])
+    
+    if skin.get("image_url"):
+        try:
+            msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=kb)
+            last_bot_message[user_id] = msg.message_id
+        except:
+            await edit_msg(callback.message, txt, reply_markup=kb)
+    else:
+        await edit_msg(callback.message, txt, reply_markup=kb)
+    await callback.answer()
+
 @dp.callback_query(F.data == "action_back", StateFilter(GameState.playing))
 async def back_to_menu(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
