@@ -55,6 +55,11 @@ SKINS = [
 
 RARITY_COLORS = {"обычный": "⬜", "редкий": "🟦", "эпический": "🟪", "легендарный": "🟨", "мифический": "💎"}
 
+
+# Сортировка скинов от обычных к мифическим
+RARITY_ORDER = {"обычный": 0, "редкий": 1, "эпический": 2, "легендарный": 3, "мифический": 4}
+SKINS.sort(key=lambda x: RARITY_ORDER.get(x["rarity"], 0))
+
 # ==================== ОБЩИЕ ТОВАРЫ У ПОСТАВЩИКОВ ====================
 SUPPLIER_ITEM_RARITIES = {
     "обычный": {"name": "Обычный", "color": "⬜", "price_mult_min": 0.8, "price_mult_max": 1.3, "chance": 55},
@@ -624,7 +629,7 @@ async def show_chats(callback: CallbackQuery):
     for key, chat in al:
         txt += f"👤 #{chat['buyer_id']} | {chat['item']} | {chat['offer']}₽\n"
         kb.append([InlineKeyboardButton(text=f"💬 Ответить #{chat['buyer_id']}", callback_data=f"open_chat_{user_id}_{chat['buyer_id']}")])
-    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+   kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="menu_page_1")])
     await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
