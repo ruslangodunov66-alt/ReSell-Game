@@ -19,6 +19,7 @@ from openai import OpenAI
 # ==================== КОНФИГ ====================
 API_TOKEN = '8747685010:AAH8bN3x0fihSvUzVitijYQLHXeHFhIV5w4'
 CHANNEL_LINK = '@vintagedrop61'
+BOT_USERNAME = 'R-Game'
 DEEPSEEK_API_KEY = "sk-8d6e9d7c39c84ec6a0ecba379674346d"
 
 client_openai = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
