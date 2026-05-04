@@ -974,10 +974,32 @@ async def rep_menu_callback(callback: CallbackQuery):
 async def ref_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     count = len(referral_data[str(user_id)]["invited"])
-    txt = f"🔗 <b>РЕФЕРАЛЬНАЯ СИСТЕМА</b>\n\nТвоя ссылка:\n<code>{ref_link(user_id)}</code>\n\n👥 Приглашено: {count} чел.\n💰 Заработано: {count*500}₽\n\n<i>Отправь другу — получи +500₽!</i>"
-    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    total_bonus = count * 10000  # 10 000₽ за каждого друга
+    txt = (
+        f"🔗 <b>РЕФЕРАЛЬНАЯ СИСТЕМА</b>\n\n"
+        f"Твоя ссылка:\n<code>{ref_link(user_id)}</code>\n\n"
+        f"👥 Приглашено: {count} чел.\n"
+        f"💰 Заработано: {total_bonus}₽\n"
+        f"⭐ Бонус: +5 репутации за друга\n\n"
+        f"<b>🎁 Награды:</b>\n"
+        f"• Ты получаешь <b>10 000₽</b> за каждого друга\n"
+        f"• Друг получает <b>5 000₽</b> стартового бонуса\n"
+        f"• 5 друзей — скин «Темщик» бесплатно\n"
+        f"• 10 друзей — скин «Мажор» бесплатно\n\n"
+        f"<i>Отправь ссылку другу и получай бонусы!</i>"
+    )
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📋 КОПИРОВАТЬ ССЫЛКУ", callback_data=f"copy_ref_{user_id}")],
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+    ]))
     try: await callback.message.delete()
     except: pass
+
+@dp.callback_query(F.data.startswith("copy_ref_"))
+async def copy_ref_btn(callback: CallbackQuery):
+    user_id = int(callback.data.split("_")[2])
+    await callback.message.answer(f"🔗 Твоя реферальная ссылка:\n<code>{ref_link(user_id)}</code>", parse_mode="HTML")
+    await callback.answer("Ссылка отправлена! 📋")
 
 # ==================== ИНВЕНТАРЬ ====================
 @dp.callback_query(F.data == "action_inventory", StateFilter(GameState.playing))
