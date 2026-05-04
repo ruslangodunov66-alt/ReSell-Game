@@ -851,10 +851,28 @@ async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == "continue_game")
 async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
-    p = players.get(callback.from_user.id)
-    if not p: return await callback.answer("Нет игры!")
+    user_id = callback.from_user.id
+    p = players.get(user_id)
+    
+    if not p:
+        # Если игра не найдена — создаём новую
+        r = get_rep(user_id)
+        players[user_id] = {"balance": 5000, "reputation": max(0, r["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": r["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
+        p = players[user_id]
+    
     await state.set_state(GameState.playing)
-    await edit_msg(callback.message, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽", reply_markup=main_kb(1, callback.from_user.id))
+    
+    if p.get("day", 1) == 1 and not p.get("current_event"):
+        event = daily_event()
+        p["current_event"] = event
+        if event: apply_event(p, event)
+    
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    
+    await edit_msg(callback.message, 
+        f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 Скин: {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}",
+        reply_markup=main_kb(1, user_id))
+    await callback.answer("Продолжаем! 🎮")
 
 @dp.callback_query(F.data == "action_stats", StateFilter(GameState.playing))
 async def show_stats(callback: CallbackQuery):
