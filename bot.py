@@ -718,25 +718,8 @@ async def handle_message(message: types.Message, state: FSMContext):
             decline_msg = random.choice(phrases["decline"])
             await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {decline_msg}")
         return
-    
-    # Первые 2 раунда — DeepSeek, дальше — простые ответы
-    if chat["round"] <= 2:
-        try:
-            sp = CLIENT_TYPES[chat["client_type"]]["system_prompt"] + f"\nТовар: {chat['item']}. Твоя цена: {chat['offer']}₽."
-            resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}] + chat["history"][-2:], temperature=0.7, max_tokens=30)
-            ai_msg = resp.choices[0].message.content
-        except:
-            ai_msg = random.choice([f"Берёте за {chat['offer']}₽?", f"Ну так что?", f"Ладно, давайте {chat['offer']}₽."])
-    else:
-        ai_msg = random.choice([
-            f"Берёте за {chat['offer']}₽?",
-            f"Ну так что?",
-            f"Ладно, давайте {chat['offer']}₽.",
-            f"Я жду ответ.",
-            f"Решайтесь!",
-        ])
-    
-    chat["history"].append({"role": "assistant", "content": ai_msg})
+
+    chat["history"].append({"role": "assistant", "content": ""})
     
     for w in ["беру", "договорились", "по рукам", "забираю", "согласен"]:
         if w in ai_msg.lower() and "?" not in ai_msg.lower():
