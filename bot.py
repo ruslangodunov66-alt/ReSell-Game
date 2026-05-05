@@ -171,6 +171,7 @@ last_bot_message = {}
 pending_messages = defaultdict(list)
 active_chat_for_user = {}
 side_jobs = {}
+supply_drop = {}  # {user_id: {"items": [...], "found": [...], "clicks": int, "active": bool}}
 player_houses = {}
 player_shops = {}
 player_skins = {}
@@ -400,6 +401,7 @@ def main_kb(page=1, user_id=None):
             [InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="action_buy"), InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="action_inventory")],
             [InlineKeyboardButton(text=cl, callback_data="action_chats"), InlineKeyboardButton(text="🔨 АУКЦИОН", callback_data="action_auction")],
             [InlineKeyboardButton(text="💼 РАБОТА", callback_data="action_job"), InlineKeyboardButton(text="📈 СПРОС", callback_data="action_demand")],
+            [InlineKeyboardButton(text="🎮 МИНИ-ИГРЫ", callback_data="action_minigames")],
             [InlineKeyboardButton(text="⏩ ДЕНЬ ВПЕРЁД", callback_data="action_nextday")],
             [InlineKeyboardButton(text="➡️ ВКЛАДКА 2", callback_data="menu_page_2")],
             [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
@@ -1054,6 +1056,104 @@ async def handle_description(message: types.Message, state: FSMContext):
     await state.set_state(GameState.playing)
     await send_msg(user_id, f"📢 <b>ОПУБЛИКОВАНО!</b>\n📦 {item['name']}\n💰 {item['market_price']}₽\n📝 Качество: {get_quality_bonus(quality)['name']} ({quality}/10)\n⏳ Жди 1-3 минуты!")
     asyncio.create_task(spawn_buyers(user_id))
+
+# ==================== МИНИ-ИГРЫ ====================
+@dp.callback_query(F.data == "action_minigames", StateFilter(GameState.playing))
+async def show_minigames(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    txt = "🎮 <b>МИНИ-ИГРЫ</b>\n\nВыбери игру:"
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📦 РАЗБЕРИ ПОСТАВКУ (1000₽)", callback_data="action_supply")],
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data == "action_supply", StateFilter(GameState.playing))
+async def show_supply(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    
+    if user_id in supply_drop and supply_drop[user_id].get("active"):
+        drop = supply_drop[user_id]
+        remaining = 10 - drop["clicks"]
+        
+        if remaining <= 0:
+            txt = f"📦 <b>ПОСТАВКА РАЗОБРАНА!</b>\n\n🎁 Найдено {len(drop['found'])} вещей:\n"
+            for item in drop["found"]:
+                txt += f"• {item['name']} (~{item['market_price']}₽)\n"
+            for item in drop["found"]:
+                p["inventory"].append(item)
+            supply_drop[user_id]["active"] = False
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔄 НОВАЯ ПОСТАВКА", callback_data="action_supply")],
+                [InlineKeyboardButton(text="📦 В ИНВЕНТАРЬ", callback_data="action_inventory")],
+                [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+            ])
+        else:
+            txt = f"📦 <b>РАЗБЕРИ ПОСТАВКУ</b>\n\n📸 Осталось кликов: {remaining}\n🎁 Найдено: {len(drop['found'])} вещей\n\n<i>Жми кнопку!</i>"
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=f"📦 РАЗОБРАТЬ ({remaining})", callback_data="supply_click")],
+            ])
+        
+        await send_msg(user_id, txt, reply_markup=kb)
+        try: await callback.message.delete()
+        except: pass
+        return
+    
+    if p["balance"] < 1000:
+        return await callback.answer("Нужно 1000₽!")
+    
+    p["balance"] -= 1000
+    
+    items_in_box = []
+    for _ in range(random.randint(3, 7)):
+        rarity_roll = random.randint(1, 100)
+        if rarity_roll <= 40: rarity = "обычный"
+        elif rarity_roll <= 70: rarity = "редкий"
+        elif rarity_roll <= 88: rarity = "эпический"
+        elif rarity_roll <= 97: rarity = "легендарный"
+        else: rarity = "мифический"
+        
+        rd = SUPPLIER_ITEM_RARITIES[rarity]
+        base = random.choice(BASE_ITEMS)
+        mp = int(base["base_price"] * random.uniform(rd["price_mult_min"], rd["price_mult_max"]))
+        items_in_box.append({
+            "name": f"{rd['color']} {base['cat']} {base['name']}",
+            "cat": base["cat"], "buy_price": int(mp * 0.5), "market_price": mp, "rarity": rarity
+        })
+    
+    supply_drop[user_id] = {"items": items_in_box, "found": [], "clicks": 0, "active": True}
+    
+    txt = f"📦 <b>ПОСТАВКА ПРИШЛА!</b>\n\n💰 Оплачено: 1000₽\n📸 Кликов: 10\n🎁 В коробке: {len(items_in_box)} вещей\n\n<i>Жми кнопку!</i>"
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📦 РАЗОБРАТЬ (10)", callback_data="supply_click")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data == "supply_click", StateFilter(GameState.playing))
+async def supply_click(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    
+    if user_id not in supply_drop or not supply_drop[user_id].get("active"):
+        return await callback.answer("Нет активной поставки!")
+    
+    drop = supply_drop[user_id]
+    drop["clicks"] += 1
+    
+    if random.random() < 0.4 and drop["items"]:
+        item = random.choice(drop["items"])
+        drop["items"].remove(item)
+        drop["found"].append(item)
+        await callback.answer(f"🎁 {item['name']}!")
+    else:
+        msgs = ["📦 Коробка...", "🔍 Ищешь...", "📸 Смотришь...", "👀 Что там?", "📦 Пусто..."]
+        await callback.answer(random.choice(msgs))
+    
+    await show_supply(callback)
 
 # ==================== ПОДРАБОТКИ ====================
 @dp.callback_query(F.data == "action_job", StateFilter(GameState.playing))
