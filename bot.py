@@ -34,6 +34,7 @@ SHOPS_FILE = "player_shops.json"
 AUCTION_FILE = "auction_data.json"
 LEADERBOARD_FILE = "leaderboard.json"
 SKINS_FILE = "player_skins.json"
+SKIN_INVENTORY_FILE = "skin_inventory.json"
 SUPPLIER_ITEMS_FILE = "supplier_items.json"
 
 SKINS = [
