@@ -122,34 +122,82 @@ MARKET_EVENTS = [
 ]
 
 CLIENT_TYPES = {
-    "angry": {
-        "system_prompt": "Ты покупатель. Торгуешься жёстко, сбиваешь цену на 20-40%. Если продавец предлагает хорошую цену — можешь согласиться. Отвечай коротко, 1 предложение.",
-        "discount_range": (0.6, 0.8), "patience": 3,
+    "normal": {
+        "max_rounds": 4,  # приветствие -> состояние -> доставка -> решение
         "phrases": {
-            "start": ["Здравствуйте! {item} за {price}₽? Это дорого. Давайте {offer}₽.", "{item} — цена завышена. {offer}₽ — моя цена.", "Привет! {item}. Готов предложить {offer}₽."],
-            "wait": ["Ну так что, думаете ещё?", "Я жду ответ по {item}.", "Скоро передумаю."],
-            "agree": ["Ладно, уговорили. Беру за {offer}₽.", "Хорошо, давайте {offer}₽.", "Договорились. {offer}₽."],
-            "decline": ["Нет, это слишком дорого. Я пошёл.", "Не, не интересно больше.", "Извините, я передумал."]
+            "greet": [
+                "Здравствуйте! Ещё продаёте {item}? Интересует состояние.",
+                "Добрый день! {item} — ещё актуально? Какое состояние?",
+                "Привет! По объявлению: {item}. Состояние хорошее?",
+                "Здравствуйте! Увидел {item}. Расскажите о состоянии, пожалуйста.",
+                "Добрый день! {item} — очень заинтересовал. Как состояние?",
+            ],
+            "ask_delivery": [
+                "А как насчёт доставки? Отправляете?",
+                "Доставка есть? В какой город?",
+                "Можно ли с доставкой? Или только самовывоз?",
+                "Отправляете почтой или СДЭКом?",
+                "По доставке как? Я из другого города.",
+            ],
+            "ask_reason": [
+                "А почему продаёте, если не секрет?",
+                "С чем связана продажа?",
+                "Просто интересно, почему решили продать?",
+                "Давно пользуетесь? Почему продаёте?",
+                "Извините за вопрос, почему продаёте?",
+            ],
+            "agree": [
+                "Хорошо, меня устраивает. Беру за {price}₽.",
+                "Отлично, договорились. {price}₽ — беру.",
+                "Цена нормальная, забираю. {price}₽.",
+                "Договорились. Когда можно встретиться?",
+                "Ок, беру. {price}₽ устраивает.",
+            ],
+            "decline": [
+                "Извините, я передумал. Удачи в продаже.",
+                "Пока подумаю, не уверен.",
+                "Спасибо за информацию, но я пока откажусь.",
+                "Не подходит, извините. Удачи.",
+                "Передумал, сорри.",
+            ],
+            "wait": [
+                "Спасибо, я понял.",
+                "Хорошо, спасибо за ответ.",
+                "Понял, принял к сведению.",
+                "Ок, благодарю.",
+                "Ясно, спасибо.",
+            ]
         }
     },
-    "kind": {
-        "system_prompt": "Ты вежливый покупатель. Просишь скидку 5-15%. Если цена устраивает — соглашаешься. Отвечай коротко, 1 предложение.",
-        "discount_range": (0.85, 0.95), "patience": 5,
+    "trader": {
+        "max_rounds": 3,
         "phrases": {
-            "start": ["Добрый день! {item} — отличная вещь! Но {price}₽ дороговато. Может {offer}₽?", "Здравствуйте! Интересует {item}. Устроит {offer}₽?", "Добрый день! Ищу {item}. Бюджет {offer}₽."],
-            "wait": ["Я подожду, спасибо!", "Не тороплю, но жду ответ.", "Буду рад, если договоримся!"],
-            "agree": ["Спасибо! Беру за {offer}₽!", "Отлично, договорились на {offer}₽!", "Хорошо, я согласен. {offer}₽."],
-            "decline": ["Извините, не могу больше. Удачи!", "Жаль, не договорились. До свидания.", "Поищу ещё. Спасибо!"]
-        }
-    },
-    "sly": {
-        "system_prompt": "Ты перекупщик. Знаешь рынок, торгуешься профессионально. Сбиваешь 15-30%. Если видишь выгоду — берёшь. Отвечай коротко, 1 предложение.",
-        "discount_range": (0.7, 0.85), "patience": 4,
-        "phrases": {
-            "start": ["Привет! {item}. Рынок сейчас {offer}₽. Отдашь?", "Здорово! {item} интересует. Готов на {offer}₽.", "Слушай, {item}. Такие за {offer}₽ уходят. Берёшь?"],
-            "wait": ["Ну чё там, думаешь?", "Я пока другие варианты гляну.", "Время — деньги. Решайся."],
-            "agree": ["По рукам! {offer}₽.", "Годится. Беру за {offer}₽.", "Добро. {offer}₽ и разошлись."],
-            "decline": ["Не, неинтересно. Бывай.", "Я пошёл, удачи.", "Дорого. Поищу другое."]
+            "greet": [
+                "Здравствуйте! {item} — цена {price}₽? Дороговато. Давайте {offer}₽?",
+                "Привет! {item} за {price}₽? Я готов предложить {offer}₽.",
+                "Добрый день! {item} интересен, но {price}₽ — много. {offer}₽?",
+            ],
+            "counter": [
+                "Нет, {price}₽ всё равно много. {new_offer}₽?",
+                "Я могу поднять до {new_offer}₽. Это предел.",
+                "Ладно, {new_offer}₽. Больше не дам.",
+                "Слушай, {new_offer}₽ — и забираю.",
+            ],
+            "agree": [
+                "Ладно, уговорил. {price}₽ беру.",
+                "Хорошо, давай {price}₽.",
+                "По рукам за {price}₽.",
+            ],
+            "decline": [
+                "Нет, не пойдёт. Удачи.",
+                "Дорого, не буду брать. Пока.",
+                "Извини, не договорились.",
+            ],
+            "wait": [
+                "Я думаю...",
+                "Ну, не знаю.",
+                "Давай ещё подумаю.",
+            ]
         }
     }
 }
@@ -457,19 +505,26 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
     client = CLIENT_TYPES[client_type]
     chat_key = f"{user_id}_{buyer_id}"
     if not is_reminder:
-        discount = random.uniform(*client["discount_range"]); discount = max(0.3, min(0.95, discount))
-        offer = int(price * discount); offer = (offer // 100) * 100 + 99
-        if offer < 100: offer = price // 2
+        if client_type == "trader":
+            discount = random.uniform(0.7, 0.9)  # скидка 10-30%
+            offer = int(price * discount); offer = (offer // 100) * 100 + 99
+            if offer < 100: offer = price // 2
+        else:
+            offer = price  # обычный клиент не торгуется
         phrases = client["phrases"]
-        msg = random.choice(phrases["start"]).format(item=item_name, price=price, offer=offer)
-        active_chats[chat_key] = {"user_id": user_id, "buyer_id": buyer_id, "client_type": client_type, "item": item_name, "price": price, "offer": offer, "history": [{"role": "system", "content": client["system_prompt"]}, {"role": "assistant", "content": msg}], "round": 1, "max_rounds": client["patience"], "finished": False}
+        msg = random.choice(phrases["greet"]).format(item=item_name, price=price, offer=offer)
+        active_chats[chat_key] = {
+            "user_id": user_id, "buyer_id": buyer_id, "client_type": client_type,
+            "item": item_name, "price": price, "offer": offer,
+            "round": 1, "max_rounds": client["max_rounds"], "finished": False,
+            "phase": "greet"
+        }
         await send_msg(user_id, f"📩 <b>Покупатель #{buyer_id}</b>\n📦 {item_name}\n💬 {msg}")
     else:
         chat = active_chats.get(chat_key)
         if chat and not chat["finished"]:
             phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
-            reminder = random.choice(phrases["wait"]).format(item=item_name)
-            chat["history"].append({"role": "assistant", "content": reminder})
+            reminder = random.choice(phrases["wait"])
             await send_msg(user_id, f"🔔 <b>Покупатель #{buyer_id}</b>\n💬 {reminder}")
 
 async def spawn_buyers(user_id):
@@ -497,11 +552,10 @@ async def complete_sale(user_id, buyer_id, message=None):
     if not sold:
         for i, inv in enumerate(p["inventory"]):
             # Сравниваем по названию, убирая эмодзи и лишние пробелы
-            inv_clean = inv["name"].split("} ")[-1] if "}" in inv["name"] else inv["name"]
-            chat_clean = item_name.split("} ")[-1] if "}" in item_name else item_name
-            if inv_clean.strip() == chat_clean.strip():
+                        if item_name in inv["name"] or inv["name"] in item_name: 
                 sold = p["inventory"].pop(i)
                 break
+
     if not sold: return None
     sold_items[user_id].add(item_name)
     profit = final - sold["buy_price"]
@@ -666,26 +720,23 @@ async def handle_message(message: types.Message, state: FSMContext):
     if not message.text: return
     user_id = message.from_user.id; text = message.text.strip()
     pending_messages[user_id].append(message.message_id)
-    
-    # Продажа только по явным словам (без цифр)
-    for w in ["согласен"]:
-        if w in text.lower():
-            # Если есть цена — это торг, не продажа
-            if "₽" not in text:
-                target = None
-                if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats:
-                    target = active_chats[active_chat_for_user[user_id]]
-                else:
-                    for key, chat in active_chats.items():
-                        if chat["user_id"] == user_id and not chat["finished"]:
-                            target = chat; break
-                if target:
-                    target["finished"] = True
-                    if user_id in active_chat_for_user: del active_chat_for_user[user_id]
-                    await send_msg(user_id, f"👤 <b>Покупатель #{target['buyer_id']}:</b> Договорились на {target['offer']}₽!")
-                    await complete_sale(user_id, target["buyer_id"], message)
-                    return
-    
+
+    # Продажа по слову "согласен"
+    if text.lower() == "согласен":
+        target = None
+        if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats:
+            target = active_chats[active_chat_for_user[user_id]]
+        else:
+            for key, chat in active_chats.items():
+                if chat["user_id"] == user_id and not chat["finished"]:
+                    target = chat; break
+        if target:
+            target["finished"] = True
+            if user_id in active_chat_for_user: del active_chat_for_user[user_id]
+            await send_msg(user_id, f"👤 <b>Покупатель #{target['buyer_id']}:</b> Договорились на {target['offer']}₽!")
+            await complete_sale(user_id, target["buyer_id"], message)
+            return
+
     # Поиск активного диалога
     chat_key = None
     if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats:
@@ -694,42 +745,71 @@ async def handle_message(message: types.Message, state: FSMContext):
         for key, chat in active_chats.items():
             if chat["user_id"] == user_id and not chat["finished"]:
                 chat_key = key; break
-    
     if not chat_key: return
+
     chat = active_chats[chat_key]
-    chat["history"].append({"role": "user", "content": text}); chat["round"] += 1
-    
-    if chat["round"] >= 3:
+    chat["round"] += 1
+    client = CLIENT_TYPES[chat["client_type"]]
+    phrases = client["phrases"]
+    buyer_id = chat["buyer_id"]
+    item_name = chat["item"]
+    price = chat["price"]
+    offer = chat["offer"]
+
+    if chat["round"] >= chat["max_rounds"]:
+        # Последний раунд: решение
         chat["finished"] = True
-            # Клиент отвечает на торг (шаблоны, без DeepSeek)
-    phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
-    
-    # Смотрим, предлагает ли продавец цену ниже чем хотел клиент
-    seller_prices = re.findall(r'(\d+)', text)
-    seller_offer = None
-    for p in seller_prices:
-        price = int(p)
-        if chat["offer"] < price <= chat["price"]:
-            seller_offer = price
-            break
-    
-    if seller_offer and seller_offer <= chat["offer"] * 1.3:
-        # Продавец предложил разумную цену — клиент может согласиться
-        ai_msg = random.choice([
-            f"Хм, {seller_offer}₽? Уже лучше. Но давай {seller_offer - random.randint(100, 500)}₽?",
-            f"{seller_offer}₽ — интересно. Я думаю.",
-            f"Слушай, {seller_offer}₽ — почти договорились. Ещё чуть скинешь?",
-            f"Ну хорошо, {seller_offer}₽. Я почти готов взять.",
-            f"Ладно, убедил почти. Но может {seller_offer - random.randint(200, 600)}₽?",
-        ])
-        chat["offer"] = seller_offer
+        if chat["client_type"] == "trader":
+            # Для торгующихся — нейросеть решает
+            try:
+                sp = f"Ты покупатель. Товар: {item_name}. Продавец предложил: {text}. Твоя цена была: {offer}₽. Прими решение: согласиться (напиши 'беру') или отказаться (напиши 'нет'). Ответь одним словом."
+                resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}], temperature=0.5, max_tokens=5)
+                decision = resp.choices[0].message.content.strip().lower()
+            except:
+                decision = "нет"
+            if "беру" in decision:
+                ai_msg = random.choice(phrases["agree"]).format(price=offer)
+                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+                await complete_sale(user_id, buyer_id, message)
+            else:
+                ai_msg = random.choice(phrases["decline"])
+                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+        else:
+            # Обычный клиент: 80% берёт, 20% отказывается
+            if random.random() < 0.8:
+                ai_msg = random.choice(phrases["agree"]).format(price=price)
+                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+                chat["offer"] = price
+                await complete_sale(user_id, buyer_id, message)
+            else:
+                ai_msg = random.choice(phrases["decline"])
+                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+        return
+
+    # Обычные раунды: задаём вопросы по очереди
+    if chat["client_type"] == "normal":
+        if chat["round"] == 2:
+            msg = random.choice(phrases["ask_delivery"])
+        elif chat["round"] == 3:
+            msg = random.choice(phrases["ask_reason"])
+        else:
+            msg = random.choice(phrases["wait"])
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
     else:
-        # Продавец просто разговаривает или предлагает высокую цену
-        ai_msg = random.choice(phrases["wait"]).format(item=chat["item"])
-    
-    chat["history"].append({"role": "assistant", "content": ai_msg})
-    
-    await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {ai_msg}")
+        # Торг: предлагает свою цену или реагирует
+        seller_prices = re.findall(r'(\d+)', text)
+        if seller_prices:
+            seller_price = int(seller_prices[0])
+            if seller_price < price:
+                new_offer = max(offer, int(seller_price * 0.9))  # немного уступает
+                new_offer = (new_offer // 100) * 100 + 99
+                msg = random.choice(phrases["counter"]).format(new_offer=new_offer)
+                chat["offer"] = new_offer
+            else:
+                msg = random.choice(phrases["wait"])
+        else:
+            msg = random.choice(phrases["wait"])
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
 # ==================== ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
 async def show_chats(callback: CallbackQuery):
