@@ -757,12 +757,12 @@ async def show_skins_menu(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "skins_paid")
 async def show_skins_paid(callback: CallbackQuery, page: int = 0):
-    paid_skins = [s for s in SKINS if s["rep_required"] == 0 and s["price"] > 0]
+    paid_skins = [s for s in SKINS if s["rep_required"] == 0 and s["price"] > 0 and not s.get("limited")]
     await show_skins_catalog(callback, page, paid_skins, "💰 ПЛАТНЫЕ СКИНЫ")
 
 @dp.callback_query(F.data == "skins_free")
 async def show_skins_free(callback: CallbackQuery, page: int = 0):
-    free_skins = [s for s in SKINS if s["rep_required"] > 0 or s["price"] == 0]
+    free_skins = [s for s in SKINS if (s["rep_required"] > 0 or s["price"] == 0) and not s.get("limited")]
     await show_skins_catalog(callback, page, free_skins, "🏆 ЗА ДОСТИЖЕНИЯ")
 
 async def show_skins_catalog(callback: CallbackQuery, page: int, skin_list: list, title: str):
@@ -790,8 +790,7 @@ async def show_skins_catalog(callback: CallbackQuery, page: int, skin_list: list
             if available <= 0:
                 txt += f"\n💎 <b>ЛИМИТ ИСЧЕРПАН</b>"; act = None
             else:
-                txt += f"\n💎 <b>Доступно: {available} из {skin['max_count']}</b>"
-                act = InlineKeyboardButton(text="💎 ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}") if skin["price"] == 0 or p["balance"] >= skin["price"] else None
+                txt += f"\n🔒 <b>ТОЛЬКО ПО ВЫДАЧЕ</b>"; act = None
         else:
             if p["balance"] >= skin["price"]: txt += f"\n💰 Цена: {skin['price']}₽"; act = InlineKeyboardButton(text=f"🛒 КУПИТЬ", callback_data=f"buy_skin_{skin['id']}")
             else: txt += f"\n❌ {skin['price']}₽ (не хватает {skin['price']-p['balance']}₽)"; act = None
