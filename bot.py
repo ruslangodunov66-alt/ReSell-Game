@@ -121,9 +121,9 @@ MARKET_EVENTS = [
 ]
 
 CLIENT_TYPES = {
-    "angry": {"system_prompt": "Ты покупатель. Торгуешься. 1-3 предложения.", "discount_range": (0.6, 0.8), "patience": 4},
-    "kind": {"system_prompt": "Ты покупатель. Вежливый. 1-3 предложения.", "discount_range": (0.85, 0.95), "patience": 6},
-    "sly": {"system_prompt": "Ты перекупщик. 1-3 предложения.", "discount_range": (0.7, 0.85), "patience": 5},
+    "angry": {"system_prompt": "Ты покупатель. Торгуешься.", "discount_range": (0.6, 0.8), "patience": 3},
+    "kind": {"system_prompt": "Ты покупатель. Вежливый.", "discount_range": (0.85, 0.95), "patience": 5},
+    "sly": {"system_prompt": "Ты перекупщик.", "discount_range": (0.7, 0.85), "patience": 4},
 }
 
 JOBS = [
@@ -414,8 +414,14 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
     else:
         chat = active_chats.get(chat_key)
         if chat and not chat["finished"]:
-            chat["history"].append({"role": "assistant", "content": f"Жду ответ по {item_name}."})
-            await send_msg(user_id, f"🔔 <b>Покупатель #{buyer_id}</b>")
+            # Без ИИ — простое напоминание
+            reminders = [
+                f"Жду ответ по {item_name}.",
+                f"Вы тут? Я всё ещё жду.",
+                f"Ответьте пожалуйста по {item_name}.",
+            ]
+            chat["history"].append({"role": "assistant", "content": random.choice(reminders)})
+            await send_msg(user_id, f"🔔 <b>Покупатель #{buyer_id}</b>\n💬 {random.choice(reminders)}")
 
 async def spawn_buyers(user_id):
     await asyncio.sleep(random.randint(60, 180))
@@ -627,24 +633,39 @@ async def handle_message(message: types.Message, state: FSMContext):
     if not chat_key: return
     chat = active_chats[chat_key]
     chat["history"].append({"role": "user", "content": text}); chat["round"] += 1
-    if chat["round"] >= 5:
+    if chat["round"] >= 3:
         chat["finished"] = True
         if random.random() < 0.6:
             await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> Ладно, {chat['offer']}₽!")
             await complete_sale(user_id, chat["buyer_id"], message)
         else: await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> Извините, передумал.")
         return
-    try:
-        sp = CLIENT_TYPES[chat["client_type"]]["system_prompt"] + f"\nТовар: {chat['item']}. Твоя цена: {chat['offer']}₽."
-        resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}] + chat["history"][-2:], temperature=0.7, max_tokens=80)
-        ai_msg = resp.choices[0].message.content
-    except: ai_msg = f"Ну так что? {chat['offer']}₽?"
+       # Первые 2 раунда — DeepSeek, дальше — простые ответы
+    if chat["round"] <= 2:
+        try:
+            sp = CLIENT_TYPES[chat["client_type"]]["system_prompt"] + f"\nТовар: {chat['item']}. Твоя цена: {chat['offer']}₽."
+            resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}] + chat["history"][-2:], temperature=0.7, max_tokens=30)
+            ai_msg = resp.choices[0].message.content
+        except: 
+            ai_msg = random.choice([f"Берёте за {chat['offer']}₽?", f"Ну так что?", f"Ладно, давайте {chat['offer']}₽."])
+    else:
+        # Без ИИ — простые шаблоны
+        ai_msg = random.choice([
+            f"Берёте за {chat['offer']}₽?",
+            f"Ну так что?",
+            f"Ладно, давайте {chat['offer']}₽.",
+            f"Я жду ответ.",
+            f"Решайтесь!",
+        ])
+    
     chat["history"].append({"role": "assistant", "content": ai_msg})
+    
     for w in ["беру", "договорились", "по рукам", "забираю", "согласен"]:
         if w in ai_msg.lower() and "?" not in ai_msg.lower():
             chat["finished"] = True
             await complete_sale(user_id, chat["buyer_id"], message)
             return
+    
     await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {ai_msg}")
 
 # ==================== ЧАТЫ ====================
