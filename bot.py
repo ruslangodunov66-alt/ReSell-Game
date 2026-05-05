@@ -1144,6 +1144,8 @@ async def show_supply(callback: CallbackQuery):
     
     supply_drop[user_id] = {"items": items_in_box, "found": [], "clicks": 0, "active": True}
     
+    supply_drop[user_id] = {"items": items_in_box, "found": [], "clicks": 0, "active": True}
+    
     txt = (
         f"📦 <b>СЕКРЕТНЫЙ БОКС ОТ ПОСТАВЩИКА!</b>\n\n"
         f"Ты купил коробку с неизвестным товаром.\n"
