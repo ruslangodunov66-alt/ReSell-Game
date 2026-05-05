@@ -1114,15 +1114,14 @@ async def show_supply(callback: CallbackQuery):
         return await callback.answer("Нужно 1000₽!")
     
     p["balance"] -= 1000
-    
-    items_in_box = []
-        for _ in range(random.randint(2, 5)):  # Меньше вещей
+        items_in_box = []
+    for _ in range(random.randint(2, 5)):
         rarity_roll = random.randint(1, 100)
-        if rarity_roll <= 60: rarity = "обычный"      # 60%
-        elif rarity_roll <= 85: rarity = "редкий"      # 25%
-        elif rarity_roll <= 95: rarity = "эпический"   # 10%
-        elif rarity_roll <= 99: rarity = "легендарный" # 4%
-        else: rarity = "мифический"                     # 1%
+        if rarity_roll <= 60: rarity = "обычный"
+        elif rarity_roll <= 85: rarity = "редкий"
+        elif rarity_roll <= 95: rarity = "эпический"
+        elif rarity_roll <= 99: rarity = "легендарный"
+        else: rarity = "мифический"
         
         rd = SUPPLIER_ITEM_RARITIES[rarity]
         base = random.choice(BASE_ITEMS)
