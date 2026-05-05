@@ -288,11 +288,6 @@ def check_rep_skins(user_id):
     rep_score = get_rep(user_id)["score"]
     return [s for s in SKINS if s["rep_required"] > 0 and rep_score >= s["rep_required"] and get_player_skin(user_id) != s["id"]]
 
-def check_rep_skins(user_id):
-    rep_score = get_rep(user_id)["score"]
-    return [s for s in SKINS if s["rep_required"] > 0 and rep_score >= s["rep_required"] and get_player_skin(user_id) != s["id"]]
-
-# ↓↓↓ ВОТ ТУТ ДОБАВЬ ↓↓↓
 def get_skin_inventory(user_id):
     uid = str(user_id)
     if uid not in skin_inventory:
