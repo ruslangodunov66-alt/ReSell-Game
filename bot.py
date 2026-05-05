@@ -461,7 +461,7 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
             await send_msg(user_id, f"🔔 <b>Покупатель #{buyer_id}</b>\n💬 {random.choice(reminders)}")
 
 async def spawn_buyers(user_id):
-    await asyncio.sleep(random.randint(60, 180))
+    await asyncio.sleep(random.randint(15, 45))
     if user_id not in published_items or not published_items[user_id]: return
     pub = published_items[user_id]; item = pub["item"]
     if item["name"] in sold_items[user_id]: return
@@ -978,20 +978,56 @@ async def show_auction(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "auction_sell", StateFilter(GameState.playing))
 async def auction_sell_menu(callback: CallbackQuery):
-    p = get_player(callback.from_user.id)
-    kb = [[InlineKeyboardButton(text=f"📦 {item['name']} (~{item['market_price']}₽)", callback_data=f"auction_put_{i}")] for i, item in enumerate(p["inventory"])]
-    # Добавляем скины из инвентаря на аукцион
-    skin_inv = get_skin_inventory(callback.from_user.id)
-    current = get_player_skin(callback.from_user.id)
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    kb = []
+    
+    # Товары из инвентаря
+    for i, item in enumerate(p["inventory"]):
+        kb.append([InlineKeyboardButton(text=f"📦 {item['name']} (~{item['market_price']}₽)", callback_data=f"auction_put_{i}")])
+    
+    # Скины из инвентаря
+    skin_inv = get_skin_inventory(user_id)
+    current = get_player_skin(user_id)
     for sid in skin_inv:
         s = next((sk for sk in SKINS if sk["id"] == sid), None)
         if s and s["price"] > 0 and sid != current:
             kb.append([InlineKeyboardButton(text=f"👤 Скин: {s['emoji']} {s['name']}", callback_data=f"auction_skin_{sid}")])
+    
+    if not kb:
+        return await callback.answer("Нечего выставить!")
+    
     kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_auction")])
-    if not kb: return await callback.answer("Нечего выставить!")
-    await send_msg(callback.from_user.id, "📤 <b>ВЫСТАВИТЬ НА АУКЦИОН</b>\n\nВыбери товар:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await send_msg(user_id, "📤 <b>ВЫСТАВИТЬ НА АУКЦИОН</b>\n\nВыбери товар или скин:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("auction_put_"), StateFilter(GameState.playing))
+async def auction_put_item(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    item_idx = int(callback.data.split("_")[2])
+    p = get_player(user_id)
+    
+    if item_idx >= len(p["inventory"]):
+        return await callback.answer("Товар не найден")
+    
+    item = p["inventory"].pop(item_idx)
+    
+    # Добавляем на аукцион
+    auction_data["items"].append({
+        "seller_id": user_id,
+        "item": item,
+        "start_price": item["market_price"],
+        "current_bid": item["market_price"],
+        "bidder_id": None,
+        "end_time": time_module.time() + 3600,
+        "active": True
+    })
+    save_json(AUCTION_FILE, auction_data)
+    
+    await callback.answer("✅ Лот выставлен!")
+    await send_msg(user_id, f"📤 <b>ЛОТ НА АУКЦИОНЕ!</b>\n📦 {item['name']}\n💰 Старт: {item['market_price']}₽\n⏳ 1 час")
 
 # ==================== ПУБЛИКАЦИЯ ====================
 @dp.callback_query(F.data.startswith("inv_"), StateFilter(GameState.playing))
@@ -1157,8 +1193,37 @@ async def show_stats(callback: CallbackQuery):
 @dp.callback_query(F.data == "action_demand", StateFilter(GameState.playing))
 async def show_demand(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
-    txt = "📊 <b>СПРОС НА РЫНКЕ</b>\n\n" + fmt_demand(p) + "\n\n💡 <b>Совет:</b> Покупай что в тренде 🔥, продавай дороже!"
-    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    
+    # Определяем погоду и ситуацию
+    weathers = ["☀️ Солнечно", "🌧 Дождливо", "❄️ Холодно", "🌤 Переменная облачность", "🌪 Ветрено"]
+    situations = ["📈 Рынок растёт", "📉 Рынок падает", "➡️ Стабильность", "🔥 Ажиотаж", "💤 Затишье"]
+    
+    weather = random.choice(weathers)
+    situation = random.choice(situations)
+    
+    txt = (
+        f"📊 <b>СИТУАЦИЯ НА РЫНКЕ</b>\n\n"
+        f"🌍 <b>Погода:</b> {weather}\n"
+        f"📊 <b>Ситуация:</b> {situation}\n\n"
+        f"<b>Спрос по категориям:</b>\n"
+        f"{fmt_demand(p)}\n\n"
+        f"💡 <b>Совет:</b> "
+    )
+    
+    # Советы в зависимости от спроса
+    max_cat = max(p["market_demand"], key=p["market_demand"].get)
+    max_val = p["market_demand"][max_cat]
+    
+    if max_val >= 1.5:
+        txt += f"Сейчас лучше всего продавать {max_cat} — спрос высокий! 🔥"
+    elif max_val >= 1.2:
+        txt += f"Обрати внимание на {max_cat} — спрос растёт! 📈"
+    else:
+        txt += "Рынок спокойный. Закупайся дёшево и жди роста! ⏳"
+    
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]
+    ]))
     try: await callback.message.delete()
     except: pass
 
