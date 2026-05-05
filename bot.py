@@ -496,7 +496,12 @@ async def complete_sale(user_id, buyer_id, message=None):
         if pub_item.get("name") == item_name: sold = pub_item; published_items[user_id] = None
     if not sold:
         for i, inv in enumerate(p["inventory"]):
-            if inv["name"] == item_name: sold = p["inventory"].pop(i); break
+            # Сравниваем по названию, убирая эмодзи и лишние пробелы
+            inv_clean = inv["name"].split("} ")[-1] if "}" in inv["name"] else inv["name"]
+            chat_clean = item_name.split("} ")[-1] if "}" in item_name else item_name
+            if inv_clean.strip() == chat_clean.strip():
+                sold = p["inventory"].pop(i)
+                break
     if not sold: return None
     sold_items[user_id].add(item_name)
     profit = final - sold["buy_price"]
