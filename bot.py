@@ -694,7 +694,30 @@ async def handle_message(message: types.Message, state: FSMContext):
     chat = active_chats[chat_key]
     chat["history"].append({"role": "user", "content": text}); chat["round"] += 1
     
-м
+    if chat["round"] >= 3:
+        chat["finished"] = True
+        try:
+            sp = CLIENT_TYPES[chat["client_type"]]["system_prompt"] + f"\nТовар: {chat['item']}. Продавец предлагает: {text}. Твоя цена была: {chat['offer']}₽. Прими решение: согласиться (напиши 'беру' и цену) или отказаться (напиши 'нет'). Ответь коротко."
+            resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}], temperature=0.7, max_tokens=40)
+            ai_msg = resp.choices[0].message.content
+        except:
+            ai_msg = random.choice(["беру", "нет"])
+        
+        if "беру" in ai_msg.lower():
+            prices = re.findall(r'(\d+)', ai_msg)
+            if prices:
+                final = int(prices[0])
+                if final > chat["offer"]:
+                    chat["offer"] = final
+            phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
+            agree_msg = random.choice(phrases["agree"]).format(offer=chat["offer"])
+            await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {agree_msg}")
+            await complete_sale(user_id, chat["buyer_id"], message)
+        else:
+            phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
+            decline_msg = random.choice(phrases["decline"])
+            await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {decline_msg}")
+        return
     
     # Первые 2 раунда — DeepSeek, дальше — простые ответы
     if chat["round"] <= 2:
