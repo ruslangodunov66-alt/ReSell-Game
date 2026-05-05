@@ -1099,18 +1099,21 @@ async def show_supply(callback: CallbackQuery):
                 [InlineKeyboardButton(text="📦 В ИНВЕНТАРЬ", callback_data="action_inventory")],
                 [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
             ])
+            await send_msg(user_id, txt, reply_markup=kb)
+            try: await callback.message.delete()
+            except: pass
+            return
         else:
             txt = f"📦 <b>РАЗБЕРИ ПОСТАВКУ</b>\n\n📸 Осталось кликов: {remaining}\n🎁 Найдено: {len(drop['found'])} вещей\n\n<i>Жми кнопку!</i>"
             kb = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text=f"📦 РАЗОБРАТЬ ({remaining})", callback_data="supply_click")],
             ])
-        
-        await send_msg(user_id, txt, reply_markup=kb)
-        try: await callback.message.delete()
-        except: pass
-        return
+            await send_msg(user_id, txt, reply_markup=kb)
+            try: await callback.message.delete()
+            except: pass
+            return
     
-        if p["balance"] < 1000:
+    if p["balance"] < 1000:
         return await callback.answer("Нужно 1000₽!")
 
     p["balance"] -= 1000
