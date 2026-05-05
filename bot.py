@@ -724,15 +724,7 @@ async def handle_message(message: types.Message, state: FSMContext):
             await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {decline_msg}")
         return
 
-    chat["history"].append({"role": "assistant", "content": ""})
-    
-    for w in ["беру", "договорились", "по рукам", "забираю", "согласен"]:
-        if w in ai_msg.lower() and "?" not in ai_msg.lower():
-            chat["finished"] = True
-            await complete_sale(user_id, chat["buyer_id"], message)
-            return
-    
-    await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {ai_msg}")
+    await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> Продолжайте диалог...")
 
 # ==================== ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
