@@ -651,44 +651,57 @@ async def handle_message(message: types.Message, state: FSMContext):
     if not message.text: return
     user_id = message.from_user.id; text = message.text.strip()
     pending_messages[user_id].append(message.message_id)
-    for w in ["продано", "продаю", "согласен", "договорились", "по рукам", "забирай", "отдаю", "продам", "бери", "ок", "давай"]:
+    
+    # Продажа только по явным словам (без цифр)
+    for w in ["продано", "забирай", "отдаю", "продам", "бери"]:
         if w in text.lower():
-            target = None
-            if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats: target = active_chats[active_chat_for_user[user_id]]
-            else:
-                for key, chat in active_chats.items():
-                    if chat["user_id"] == user_id and not chat["finished"]: target = chat; break
-            if target:
-                target["finished"] = True
-                if user_id in active_chat_for_user: del active_chat_for_user[user_id]
-                await send_msg(user_id, f"👤 <b>Покупатель #{target['buyer_id']}:</b> Договорились на {target['offer']}₽!")
-                await complete_sale(user_id, target["buyer_id"], message)
-                return
+            # Если есть цена — это торг, не продажа
+            if "₽" not in text:
+                target = None
+                if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats:
+                    target = active_chats[active_chat_for_user[user_id]]
+                else:
+                    for key, chat in active_chats.items():
+                        if chat["user_id"] == user_id and not chat["finished"]:
+                            target = chat; break
+                if target:
+                    target["finished"] = True
+                    if user_id in active_chat_for_user: del active_chat_for_user[user_id]
+                    await send_msg(user_id, f"👤 <b>Покупатель #{target['buyer_id']}:</b> Договорились на {target['offer']}₽!")
+                    await complete_sale(user_id, target["buyer_id"], message)
+                    return
+    
+    # Поиск активного диалога
     chat_key = None
-    if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats: chat_key = active_chat_for_user[user_id]
+    if user_id in active_chat_for_user and active_chat_for_user[user_id] in active_chats:
+        chat_key = active_chat_for_user[user_id]
     else:
         for key, chat in active_chats.items():
-            if chat["user_id"] == user_id and not chat["finished"]: chat_key = key; break
+            if chat["user_id"] == user_id and not chat["finished"]:
+                chat_key = key; break
+    
     if not chat_key: return
     chat = active_chats[chat_key]
     chat["history"].append({"role": "user", "content": text}); chat["round"] += 1
+    
     if chat["round"] >= 3:
         chat["finished"] = True
         if random.random() < 0.6:
             await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> Ладно, {chat['offer']}₽!")
             await complete_sale(user_id, chat["buyer_id"], message)
-        else: await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> Извините, передумал.")
+        else:
+            await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> Извините, передумал.")
         return
-       # Первые 2 раунда — DeepSeek, дальше — простые ответы
+    
+    # Первые 2 раунда — DeepSeek, дальше — простые ответы
     if chat["round"] <= 2:
         try:
             sp = CLIENT_TYPES[chat["client_type"]]["system_prompt"] + f"\nТовар: {chat['item']}. Твоя цена: {chat['offer']}₽."
             resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}] + chat["history"][-2:], temperature=0.7, max_tokens=30)
             ai_msg = resp.choices[0].message.content
-        except: 
+        except:
             ai_msg = random.choice([f"Берёте за {chat['offer']}₽?", f"Ну так что?", f"Ладно, давайте {chat['offer']}₽."])
     else:
-        # Без ИИ — простые шаблоны
         ai_msg = random.choice([
             f"Берёте за {chat['offer']}₽?",
             f"Ну так что?",
@@ -1108,13 +1121,13 @@ async def show_supply(callback: CallbackQuery):
     p["balance"] -= 1000
     
     items_in_box = []
-    for _ in range(random.randint(3, 7)):
+        for _ in range(random.randint(2, 5)):  # Меньше вещей
         rarity_roll = random.randint(1, 100)
-        if rarity_roll <= 40: rarity = "обычный"
-        elif rarity_roll <= 70: rarity = "редкий"
-        elif rarity_roll <= 88: rarity = "эпический"
-        elif rarity_roll <= 97: rarity = "легендарный"
-        else: rarity = "мифический"
+        if rarity_roll <= 60: rarity = "обычный"      # 60%
+        elif rarity_roll <= 85: rarity = "редкий"      # 25%
+        elif rarity_roll <= 95: rarity = "эпический"   # 10%
+        elif rarity_roll <= 99: rarity = "легендарный" # 4%
+        else: rarity = "мифический"                     # 1%
         
         rd = SUPPLIER_ITEM_RARITIES[rarity]
         base = random.choice(BASE_ITEMS)
