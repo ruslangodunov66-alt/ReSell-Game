@@ -173,6 +173,7 @@ side_jobs = {}
 player_houses = {}
 player_shops = {}
 player_skins = {}
+skin_inventory = {}  # {user_id: ["skin_id1", "skin_id2", ...]}
 item_descriptions = {}
 auction_data = {"items": []}
 leaderboard_data = {}
@@ -187,7 +188,7 @@ def save_json(filename, data):
     with open(filename, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_all():
-    global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock
+    global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory
     referral_data = defaultdict(lambda: {"invited": [], "bonus_claimed": False}, load_json(REFERRAL_FILE, {}))
     rep_data = load_json(REPUTATION_FILE, {})
     learning_data = load_json(LEARNING_FILE, {})
@@ -197,6 +198,7 @@ def load_all():
     auction_data = load_json(AUCTION_FILE, {"items": []})
     leaderboard_data = load_json(LEADERBOARD_FILE, {})
     supplier_stock = load_json(SUPPLIER_ITEMS_FILE, {"items": [], "last_update": 0})
+    skin_inventory = load_json(SKIN_INVENTORY_FILE, {})
 
 load_all()
 check_supplier_update()
@@ -260,7 +262,7 @@ def get_player_skin(user_id):
 def buy_skin(user_id, skin_id):
     skin = next((s for s in SKINS if s["id"] == skin_id), None)
     if not skin: return False, "Не найден"
-    if get_player_skin(user_id) == skin_id: return False, "Уже есть!"
+    if get_player_skin(user_id) == skin_id: return False, "Уже надет!"
     
     # Проверка лимитированных скинов
     if skin.get("limited"):
@@ -271,6 +273,11 @@ def buy_skin(user_id, skin_id):
     p = get_player(user_id)
     if skin["price"] > 0 and p["balance"] < skin["price"]: return False, "Недостаточно!"
     if skin["price"] > 0: p["balance"] -= skin["price"]
+    
+    # Добавляем в инвентарь скинов
+    add_skin_to_inventory(user_id, skin_id)
+    
+    # Надеваем скин
     player_skins[str(user_id)] = skin_id
     save_json(SKINS_FILE, player_skins)
     return True, f"✅ {skin['name']}!"
@@ -278,6 +285,35 @@ def buy_skin(user_id, skin_id):
 def check_rep_skins(user_id):
     rep_score = get_rep(user_id)["score"]
     return [s for s in SKINS if s["rep_required"] > 0 and rep_score >= s["rep_required"] and get_player_skin(user_id) != s["id"]]
+
+def check_rep_skins(user_id):
+    rep_score = get_rep(user_id)["score"]
+    return [s for s in SKINS if s["rep_required"] > 0 and rep_score >= s["rep_required"] and get_player_skin(user_id) != s["id"]]
+
+# ↓↓↓ ВОТ ТУТ ДОБАВЬ ↓↓↓
+def get_skin_inventory(user_id):
+    uid = str(user_id)
+    if uid not in skin_inventory:
+        skin_inventory[uid] = []
+    return skin_inventory[uid]
+
+def add_skin_to_inventory(user_id, skin_id):
+    uid = str(user_id)
+    if uid not in skin_inventory:
+        skin_inventory[uid] = []
+    if skin_id not in skin_inventory[uid]:
+        skin_inventory[uid].append(skin_id)
+        save_json(SKIN_INVENTORY_FILE, skin_inventory)
+        return True
+    return False
+
+def remove_skin_from_inventory(user_id, skin_id):
+    uid = str(user_id)
+    if uid in skin_inventory and skin_id in skin_inventory[uid]:
+        skin_inventory[uid].remove(skin_id)
+        save_json(SKIN_INVENTORY_FILE, skin_inventory)
+        return True
+    return False
 
 # ==================== НЕДВИЖИМОСТЬ ====================
 def get_player_house(user_id):
@@ -695,40 +731,72 @@ async def open_chat(callback: CallbackQuery, state: FSMContext):
 
 # ==================== КАТАЛОГ СКИНОВ ====================
 @dp.callback_query(F.data == "action_skins")
-async def show_skins_catalog(callback: CallbackQuery, page: int = 0):
+async def show_skins_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    txt = "👤 <b>МАГАЗИН СКИНОВ</b>\n\nВыбери категорию:"
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💰 ПЛАТНЫЕ СКИНЫ", callback_data="skins_paid")],
+        [InlineKeyboardButton(text="🏆 ЗА ДОСТИЖЕНИЯ", callback_data="skins_free")],
+        [InlineKeyboardButton(text="🎒 ИНВЕНТАРЬ СКИНОВ", callback_data="skins_inventory")],
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data == "skins_paid")
+async def show_skins_paid(callback: CallbackQuery, page: int = 0):
+    paid_skins = [s for s in SKINS if s["rep_required"] == 0 and s["price"] > 0]
+    await show_skins_catalog(callback, page, paid_skins, "💰 ПЛАТНЫЕ СКИНЫ")
+
+@dp.callback_query(F.data == "skins_free")
+async def show_skins_free(callback: CallbackQuery, page: int = 0):
+    free_skins = [s for s in SKINS if s["rep_required"] > 0 or s["price"] == 0]
+    await show_skins_catalog(callback, page, free_skins, "🏆 ЗА ДОСТИЖЕНИЯ")
+
+async def show_skins_catalog(callback: CallbackQuery, page: int, skin_list: list, title: str):
     user_id = callback.from_user.id
     if page < 0: page = 0
-    if page >= len(SKINS): page = len(SKINS) - 1
-    skin = SKINS[page]; owned = get_player_skin(user_id) == skin["id"]
+    if page >= len(skin_list): page = len(skin_list) - 1
+    if not skin_list:
+        return await send_msg(user_id, "В этой категории пока нет скинов.")
+    
+    skin = skin_list[page]; owned = get_player_skin(user_id) == skin["id"]
     p = get_player(user_id); rep_score = get_rep(user_id)["score"]
     rc = RARITY_COLORS.get(skin["rarity"], "⬜")
-    txt = f"👤 <b>КАТАЛОГ СКИНОВ</b>\n📄 {page+1}/{len(SKINS)}\n\n{skin['emoji']} <b>{skin['name']}</b>\n{rc} {skin['rarity'].upper()}\n📝 {skin['description']}\n"
-    if owned: txt += "\n✅ <b>ТВОЙ СКИН</b>"; act = None
+    
+    txt = f"👤 <b>{title}</b>\n📄 {page+1}/{len(skin_list)}\n\n{skin['emoji']} <b>{skin['name']}</b>\n{rc} {skin['rarity'].upper()}\n📝 {skin['description']}\n"
+    
+    if owned: txt += "\n✅ <b>НАДЕТ</b>"; act = None
     elif skin["rep_required"] > 0:
         if rep_score >= skin["rep_required"]: txt += "\n🎁 <b>ДОСТУПЕН!</b>"; act = InlineKeyboardButton(text="🎁 ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}")
         else: txt += f"\n🔒 Нужно {skin['rep_required']} реп. (у тебя {rep_score})"; act = None
     else:
-        # Проверка лимита
         if skin.get("limited"):
             skin_id = skin["id"]
             count = sum(1 for uid, s in player_skins.items() if s == skin_id)
             available = skin["max_count"] - count
             if available <= 0:
-                txt += f"\n💎 <b>ЛИМИТ ИСЧЕРПАН ({skin['max_count']} из {skin['max_count']})</b>"; act = None
+                txt += f"\n💎 <b>ЛИМИТ ИСЧЕРПАН</b>"; act = None
             else:
-                txt += f"\n💎 <b>МИФИЧЕСКИЙ! Доступно: {available} из {skin['max_count']}</b>"
+                txt += f"\n💎 <b>Доступно: {available} из {skin['max_count']}</b>"
                 act = InlineKeyboardButton(text="💎 ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}") if skin["price"] == 0 or p["balance"] >= skin["price"] else None
         else:
             if p["balance"] >= skin["price"]: txt += f"\n💰 Цена: {skin['price']}₽"; act = InlineKeyboardButton(text=f"🛒 КУПИТЬ", callback_data=f"buy_skin_{skin['id']}")
             else: txt += f"\n❌ {skin['price']}₽ (не хватает {skin['price']-p['balance']}₽)"; act = None
+    
     txt += f"\n\n💼 {p['balance']}₽ | ⭐ {rep_score}/100"
+    
     nav = []
-    if page > 0: nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"skin_page_{page-1}"))
-    if page < len(SKINS)-1: nav.append(InlineKeyboardButton(text="➡️", callback_data=f"skin_page_{page+1}"))
+    if page > 0: nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"skinlist_{title}_{page-1}"))
+    if page < len(skin_list)-1: nav.append(InlineKeyboardButton(text="➡️", callback_data=f"skinlist_{title}_{page+1}"))
+    
     kb = []
     if nav: kb.append(nav)
     if act: kb.append([act])
+    kb.append([InlineKeyboardButton(text="🔙 К КАТЕГОРИЯМ", callback_data="action_skins")])
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    
     if skin.get("image_url"):
         try:
             msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
@@ -738,9 +806,85 @@ async def show_skins_catalog(callback: CallbackQuery, page: int = 0):
         except: await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     else: await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
-@dp.callback_query(F.data.startswith("skin_page_"))
-async def skin_page_btn(callback: CallbackQuery):
-    await show_skins_catalog(callback, int(callback.data.split("_")[2]))
+@dp.callback_query(F.data.startswith("skinlist_"))
+async def skinlist_page_btn(callback: CallbackQuery):
+    parts = callback.data.split("_")
+    title = parts[1]
+    page = int(parts[2])
+    
+    if "ПЛАТНЫЕ" in title:
+        paid_skins = [s for s in SKINS if s["rep_required"] == 0 and s["price"] > 0]
+        await show_skins_catalog(callback, page, paid_skins, "💰 ПЛАТНЫЕ СКИНЫ")
+    else:
+        free_skins = [s for s in SKINS if s["rep_required"] > 0 or s["price"] == 0]
+        await show_skins_catalog(callback, page, free_skins, "🏆 ЗА ДОСТИЖЕНИЯ")
+
+@dp.callback_query(F.data == "skins_inventory")
+async def show_skins_inventory(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    inv = get_skin_inventory(user_id)
+    
+    if not inv:
+        return await send_msg(user_id, "🎒 <b>ИНВЕНТАРЬ СКИНОВ ПУСТ</b>\n\nКупи скины в магазине или получи за достижения!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🛒 В МАГАЗИН", callback_data="action_skins")],
+            [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+        ]))
+    
+    txt = "🎒 <b>ТВОИ СКИНЫ:</b>\n\n"
+    kb = []
+    current_skin = get_player_skin(user_id)
+    
+    for skin_id in inv:
+        skin = next((s for s in SKINS if s["id"] == skin_id), None)
+        if skin:
+            active = "✅ НАДЕТ" if skin_id == current_skin else ""
+            txt += f"{skin['emoji']} {skin['name']} ({skin['rarity']}) {active}\n"
+            if skin_id != current_skin:
+                kb.append([InlineKeyboardButton(text=f"👕 НАДЕТЬ: {skin['emoji']} {skin['name']}", callback_data=f"equip_skin_{skin_id}")])
+            if skin["price"] > 0:
+                kb.append([InlineKeyboardButton(text=f"📤 ПРОДАТЬ: {skin['emoji']} {skin['name']} за {int(skin['price']*0.7)}₽", callback_data=f"sell_skin_{skin_id}")])
+    
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data.startswith("equip_skin_"))
+async def equip_skin_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    skin_id = callback.data.replace("equip_skin_", "")
+    skin = next((s for s in SKINS if s["id"] == skin_id), None)
+    if skin:
+        player_skins[str(user_id)] = skin_id
+        save_json(SKINS_FILE, player_skins)
+        await callback.answer(f"Надет: {skin['name']}!")
+        await show_skins_inventory(callback)
+    else:
+        await callback.answer("Скин не найден")
+
+@dp.callback_query(F.data.startswith("sell_skin_"))
+async def sell_skin_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    skin_id = callback.data.replace("sell_skin_", "")
+    skin = next((s for s in SKINS if s["id"] == skin_id), None)
+    
+    if not skin:
+        return await callback.answer("Скин не найден")
+    
+    if get_player_skin(user_id) == skin_id:
+        return await callback.answer("Сначала сними скин!")
+    
+    if skin["price"] == 0:
+        return await callback.answer("Бесплатные скины нельзя продать!")
+    
+    sell_price = int(skin["price"] * 0.7)
+    p = get_player(user_id)
+    p["balance"] += sell_price
+    remove_skin_from_inventory(user_id, skin_id)
+    
+    await callback.answer(f"Продан за {sell_price}₽!")
+    await send_msg(user_id, f"💰 <b>СКИН ПРОДАН!</b>\n{skin['emoji']} {skin['name']}\n💵 Получено: {sell_price}₽\n💼 Баланс: {p['balance']}₽")
+    await show_skins_inventory(callback)
 
 @dp.callback_query(F.data.startswith("buy_skin_"))
 async def buy_skin_btn(callback: CallbackQuery):
@@ -749,7 +893,7 @@ async def buy_skin_btn(callback: CallbackQuery):
     if not skin: return await callback.answer("Не найден")
     if skin["rep_required"] > 0 and get_rep(user_id)["score"] < skin["rep_required"]: return await callback.answer(f"Нужно {skin['rep_required']} реп.!")
     success, msg = buy_skin(user_id, skin_id)
-    if success: await callback.answer(msg); await show_skins_catalog(callback, next((i for i, s in enumerate(SKINS) if s["id"] == skin_id), 0))
+    if success: await callback.answer(msg); await show_skins_menu(callback)
     else: await callback.answer(msg, show_alert=True)
 
 # ==================== ЗАКУПКА ====================
@@ -835,6 +979,13 @@ async def show_auction(callback: CallbackQuery):
 async def auction_sell_menu(callback: CallbackQuery):
     p = get_player(callback.from_user.id)
     kb = [[InlineKeyboardButton(text=f"📦 {item['name']} (~{item['market_price']}₽)", callback_data=f"auction_put_{i}")] for i, item in enumerate(p["inventory"])]
+    # Добавляем скины из инвентаря на аукцион
+    skin_inv = get_skin_inventory(callback.from_user.id)
+    current = get_player_skin(callback.from_user.id)
+    for sid in skin_inv:
+        s = next((sk for sk in SKINS if sk["id"] == sid), None)
+        if s and s["price"] > 0 and sid != current:
+            kb.append([InlineKeyboardButton(text=f"👤 Скин: {s['emoji']} {s['name']}", callback_data=f"auction_skin_{sid}")])
     kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_auction")])
     if not kb: return await callback.answer("Нечего выставить!")
     await send_msg(callback.from_user.id, "📤 <b>ВЫСТАВИТЬ НА АУКЦИОН</b>\n\nВыбери товар:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
