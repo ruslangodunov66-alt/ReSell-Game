@@ -1192,25 +1192,53 @@ async def show_stats(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "action_demand", StateFilter(GameState.playing))
 async def show_demand(callback: CallbackQuery):
-    p = get_player(callback.from_user.id)
+    user_id = callback.from_user.id
+    p = get_player(user_id)
     
-    # Определяем погоду и ситуацию
-    weathers = ["☀️ Солнечно", "🌧 Дождливо", "❄️ Холодно", "🌤 Переменная облачность", "🌪 Ветрено"]
-    situations = ["📈 Рынок растёт", "📉 Рынок падает", "➡️ Стабильность", "🔥 Ажиотаж", "💤 Затишье"]
+    # Применяем погодные эффекты
+    weathers = [
+        {"name": "☀️ Солнечно", "effect_cat": "👕 Худи", "effect_mult": 1.3, "desc": "Спрос на худи и футболки вырос!"},
+        {"name": "🌧 Дождливо", "effect_cat": "🧥 Куртки", "effect_mult": 1.4, "desc": "Все ищут куртки и дождевики!"},
+        {"name": "❄️ Холодно", "effect_cat": "🧥 Куртки", "effect_mult": 1.5, "desc": "Зима близко — спрос на куртки взлетел!"},
+        {"name": "🌤 Облачно", "effect_cat": "👖 Джинсы", "effect_mult": 1.2, "desc": "Джинсы и плотная одежда в тренде."},
+        {"name": "🌪 Ветрено", "effect_cat": "👟 Кроссы", "effect_mult": 0.7, "desc": "В такую погоду меньше покупают."},
+    ]
     
     weather = random.choice(weathers)
+    
+    # Применяем эффект на 1 игровой день
+    if weather["effect_cat"] in p["market_demand"]:
+        p["market_demand"][weather["effect_cat"]] *= weather["effect_mult"]
+        p["market_demand"][weather["effect_cat"]] = max(0.3, min(3.0, p["market_demand"][weather["effect_cat"]]))
+    
+    # Случайная рыночная ситуация
+    situations = [
+        {"name": "📈 Рынок растёт", "mult": 1.1, "desc": "Общий спрос повысился!"},
+        {"name": "📉 Рынок падает", "mult": 0.85, "desc": "Покупатели экономят."},
+        {"name": "🔥 Ажиотаж", "mult": 1.3, "desc": "Все скупают всё подряд!"},
+        {"name": "💤 Затишье", "mult": 0.9, "desc": "Мало покупателей на рынке."},
+        {"name": "➡️ Стабильность", "mult": 1.0, "desc": "Рынок без изменений."},
+    ]
+    
     situation = random.choice(situations)
+    
+    # Применяем общий эффект
+    if situation["mult"] != 1.0:
+        for cat in p["market_demand"]:
+            p["market_demand"][cat] *= situation["mult"]
+            p["market_demand"][cat] = max(0.3, min(3.0, p["market_demand"][cat]))
     
     txt = (
         f"📊 <b>СИТУАЦИЯ НА РЫНКЕ</b>\n\n"
-        f"🌍 <b>Погода:</b> {weather}\n"
-        f"📊 <b>Ситуация:</b> {situation}\n\n"
+        f"🌍 <b>Погода:</b> {weather['name']}\n"
+        f"   {weather['desc']}\n\n"
+        f"📊 <b>Ситуация:</b> {situation['name']}\n"
+        f"   {situation['desc']}\n\n"
         f"<b>Спрос по категориям:</b>\n"
         f"{fmt_demand(p)}\n\n"
         f"💡 <b>Совет:</b> "
     )
     
-    # Советы в зависимости от спроса
     max_cat = max(p["market_demand"], key=p["market_demand"].get)
     max_val = p["market_demand"][max_cat]
     
@@ -1221,7 +1249,7 @@ async def show_demand(callback: CallbackQuery):
     else:
         txt += "Рынок спокойный. Закупайся дёшево и жди роста! ⏳"
     
-    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]
     ]))
     try: await callback.message.delete()
