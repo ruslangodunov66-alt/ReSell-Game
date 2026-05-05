@@ -1112,7 +1112,7 @@ async def show_supply(callback: CallbackQuery):
             except: pass
             return
     
-        if p["balance"] < 10000:
+    if p["balance"] < 10000:
         return await callback.answer("Нужно 10 000₽!")
 
     p["balance"] -= 10000
