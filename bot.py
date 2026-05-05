@@ -701,31 +701,35 @@ async def handle_message(message: types.Message, state: FSMContext):
     
     if chat["round"] >= 3:
         chat["finished"] = True
-        try:
-            sp = CLIENT_TYPES[chat["client_type"]]["system_prompt"] + f"\nТовар: {chat['item']}. Продавец предлагает: {text}. Твоя цена была: {chat['offer']}₽. Прими решение: согласиться (напиши 'беру' и цену) или отказаться (напиши 'нет'). Ответь коротко."
-            resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}], temperature=0.7, max_tokens=40)
-            ai_msg = resp.choices[0].message.content
-        except:
-            ai_msg = random.choice(["беру", "нет"])
-        
-        if "беру" in ai_msg.lower():
-            prices = re.findall(r'(\d+)', ai_msg)
-            if prices:
-                final = int(prices[0])
-                if final > chat["offer"]:
-                    chat["offer"] = final
-            phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
-            agree_msg = random.choice(phrases["agree"]).format(offer=chat["offer"])
-            await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {agree_msg}")
-            await complete_sale(user_id, chat["buyer_id"], message)
-        else:
-            phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
-            decline_msg = random.choice(phrases["decline"])
-            await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {decline_msg}")
-        return
-
-    await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> Продолжайте диалог...")
-
+            # Клиент отвечает на торг (шаблоны, без DeepSeek)
+    phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
+    
+    # Смотрим, предлагает ли продавец цену ниже чем хотел клиент
+    seller_prices = re.findall(r'(\d+)', text)
+    seller_offer = None
+    for p in seller_prices:
+        price = int(p)
+        if chat["offer"] < price <= chat["price"]:
+            seller_offer = price
+            break
+    
+    if seller_offer and seller_offer <= chat["offer"] * 1.3:
+        # Продавец предложил разумную цену — клиент может согласиться
+        ai_msg = random.choice([
+            f"Хм, {seller_offer}₽? Уже лучше. Но давай {seller_offer - random.randint(100, 500)}₽?",
+            f"{seller_offer}₽ — интересно. Я думаю.",
+            f"Слушай, {seller_offer}₽ — почти договорились. Ещё чуть скинешь?",
+            f"Ну хорошо, {seller_offer}₽. Я почти готов взять.",
+            f"Ладно, убедил почти. Но может {seller_offer - random.randint(200, 600)}₽?",
+        ])
+        chat["offer"] = seller_offer
+    else:
+        # Продавец просто разговаривает или предлагает высокую цену
+        ai_msg = random.choice(phrases["wait"]).format(item=chat["item"])
+    
+    chat["history"].append({"role": "assistant", "content": ai_msg})
+    
+    await send_msg(user_id, f"👤 <b>Покупатель #{chat['buyer_id']}:</b> {ai_msg}")
 # ==================== ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
 async def show_chats(callback: CallbackQuery):
@@ -1139,22 +1143,26 @@ async def show_supply(callback: CallbackQuery):
     p["balance"] -= 10000
 
     items_in_box = []
-    for _ in range(random.randint(2, 5)):
+    for _ in range(random.randint(1, 3)):  # Меньше вещей
         rarity_roll = random.randint(1, 100)
-        if rarity_roll <= 60:
-            rarity = "обычный"
-        elif rarity_roll <= 85:
-            rarity = "редкий"
-        elif rarity_roll <= 95:
-            rarity = "эпический"
+        if rarity_roll <= 70:
+            rarity = "обычный"        # 70%
+        elif rarity_roll <= 90:
+            rarity = "редкий"         # 20%
+        elif rarity_roll <= 97:
+            rarity = "эпический"      # 7%
         elif rarity_roll <= 99:
-            rarity = "легендарный"
+            rarity = "легендарный"    # 2%
         else:
-            rarity = "мифический"
+            rarity = "мифический"     # 1%
 
         rd = SUPPLIER_ITEM_RARITIES[rarity]
         base = random.choice(BASE_ITEMS)
-        mp = int(base["base_price"] * random.uniform(rd["price_mult_min"], rd["price_mult_max"]))
+        # Цена товара чаще около 8500 или ниже
+        if random.random() < 0.6:
+            mp = random.randint(3000, 8500)  # 60% шанс получить дешёвый товар
+        else:
+            mp = random.randint(8500, 20000)  # 40% шанс получить что-то дороже
         items_in_box.append({
             "name": f"{rd['color']} {base['cat']} {base['name']}",
             "cat": base["cat"],
