@@ -551,8 +551,7 @@ async def complete_sale(user_id, buyer_id, message=None):
         if pub_item.get("name") == item_name: sold = pub_item; published_items[user_id] = None
     if not sold:
         for i, inv in enumerate(p["inventory"]):
-            # Сравниваем по названию, убирая эмодзи и лишние пробелы
-                        if item_name in inv["name"] or inv["name"] in item_name: 
+            if item_name in inv["name"] or inv["name"] in item_name: 
                 sold = p["inventory"].pop(i)
                 break
 
