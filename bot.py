@@ -1110,25 +1110,34 @@ async def show_supply(callback: CallbackQuery):
         except: pass
         return
     
-    if p["balance"] < 1000:
+        if p["balance"] < 1000:
         return await callback.answer("Нужно 1000₽!")
-    
+
     p["balance"] -= 1000
-        items_in_box = []
+
+    items_in_box = []
     for _ in range(random.randint(2, 5)):
         rarity_roll = random.randint(1, 100)
-        if rarity_roll <= 60: rarity = "обычный"
-        elif rarity_roll <= 85: rarity = "редкий"
-        elif rarity_roll <= 95: rarity = "эпический"
-        elif rarity_roll <= 99: rarity = "легендарный"
-        else: rarity = "мифический"
-        
+        if rarity_roll <= 60:
+            rarity = "обычный"
+        elif rarity_roll <= 85:
+            rarity = "редкий"
+        elif rarity_roll <= 95:
+            rarity = "эпический"
+        elif rarity_roll <= 99:
+            rarity = "легендарный"
+        else:
+            rarity = "мифический"
+
         rd = SUPPLIER_ITEM_RARITIES[rarity]
         base = random.choice(BASE_ITEMS)
         mp = int(base["base_price"] * random.uniform(rd["price_mult_min"], rd["price_mult_max"]))
         items_in_box.append({
             "name": f"{rd['color']} {base['cat']} {base['name']}",
-            "cat": base["cat"], "buy_price": int(mp * 0.5), "market_price": mp, "rarity": rarity
+            "cat": base["cat"],
+            "buy_price": int(mp * 0.5),
+            "market_price": mp,
+            "rarity": rarity
         })
     
     supply_drop[user_id] = {"items": items_in_box, "found": [], "clicks": 0, "active": True}
