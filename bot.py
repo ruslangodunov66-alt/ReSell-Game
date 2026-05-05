@@ -1112,10 +1112,10 @@ async def show_supply(callback: CallbackQuery):
             except: pass
             return
     
-    if p["balance"] < 1000:
-        return await callback.answer("Нужно 1000₽!")
+        if p["balance"] < 10000:
+        return await callback.answer("Нужно 10 000₽!")
 
-    p["balance"] -= 1000
+    p["balance"] -= 10000
 
     items_in_box = []
     for _ in range(random.randint(2, 5)):
@@ -1144,7 +1144,17 @@ async def show_supply(callback: CallbackQuery):
     
     supply_drop[user_id] = {"items": items_in_box, "found": [], "clicks": 0, "active": True}
     
-    txt = f"📦 <b>ПОСТАВКА ПРИШЛА!</b>\n\n💰 Оплачено: 1000₽\n📸 Кликов: 10\n🎁 В коробке: {len(items_in_box)} вещей\n\n<i>Жми кнопку!</i>"
+     txt = (
+        f"📦 <b>СЕКРЕТНЫЙ БОКС ОТ ПОСТАВЩИКА!</b>\n\n"
+        f"Ты купил коробку с неизвестным товаром.\n"
+        f"Как на реальной оптовке — никогда не знаешь,\n"
+        f"попадётся там брендовая вещь или обычный мусор.\n\n"
+        f"💰 Оплачено: 10 000₽\n"
+        f"📸 Нужно открыть: 10 раз\n"
+        f"🎁 Товаров внутри: {len(items_in_box)} шт.\n\n"
+        f"<i>Жми кнопку чтобы разбирать коробку!\n"
+        f"Шанс найти что-то ценное — 40%</i>"
+    )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📦 РАЗОБРАТЬ (10)", callback_data="supply_click")],
     ])
