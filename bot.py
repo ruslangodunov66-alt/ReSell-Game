@@ -823,10 +823,10 @@ async def skinlist_page_btn(callback: CallbackQuery):
     page = int(parts[2])
     
     if "ПЛАТНЫЕ" in title:
-        paid_skins = [s for s in SKINS if s["rep_required"] == 0 and s["price"] > 0]
+        paid_skins = [s for s in SKINS if s["rep_required"] == 0 and s["price"] > 0 and not s.get("limited")]
         await show_skins_catalog(callback, page, paid_skins, "💰 ПЛАТНЫЕ СКИНЫ")
     else:
-        free_skins = [s for s in SKINS if s["rep_required"] > 0 or s["price"] == 0]
+        free_skins = [s for s in SKINS if (s["rep_required"] > 0 or s["price"] == 0) and not s.get("limited")]
         await show_skins_catalog(callback, page, free_skins, "🏆 ЗА ДОСТИЖЕНИЯ")
 
 @dp.callback_query(F.data == "skins_inventory")
