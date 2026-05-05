@@ -460,15 +460,14 @@ async def send_buyer(user_id, buyer_id, client_type, item_name, price, is_remind
         discount = random.uniform(*client["discount_range"]); discount = max(0.3, min(0.95, discount))
         offer = int(price * discount); offer = (offer // 100) * 100 + 99
         if offer < 100: offer = price // 2
-                phrases = CLIENT_TYPES[client_type]["phrases"]
+        phrases = client["phrases"]
         msg = random.choice(phrases["start"]).format(item=item_name, price=price, offer=offer)
         active_chats[chat_key] = {"user_id": user_id, "buyer_id": buyer_id, "client_type": client_type, "item": item_name, "price": price, "offer": offer, "history": [{"role": "system", "content": client["system_prompt"]}, {"role": "assistant", "content": msg}], "round": 1, "max_rounds": client["patience"], "finished": False}
         await send_msg(user_id, f"📩 <b>Покупатель #{buyer_id}</b>\n📦 {item_name}\n💬 {msg}")
     else:
         chat = active_chats.get(chat_key)
         if chat and not chat["finished"]:
-            # Без ИИ — простое напоминание
-                        phrases = CLIENT_TYPES[client_type]["phrases"]
+            phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
             reminder = random.choice(phrases["wait"]).format(item=item_name)
             chat["history"].append({"role": "assistant", "content": reminder})
             await send_msg(user_id, f"🔔 <b>Покупатель #{buyer_id}</b>\n💬 {reminder}")
@@ -1102,9 +1101,19 @@ async def handle_description(message: types.Message, state: FSMContext):
 @dp.callback_query(F.data == "action_minigames", StateFilter(GameState.playing))
 async def show_minigames(callback: CallbackQuery):
     user_id = callback.from_user.id
-    txt = "🎮 <b>МИНИ-ИГРЫ</b>\n\nВыбери игру:"
+    p = get_player(user_id)
+    txt = (
+        f"🎮 <b>МИНИ-ИГРЫ</b>\n\n"
+        f"<b>📦 РАЗБЕРИ ПОСТАВКУ</b>\n"
+        f"💰 Цена: 10 000₽\n"
+        f"🎁 Секретный бокс от поставщика — как на реальной оптовке!\n"
+        f"Никогда не знаешь, попадётся бренд или обычный мусор.\n"
+        f"🔄 Шанс найти вещь: 40%\n"
+        f"💎 Можно найти редкий, эпический или даже легендарный товар!\n\n"
+        f"💼 Твой баланс: {p['balance']}₽"
+    )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📦 РАЗБЕРИ ПОСТАВКУ (1000₽)", callback_data="action_supply")],
+        [InlineKeyboardButton(text="📦 РАЗОБРАТЬ ПОСТАВКУ (10 000₽)", callback_data="action_supply")],
         [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
     ])
     await send_msg(user_id, txt, reply_markup=kb)
