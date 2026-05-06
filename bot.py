@@ -868,9 +868,14 @@ async def handle_message(message: types.Message, state: FSMContext):
         
         if decision == "agree":
             if chat["client_type"] == "trader":
-                ai_msg = random.choice(phrases["agree"]).format(price=chat["offer"])
+                final_price = chat["offer"]
+                ai_msg = random.choice(phrases["agree"]).format(price=final_price)
             else:
-                ai_msg = random.choice(phrases["reason_reaction"]).format(price=chat["price"])
+                final_price = chat["price"]
+                # Выбираем фразу и вручную подставляем цену
+                msg_template = random.choice(phrases["reason_reaction"])
+                ai_msg = msg_template.replace("{price}", str(final_price))
+            
             await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
             await complete_sale(user_id, buyer_id, message)
         else:
