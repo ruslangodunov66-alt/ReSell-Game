@@ -577,13 +577,51 @@ async def spawn_buyers(user_id):
     if user_id not in published_items or not published_items[user_id]: return
     pub = published_items[user_id]; item = pub["item"]
     if item["name"] in sold_items[user_id]: return
+    
     n = random.randint(1, 3)
     types = random.choices(["normal", "skeptic", "trader"], weights=[60, 25, 15], k=n)
-    await send_msg(user_id, f"📱 <b>ОБЪЯВЛЕНИЕ!</b>\n📦 {item['name']}\n💰 {item['market_price']}₽\n👥 Пишут: <b>{n}</b> чел.")
+    
+    # Создаём покупателей без отправки сообщений
     for i, bt in enumerate(types):
-        await asyncio.sleep(random.randint(5, 20))
-        await send_buyer(user_id, i + 1, bt, item["name"], item["market_price"])
-
+        buyer_id = i + 1
+        chat_key = f"{user_id}_{buyer_id}"
+        
+        if bt == "trader":
+            discount = random.uniform(0.7, 0.9)
+            offer = int(item["market_price"] * discount)
+            offer = (offer // 100) * 100 + 99
+            if offer < 100: offer = item["market_price"] // 2
+        else:
+            offer = item["market_price"]
+        
+        # Сохраняем покупателя в ожидании
+        active_chats[chat_key] = {
+            "user_id": user_id, "buyer_id": buyer_id, "client_type": bt,
+            "item": item["name"], "price": item["market_price"], "offer": offer,
+            "round": 0, "max_rounds": CLIENT_TYPES[bt]["max_rounds"],
+            "finished": False, "phase": "waiting",
+            "history": []
+        }
+    
+    # Одно уведомление
+    txt = f"📱 <b>ПО ВАШЕМУ ОБЪЯВЛЕНИЮ НАПИСАЛИ!</b>\n\n📦 {item['name']}\n💰 Цена: {item['market_price']}₽\n👥 Откликнулось: <b>{n}</b> чел.\n\n"
+    
+    normal_count = types.count("normal")
+    skeptic_count = types.count("skeptic")
+    trader_count = types.count("trader")
+    
+    if normal_count > 0: txt += f"• {normal_count} обычных покупателей\n"
+    if skeptic_count > 0: txt += f"• {skeptic_count} сомневающихся\n"
+    if trader_count > 0: txt += f"• {trader_count} торгующихся\n"
+    
+    txt += "\n<i>Зайдите в 💬 ЧАТЫ чтобы начать диалог!</i>"
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💬 ПЕРЕЙТИ В ЧАТЫ", callback_data="action_chats")],
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+    ])
+    
+    await send_msg(user_id, txt, reply_markup=kb)
 async def complete_sale(user_id, buyer_id, message=None):
     chat_key = f"{user_id}_{buyer_id}"
     chat = active_chats.get(chat_key)
@@ -826,7 +864,7 @@ async def handle_message(message: types.Message, state: FSMContext):
             else:
                 decision = "decline"
         
-        phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
+        phrases = client["phrases"]
         
         if decision == "agree":
             if chat["client_type"] == "trader":
@@ -882,11 +920,19 @@ async def show_chats(callback: CallbackQuery):
     user_id = callback.from_user.id
     al = [(k, c) for k, c in active_chats.items() if c["user_id"] == user_id and not c["finished"]]
     if not al: return await send_msg(user_id, "💬 Нет диалогов.\nОпубликуй товар в 📦 Инвентаре!")
+    
     txt = f"💬 <b>ДИАЛОГИ ({len(al)}):</b>\n\n"
     kb = []
+    
     for key, chat in al:
-        txt += f"👤 #{chat['buyer_id']} | {chat['item']} | {chat['offer']}₽\n"
-        kb.append([InlineKeyboardButton(text=f"💬 Ответить #{chat['buyer_id']}", callback_data=f"open_chat_{user_id}_{chat['buyer_id']}")])
+        status = "⏳ Ожидает" if chat["round"] == 0 else f"💬 Диалог ({chat['round']}/{chat['max_rounds']})"
+        type_names = {"normal": "Обычный", "skeptic": "Скептик", "trader": "Торгаш"}
+        txt += f"👤 #{chat['buyer_id']} ({type_names.get(chat['client_type'], '?')})\n📦 {chat['item']}\n💰 {chat['offer']}₽ | {status}\n\n"
+        kb.append([InlineKeyboardButton(
+            text=f"💬 Ответить #{chat['buyer_id']} — {chat['item'][:20]}",
+            callback_data=f"open_chat_{user_id}_{chat['buyer_id']}"
+        )])
+    
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="menu_page_1")])
     await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
@@ -896,11 +942,27 @@ async def show_chats(callback: CallbackQuery):
 async def open_chat(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split("_"); user_id = int(parts[2]); buyer_id = int(parts[3])
     chat_key = f"{user_id}_{buyer_id}"
-    if chat_key not in active_chats or active_chats[chat_key]["finished"]: return await callback.answer("Диалог завершён")
+    if chat_key not in active_chats or active_chats[chat_key]["finished"]: 
+        return await callback.answer("Диалог завершён")
+    
+    chat = active_chats[chat_key]
     active_chat_for_user[user_id] = chat_key
     await state.set_state(GameState.playing)
-    await send_msg(user_id, f"💬 <b>ДИАЛОГ #{buyer_id}</b>\nПиши «продано» чтобы продать!")
-
+    
+    # Если диалог только начался — отправляем первое сообщение
+    if chat["round"] == 0:
+        client = CLIENT_TYPES[chat["client_type"]]
+        phrases = client["phrases"]
+        msg = random.choice(phrases["greet"]).format(
+            item=chat["item"], price=chat["price"], offer=chat["offer"]
+        )
+        chat["round"] = 1
+        chat["history"] = [{"role": "assistant", "content": msg}]
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}\n\n<i>Ответь на сообщение или напиши «согласен» для продажи!</i>")
+    else:
+        await send_msg(user_id, f"💬 <b>ДИАЛОГ #{buyer_id}</b>\nПродолжай общение или напиши «согласен»!")
+    
+    await callback.answer("Чат открыт!")
 # ==================== КАТАЛОГ СКИНОВ ====================
 @dp.callback_query(F.data == "action_skins")
 async def show_skins_menu(callback: CallbackQuery):
