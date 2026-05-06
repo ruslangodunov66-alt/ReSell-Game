@@ -610,7 +610,7 @@ async def spawn_buyers(user_id):
     pub = published_items[user_id]; item = pub["item"]
     if item["name"] in sold_items[user_id]: return
     n = random.randint(1, 3)
-      types = random.choices(["normal", "skeptic", "trader"], weights=[60, 25, 15], k=n)
+    types = random.choices(["normal", "skeptic", "trader"], weights=[60, 25, 15], k=n)
     await send_msg(user_id, f"📱 <b>ОБЪЯВЛЕНИЕ!</b>\n📦 {item['name']}\n💰 {item['market_price']}₽\n👥 Пишут: <b>{n}</b> чел.")
     for i, bt in enumerate(types):
         await asyncio.sleep(random.randint(5, 20))
