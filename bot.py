@@ -195,9 +195,9 @@ CLIENT_TYPES = {
                 "Ок. Почему решили продать?",
             ],
             "reason_reaction": [
-                "Ну хорошо, убедили. {price}₽ — беру.",
-                "Ладно, звучит разумно. Забираю за {price}₽.",
-                "Уговорили. {price}₽ — по рукам.",
+                "Ну хорошо, убедили. {0}₽ — беру.",
+                "Ладно, звучит разумно. Забираю за {0}₽.",
+                "Уговорили. {0}₽ — по рукам.",
             ],
             "decline": [
                 "Нет, не убедили. Я пошёл.",
@@ -217,9 +217,9 @@ CLIENT_TYPES = {
         "max_rounds": 3,
         "phrases": {
             "greet": [
-                "Здравствуйте! {item} — {price}₽? Давайте {offer}₽.",
-                "Привет! {item} за {price}₽? Я готов предложить {offer}₽.",
-                "Добрый день! {item} интересен, но {price}₽ много. {offer}₽?",
+                "Здравствуйте! {item} — {0}₽? Давайте {offer}₽.",
+                "Привет! {item} за {0}₽? Я готов предложить {offer}₽.",
+                "Добрый день! {item} интересен, но {0}₽ много. {offer}₽?",
             ],
             "counter": [
                 "Нет, всё равно дорого. {new_offer}₽?",
@@ -228,9 +228,9 @@ CLIENT_TYPES = {
                 "Слушай, {new_offer}₽ — и забираю.",
             ],
             "agree": [
-                "Ладно, уговорил. {price}₽ беру.",
-                "Хорошо, давай {price}₽.",
-                "По рукам за {price}₽.",
+                "Ладно, уговорил. {0}₽ беру.",
+                "Хорошо, давай {0}₽.",
+                "По рукам за {0}₽.",
             ],
             "decline": [
                 "Нет, не пойдёт. Удачи.",
@@ -889,7 +889,7 @@ async def handle_message(message: types.Message, state: FSMContext):
         elif chat["round"] == 3:
             msg = random.choice(phrases["delivery_reaction"])
         elif chat["round"] == 4:
-            msg = random.choice(phrases["reason_reaction"])
+            msg = random.choice(phrases["reason_reaction"]).replace("{price}", str(chat["price"]))
         else:
             msg = random.choice(phrases["wait"])
         await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
@@ -899,7 +899,7 @@ async def handle_message(message: types.Message, state: FSMContext):
         elif chat["round"] == 3:
             msg = random.choice(phrases["delivery_reaction"])
         elif chat["round"] == 4:
-            msg = random.choice(phrases["reason_reaction"])
+            msg = random.choice(phrases["reason_reaction"]).replace("{price}", str(chat["price"]))
         else:
             msg = random.choice(phrases["wait"])
         await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
