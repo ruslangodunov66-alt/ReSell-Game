@@ -801,6 +801,10 @@ async def play_cmd(message: types.Message, state: FSMContext):
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
     await send_menu_with_skin(user_id, f"🌟 <b>ДЕНЬ 1</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
 
+@dp.message(F.photo)
+async def get_photo_links(message: types.Message):
+    await message.answer(f"✅ <b>FILE ID:</b>\n<code>{message.photo[-1].file_id}</code>", parse_mode="HTML")
+
 # ==================== ЧАТ С ПОКУПАТЕЛЯМИ ====================
 @dp.message(StateFilter(GameState.playing))
 async def handle_message(message: types.Message, state: FSMContext):
@@ -1737,10 +1741,6 @@ async def learn_btn(callback: CallbackQuery):
     await send_msg(callback.from_user.id, "📚 <b>ОБУЧЕНИЕ ТОВАРНОМУ БИЗНЕСУ</b>\n\nИзучай уроки и получай бонусы!", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
-
-@dp.message(F.photo)
-async def get_photo_links(message: types.Message):
-    await message.answer(f"✅ <b>FILE ID:</b>\n<code>{message.photo[-1].file_id}</code>", parse_mode="HTML")
 
 # ==================== ЗАПУСК ====================
 async def main():
