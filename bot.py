@@ -796,7 +796,7 @@ async def handle_message(message: types.Message, state: FSMContext):
                 chat_key = key; break
     if not chat_key: return
 
-    chat = active_chats[chat_key]
+        chat = active_chats[chat_key]
     chat["round"] += 1
     client = CLIENT_TYPES[chat["client_type"]]
     phrases = client["phrases"]
@@ -805,10 +805,9 @@ async def handle_message(message: types.Message, state: FSMContext):
     price = chat["price"]
     offer = chat["offer"]
 
-        if chat["round"] >= chat["max_rounds"]:
+    if chat["round"] >= chat["max_rounds"]:
         chat["finished"] = True
         if chat["client_type"] == "trader":
-            # Торгующиеся: 50% согласие если цена близка
             if chat["offer"] >= chat["price"] * 0.7:
                 if random.random() < 0.5:
                     decision = "agree"
@@ -817,15 +816,11 @@ async def handle_message(message: types.Message, state: FSMContext):
             else:
                 decision = "decline"
         else:
-            # Обычные и скептики: решение по качеству ответов
-            # Считаем качество ответов продавца (длина сообщений)
             total_len = sum(len(msg["content"]) for msg in chat.get("history", []) if msg["role"] == "user")
-            quality = min(100, total_len / 2)  # Чем длиннее ответы — тем выше качество
-            
+            quality = min(100, total_len / 2)
             client_type = chat["client_type"]
             bonus = CLIENT_TYPES[client_type].get("persuasion_bonus", 0)
-            success_chance = quality - bonus  # Скептиков сложнее убедить
-            
+            success_chance = quality - bonus
             if random.randint(1, 100) <= success_chance:
                 decision = "agree"
             else:
