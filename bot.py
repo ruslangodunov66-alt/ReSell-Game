@@ -283,8 +283,10 @@ SHOP_LEVELS = [
     {"id": "none", "name": "Нет магазина", "price": 0, "income_per_hour": 0},
     {"id": "stall", "name": "🛍 Лавка на рынке", "price": 5000, "income_per_hour": 100},
     {"id": "container", "name": "📦 Контейнер на Садоводе", "price": 15000, "income_per_hour": 300},
-    {"id": "store", "name": "🏬 Магазин в ТЦ", "price": 50000, "income_per_hour": 800},
-    {"id": "boutique", "name": "👑 Бутик в центре", "price": 150000, "income_per_hour": 2000},
+    {"id": "small_shop", "name": "🏬 Маленький магазин одежды", "price": 50000, "income_per_hour": 800},
+    {"id": "store", "name": "🏪 Магазин в ТЦ", "price": 150000, "income_per_hour": 2000},
+    {"id": "brand_shop", "name": "👔 Брендовый магазин одежды", "price": 500000, "income_per_hour": 5000},
+    {"id": "boutique", "name": "👑 Бутик в центре", "price": 1500000, "income_per_hour": 15000},
 ]
 
 TAXOPARK_LEVELS = [
@@ -605,7 +607,7 @@ def main_kb(page=1, user_id=None):
             [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
         ])
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🏠 ЖИЛЬЁ", callback_data="action_houses"), InlineKeyboardButton(text="🏪 МАГАЗИН", callback_data="action_shop")],
+        [InlineKeyboardButton(text="🏠 ЖИЛЬЁ", callback_data="action_houses"), InlineKeyboardButton(text="💼 БИЗНЕС", callback_data="action_business")],
         [InlineKeyboardButton(text="🚗 АВТО", callback_data="action_cars")],
         [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
         [InlineKeyboardButton(text="🏆 ЛИДЕРЫ", callback_data="action_leaderboard")],
@@ -1256,6 +1258,40 @@ async def buy_supplier_item(callback: CallbackQuery):
     await callback.answer("✅ Куплен!")
     await send_msg(user_id, f"🛒 <b>КУПЛЕНО!</b>\n📦 {item['name']}\n💰 Закуп: {item['buy_price']}₽\n📊 Рынок: ~{item['market_price']}₽\n👇 📦 Инвентарь → Опубликовать!")
 
+# ==================== БИЗНЕС (МЕНЮ) ====================
+@dp.callback_query(F.data == "action_business", StateFilter(GameState.playing))
+async def show_business_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    
+    # Информация о магазине
+    shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(user_id)["level"]), SHOP_LEVELS[0])
+    
+    # Информация о таксопарке
+    park = get_player_taxopark(user_id)
+    park_level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    
+    txt = (
+        "💼 <b>БИЗНЕС</b>\n\n"
+        f"🏪 <b>Магазин:</b> {shop['name']}\n"
+        f"   Доход: {shop['income_per_hour']}₽/час\n\n"
+        f"🚕 <b>Таксопарк:</b> {park_level['name']}\n"
+    )
+    if park_level["slots"] > 0:
+        txt += f"   Машин: {len(park['cars'])}/{park_level['slots']}\n"
+        txt += f"   Доход: {park_level['income_per_car']:,}₽/час с машины\n".replace(",", " ")
+    
+    txt += f"\n💼 Баланс: {p['balance']:,}₽\n\n<i>Выбери бизнес для управления:</i>".replace(",", " ")
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🏪 МАГАЗИН ОДЕЖДЫ", callback_data="action_shop")],
+        [InlineKeyboardButton(text="🚕 ТАКСОПАРК", callback_data="cars_taxopark")],
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    try: await callback.message.delete()
+    except: pass
+
 # ==================== МАГАЗИН ====================
 @dp.callback_query(F.data == "action_shop", StateFilter(GameState.playing))
 async def show_shop(callback: CallbackQuery):
@@ -1264,12 +1300,35 @@ async def show_shop(callback: CallbackQuery):
     elapsed = time_module.time() - get_player_shop(user_id)["last_collect"]
     income = int(shop["income_per_hour"] * (elapsed / 3600))
     p = get_player(user_id)
-    txt = f"🏪 <b>МАГАЗИН ОДЕЖДЫ</b>\n\nТвой: {shop['name']}\n💰 Доход: {shop['income_per_hour']}₽/час\n💵 Накоплено: {income}₽\n💼 Баланс: {p['balance']}₽"
-    kb = []
-    if income > 0: kb.append([InlineKeyboardButton(text=f"💰 СОБРАТЬ +{income}₽", callback_data="collect_shop_income")])
+    
+    txt = (
+        f"🏪 <b>МАГАЗИН ОДЕЖДЫ</b>\n\n"
+        f"Текущий: {shop['name']}\n"
+        f"💰 Доход: {shop['income_per_hour']:,}₽/час\n".replace(",", " ")
+        f"💵 Накоплено: {income:,}₽\n\n".replace(",", " ")
+        f"<b>Все уровни:</b>\n"
+    )
+    
     for s in SHOP_LEVELS:
-        if s["price"] > shop["price"] and p["balance"] >= s["price"]: kb.append([InlineKeyboardButton(text=f"🛒 {s['name']} — {s['price']}₽", callback_data=f"buy_shop_{s['id']}")])
-    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+        if s["id"] == "none":
+            continue
+        status = "✅" if s["id"] == shop["id"] else "⬜"
+        txt += f"{status} {s['name']} — {s['income_per_hour']:,}₽/ч".replace(",", " ")
+        if s["id"] != shop["id"]:
+            txt += f" | Цена: {s['price']:,}₽".replace(",", " ")
+        txt += "\n"
+    
+    txt += f"\n💼 Баланс: {p['balance']:,}₽".replace(",", " ")
+    
+    kb = []
+    if income > 0:
+        kb.append([InlineKeyboardButton(text=f"💰 СОБРАТЬ +{income:,}₽".replace(",", " "), callback_data="collect_shop_income")])
+    
+    for s in SHOP_LEVELS:
+        if s["price"] > shop["price"] and p["balance"] >= s["price"]:
+            kb.append([InlineKeyboardButton(text=f"🛒 КУПИТЬ: {s['name']} — {s['price']:,}₽".replace(",", " "), callback_data=f"buy_shop_{s['id']}")])
+    
+    kb.append([InlineKeyboardButton(text="🔙 В БИЗНЕС", callback_data="action_business")])
     await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
@@ -1654,7 +1713,7 @@ async def show_cars_catalog(callback: CallbackQuery, page: int = 0):
     if act: kb.append([act])
     if owned and current_car_id != car["id"]:
         kb.append([InlineKeyboardButton(text="🚗 СДЕЛАТЬ ТЕКУЩЕЙ", callback_data=f"set_car_{car['id']}")])
-    kb.append([InlineKeyboardButton(text="🔙 В АВТОМЕНЮ", callback_data="action_cars")])
+    kb.append([InlineKeyboardButton(text="🔙 В БИЗНЕС", callback_data="action_business")])
     
     if car.get("image_url"):
         try:
@@ -1822,7 +1881,7 @@ async def taxopark_add_menu(callback: CallbackQuery):
             txt += f"• {car['name']}\n"
             kb.append([InlineKeyboardButton(text=f"➕ {car['name']}", callback_data=f"add_taxopark_{car_id}")])
     
-    kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="cars_taxopark")])
+    kb.append([InlineKeyboardButton(text="🔙 В ТАКСОПАРК", callback_data="cars_taxopark")])
     await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
