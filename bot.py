@@ -213,7 +213,7 @@ CLIENT_TYPES = {
         },
         "persuasion_bonus": 30
     },
-    "trader": {
+   "trader": {
         "max_rounds": 3,
         "phrases": {
             "greet": [
