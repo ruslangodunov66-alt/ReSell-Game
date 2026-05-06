@@ -1734,19 +1734,42 @@ async def show_taxopark(callback: CallbackQuery):
     income = int(level["income_per_car"] * len(park["cars"]) * (elapsed / 3600))
     p = get_player(user_id)
     
-    txt = f"🚕 <b>ТАКСОПАРК</b>\n\nТекущий: {level['name']}\n"
-    if level["slots"] > 0:
-        txt += f"📊 Слотов: {len(park['cars'])}/{level['slots']}\n"
-        txt += f"💰 Доход: {level['income_per_car']:,}₽/час с машины\n".replace(",", " ")
-        txt += f"💵 Накоплено: {income:,}₽\n\n".replace(",", " ")
-        if park["cars"]:
-            txt += "<b>Машины в таксопарке:</b>\n"
-            for car_id in park["cars"]:
-                car = next((c for c in CARS if c["id"] == car_id), None)
-                if car:
-                    txt += f"• {car['name']}\n"
-    
-    txt += f"\n💼 Баланс: {p['balance']:,}₽".replace(",", " ")
+    # Если таксопарк не куплен — показываем обучение
+    if level["id"] == "none":
+        txt = (
+            "🚕 <b>ТАКСОПАРК</b>\n\n"
+            "📚 <b>Как это работает:</b>\n\n"
+            "1️⃣ Покупаешь машины в 🛒 АВТОСАЛОНЕ\n"
+            "2️⃣ Покупаешь таксопарк нужного уровня\n"
+            "3️⃣ Добавляешь машины из гаража в таксопарк\n"
+            "4️⃣ Машины начинают приносить пассивный доход!\n\n"
+            "<b>Доход копится каждый час автоматически.</b>\n"
+            "Нажми 💰 СОБРАТЬ чтобы получить деньги.\n\n"
+            "<b>Уровни таксопарка:</b>\n"
+            "🚕 Маленький — 500 000₽ (3 слота, 5 000₽/час)\n"
+            "🚖 Средний — 2 000 000₽ (7 слотов, 8 000₽/час)\n"
+            "🚗 Крупный — 10 000 000₽ (15 слотов, 12 000₽/час)\n"
+            "👑 Элитный — 50 000 000₽ (30 слотов, 20 000₽/час)\n\n"
+            "⚠️ <b>Важно:</b> Машины в таксопарке и в гараже — это разное.\n"
+            "Ты можешь иметь одну машину и ездить на ней,\n"
+            "а другие купить специально для таксопарка.\n\n"
+            "💡 <b>Совет:</b> Сначала накопи на первые машины,\n"
+            "потом купи таксопарк и поставь их туда!\n\n"
+            f"💼 Твой баланс: {p['balance']:,}₽".replace(",", " ")
+        )
+    else:
+        txt = f"🚕 <b>ТАКСОПАРК</b>\n\nТекущий: {level['name']}\n"
+        if level["slots"] > 0:
+            txt += f"📊 Слотов: {len(park['cars'])}/{level['slots']}\n"
+            txt += f"💰 Доход: {level['income_per_car']:,}₽/час с машины\n".replace(",", " ")
+            txt += f"💵 Накоплено: {income:,}₽\n\n".replace(",", " ")
+            if park["cars"]:
+                txt += "<b>Машины в таксопарке:</b>\n"
+                for car_id in park["cars"]:
+                    car = next((c for c in CARS if c["id"] == car_id), None)
+                    if car:
+                        txt += f"• {car['name']}\n"
+        txt += f"\n💼 Баланс: {p['balance']:,}₽".replace(",", " ")
     
     kb = []
     if income > 0:
@@ -1756,17 +1779,50 @@ async def show_taxopark(callback: CallbackQuery):
         if lvl["price"] > level["price"] and p["balance"] >= lvl["price"]:
             kb.append([InlineKeyboardButton(text=f"⬆️ {lvl['name']} — {lvl['price']:,}₽".replace(",", " "), callback_data=f"buy_taxopark_{lvl['id']}")])
     
+    # Если таксопарк не куплен — показываем кнопку покупки первого уровня
+    if level["id"] == "none":
+        if p["balance"] >= 500000:
+            kb.append([InlineKeyboardButton(text="🚕 КУПИТЬ МАЛЕНЬКИЙ ТАКСОПАРК — 500 000₽", callback_data="buy_taxopark_small")])
+    
     if level["slots"] > 0 and len(park["cars"]) < level["slots"]:
         collection = get_car_collection(user_id)
         available = [c for c in collection if c not in park["cars"]]
         if level["id"] == "elite":
             available = [c for c in available if next((car for car in CARS if car["id"] == c), {}).get("price", 0) >= 500000]
-        for car_id in available[:5]:
-            car = next((c for c in CARS if c["id"] == car_id), None)
-            if car:
-                kb.append([InlineKeyboardButton(text=f"➕ {car['name']}", callback_data=f"add_taxopark_{car_id}")])
+        if available:
+            kb.append([InlineKeyboardButton(text="➕ ДОБАВИТЬ МАШИНУ В ТАКСОПАРК", callback_data="taxopark_add_menu")])
     
     kb.append([InlineKeyboardButton(text="🔙 В АВТОМЕНЮ", callback_data="action_cars")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data == "taxopark_add_menu", StateFilter(GameState.playing))
+async def taxopark_add_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    park = get_player_taxopark(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    collection = get_car_collection(user_id)
+    available = [c for c in collection if c not in park["cars"]]
+    
+    if level["id"] == "elite":
+        available = [c for c in available if next((car for car in CARS if car["id"] == c), {}).get("price", 0) >= 500000]
+    
+    if not available:
+        await callback.answer("Нет доступных машин для добавления!")
+        return
+    
+    txt = "➕ <b>ВЫБЕРИ МАШИНУ ДЛЯ ТАКСОПАРКА:</b>\n\n"
+    txt += f"Доход с машины: {level['income_per_car']:,}₽/час\n\n".replace(",", " ")
+    
+    kb = []
+    for car_id in available[:8]:
+        car = next((c for c in CARS if c["id"] == car_id), None)
+        if car:
+            txt += f"• {car['name']}\n"
+            kb.append([InlineKeyboardButton(text=f"➕ {car['name']}", callback_data=f"add_taxopark_{car_id}")])
+    
+    kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="cars_taxopark")])
     await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
