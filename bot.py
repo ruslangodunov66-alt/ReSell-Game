@@ -123,42 +123,47 @@ MARKET_EVENTS = [
 
 CLIENT_TYPES = {
     "normal": {
-        "max_rounds": 4,  # приветствие -> состояние -> доставка -> решение
+        "max_rounds": 5,  # привет → состояние → доставка → причина → решение
         "phrases": {
             "greet": [
-                "Здравствуйте! Ещё продаёте {item}? Интересует состояние.",
-                "Добрый день! {item} — ещё актуально? Какое состояние?",
-                "Привет! По объявлению: {item}. Состояние хорошее?",
+                "Здравствуйте! Ещё продаёте {item}? Какое состояние?",
+                "Добрый день! {item} — ещё актуально? Интересует состояние.",
+                "Привет! По объявлению: {item}. В каком состоянии?",
                 "Здравствуйте! Увидел {item}. Расскажите о состоянии, пожалуйста.",
                 "Добрый день! {item} — очень заинтересовал. Как состояние?",
+                "Приветствую! {item} — ещё в продаже? Что по состоянию?",
+                "Здравствуйте! {item} — то что искал. Состояние хорошее?",
+                "Добрый день! По поводу {item}. Расскажите подробнее?",
             ],
-            "ask_delivery": [
-                "А как насчёт доставки? Отправляете?",
-                "Доставка есть? В какой город?",
-                "Можно ли с доставкой? Или только самовывоз?",
-                "Отправляете почтой или СДЭКом?",
-                "По доставке как? Я из другого города.",
+            "state_reaction": [
+                "Понял, спасибо. А доставка есть?",
+                "Хорошо, принял. Как насчёт доставки?",
+                "Ясно, благодарю. Отправляете в другие города?",
+                "Ок, спасибо за информацию. Доставка возможна?",
+                "Принято. По доставке что скажете?",
             ],
-            "ask_reason": [
-                "А почему продаёте, если не секрет?",
-                "С чем связана продажа?",
-                "Просто интересно, почему решили продать?",
-                "Давно пользуетесь? Почему продаёте?",
-                "Извините за вопрос, почему продаёте?",
+            "delivery_reaction": [
+                "Понял, спасибо. А почему продаёте, если не секрет?",
+                "Ясно, благодарю. С чем связана продажа?",
+                "Хорошо. А почему решили продать?",
+                "Ок, спасибо. Просто интересно, почему продаёте?",
+                "Принято. Давно пользуетесь?",
             ],
-            "agree": [
-                "Хорошо, меня устраивает. Беру за {price}₽.",
-                "Отлично, договорились. {price}₽ — беру.",
-                "Цена нормальная, забираю. {price}₽.",
-                "Договорились. Когда можно встретиться?",
-                "Ок, беру. {price}₽ устраивает.",
+            "reason_reaction": [
+                "Понял, спасибо за честность. Я думаю, цена {price}₽ — нормально.",
+                "Спасибо за информацию! Меня устраивает цена {price}₽.",
+                "Хорошо, я понял. {price}₽ — беру.",
+                "Отлично, договорились. {price}₽ — моя цена.",
+                "Спасибо, я беру за {price}₽.",
             ],
             "decline": [
                 "Извините, я передумал. Удачи в продаже.",
                 "Пока подумаю, не уверен.",
-                "Спасибо за информацию, но я пока откажусь.",
+                "Спасибо за информацию, но я откажусь.",
                 "Не подходит, извините. Удачи.",
                 "Передумал, сорри.",
+                "Извините, не буду брать. Спасибо за ответы.",
+                "Пока откажусь. Возможно позже.",
             ],
             "wait": [
                 "Спасибо, я понял.",
@@ -167,8 +172,80 @@ CLIENT_TYPES = {
                 "Ок, благодарю.",
                 "Ясно, спасибо.",
             ]
-        }
+        },
+        "persuasion_bonus": 0  # Насколько легко убедить (0 = легко)
     },
+    "skeptic": {
+        "max_rounds": 5,
+        "phrases": {
+            "greet": [
+                "Здравствуйте! {item} за {price}₽? А почему так дорого?",
+                "Добрый день! {item} — цена высоковата. Что с состоянием?",
+                "Привет! {item} — интересует, но {price}₽ это много. Состояние?",
+                "Здравствуйте! {item} нравится, но цена смущает. Расскажите о состоянии.",
+            ],
+            "state_reaction": [
+                "Хм, ну ладно. А доставка?",
+                "Допустим. По доставке что?",
+                "Ок, проехали. Отправляете?",
+            ],
+            "delivery_reaction": [
+                "Ясно. А почему продаёте? Что-то не так с товаром?",
+                "Понял. Причина продажи какая?",
+                "Ок. Почему решили продать?",
+            ],
+            "reason_reaction": [
+                "Ну хорошо, убедили. {price}₽ — беру.",
+                "Ладно, звучит разумно. Забираю за {price}₽.",
+                "Уговорили. {price}₽ — по рукам.",
+            ],
+            "decline": [
+                "Нет, не убедили. Я пошёл.",
+                "Дорого всё равно. Отказ.",
+                "Не верю я вам. Удачи.",
+                "Передумал. Пока.",
+            ],
+            "wait": [
+                "Ну не знаю...",
+                "Сомневаюсь я.",
+                "Надо подумать.",
+            ]
+        },
+        "persuasion_bonus": 30  # Сложнее убедить (30% шанс отказа даже при хороших ответах)
+    },
+    "trader": {
+        "max_rounds": 3,
+        "phrases": {
+            "greet": [
+                "Здравствуйте! {item} — {price}₽? Давайте {offer}₽.",
+                "Привет! {item} за {price}₽? Я готов предложить {offer}₽.",
+                "Добрый день! {item} интересен, но {price}₽ много. {offer}₽?",
+            ],
+            "counter": [
+                "Нет, всё равно дорого. {new_offer}₽?",
+                "Я могу поднять до {new_offer}₽. Это предел.",
+                "Ладно, {new_offer}₽. Больше не дам.",
+                "Слушай, {new_offer}₽ — и забираю.",
+            ],
+            "agree": [
+                "Ладно, уговорил. {price}₽ беру.",
+                "Хорошо, давай {price}₽.",
+                "По рукам за {price}₽.",
+            ],
+            "decline": [
+                "Нет, не пойдёт. Удачи.",
+                "Дорого, не буду брать. Пока.",
+                "Извини, не договорились.",
+            ],
+            "wait": [
+                "Я думаю...",
+                "Ну, не знаю.",
+                "Давай ещё подумаю.",
+            ]
+        },
+        "persuasion_bonus": 0
+    }
+}
     "trader": {
         "max_rounds": 3,
         "phrases": {
@@ -533,7 +610,7 @@ async def spawn_buyers(user_id):
     pub = published_items[user_id]; item = pub["item"]
     if item["name"] in sold_items[user_id]: return
     n = random.randint(1, 3)
-    types = random.choices(list(CLIENT_TYPES.keys()), k=n)
+      types = random.choices(["normal", "skeptic", "trader"], weights=[60, 25, 15], k=n)
     await send_msg(user_id, f"📱 <b>ОБЪЯВЛЕНИЕ!</b>\n📦 {item['name']}\n💰 {item['market_price']}₽\n👥 Пишут: <b>{n}</b> чел.")
     for i, bt in enumerate(types):
         await asyncio.sleep(random.randint(5, 20))
@@ -760,60 +837,45 @@ async def handle_message(message: types.Message, state: FSMContext):
     price = chat["price"]
     offer = chat["offer"]
 
-    if chat["round"] >= chat["max_rounds"]:
-        # Последний раунд: решение
+        if chat["round"] >= chat["max_rounds"]:
         chat["finished"] = True
         if chat["client_type"] == "trader":
-            # Для торгующихся — нейросеть решает
-            try:
-                sp = f"Ты покупатель. Товар: {item_name}. Продавец предложил: {text}. Твоя цена была: {offer}₽. Прими решение: согласиться (напиши 'беру') или отказаться (напиши 'нет'). Ответь одним словом."
-                resp = client_openai.chat.completions.create(model="deepseek-chat", messages=[{"role": "system", "content": sp}], temperature=0.5, max_tokens=5)
-                decision = resp.choices[0].message.content.strip().lower()
-            except:
-                decision = "нет"
-            if "беру" in decision:
-                ai_msg = random.choice(phrases["agree"]).format(price=offer)
-                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
-                await complete_sale(user_id, buyer_id, message)
+            # Торгующиеся: 50% согласие если цена близка
+            if chat["offer"] >= chat["price"] * 0.7:
+                if random.random() < 0.5:
+                    decision = "agree"
+                else:
+                    decision = "decline"
             else:
-                ai_msg = random.choice(phrases["decline"])
-                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+                decision = "decline"
         else:
-            # Обычный клиент: 80% берёт, 20% отказывается
-            if random.random() < 0.8:
-                ai_msg = random.choice(phrases["agree"]).format(price=price)
-                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
-                chat["offer"] = price
-                await complete_sale(user_id, buyer_id, message)
+            # Обычные и скептики: решение по качеству ответов
+            # Считаем качество ответов продавца (длина сообщений)
+            total_len = sum(len(msg["content"]) for msg in chat.get("history", []) if msg["role"] == "user")
+            quality = min(100, total_len / 2)  # Чем длиннее ответы — тем выше качество
+            
+            client_type = chat["client_type"]
+            bonus = CLIENT_TYPES[client_type].get("persuasion_bonus", 0)
+            success_chance = quality - bonus  # Скептиков сложнее убедить
+            
+            if random.randint(1, 100) <= success_chance:
+                decision = "agree"
             else:
-                ai_msg = random.choice(phrases["decline"])
-                await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+                decision = "decline"
+        
+        phrases = CLIENT_TYPES[chat["client_type"]]["phrases"]
+        
+        if decision == "agree":
+            if chat["client_type"] == "trader":
+                ai_msg = random.choice(phrases["agree"]).format(price=chat["offer"])
+            else:
+                ai_msg = random.choice(phrases["reason_reaction"]).format(price=chat["price"])
+            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
+            await complete_sale(user_id, buyer_id, message)
+        else:
+            ai_msg = random.choice(phrases["decline"])
+            await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
         return
-
-    # Обычные раунды: задаём вопросы по очереди
-    if chat["client_type"] == "normal":
-        if chat["round"] == 2:
-            msg = random.choice(phrases["ask_delivery"])
-        elif chat["round"] == 3:
-            msg = random.choice(phrases["ask_reason"])
-        else:
-            msg = random.choice(phrases["wait"])
-        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
-    else:
-        # Торг: предлагает свою цену или реагирует
-        seller_prices = re.findall(r'(\d+)', text)
-        if seller_prices:
-            seller_price = int(seller_prices[0])
-            if seller_price < price:
-                new_offer = max(offer, int(seller_price * 0.9))  # немного уступает
-                new_offer = (new_offer // 100) * 100 + 99
-                msg = random.choice(phrases["counter"]).format(new_offer=new_offer)
-                chat["offer"] = new_offer
-            else:
-                msg = random.choice(phrases["wait"])
-        else:
-            msg = random.choice(phrases["wait"])
-        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
 # ==================== ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
 async def show_chats(callback: CallbackQuery):
@@ -1608,6 +1670,10 @@ async def learn_btn(callback: CallbackQuery):
     await send_msg(callback.from_user.id, "📚 <b>ОБУЧЕНИЕ ТОВАРНОМУ БИЗНЕСУ</b>\n\nИзучай уроки и получай бонусы!", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
+
+@dp.message(F.photo)
+async def get_photo_links(message: types.Message):
+    await message.answer(f"✅ <b>FILE ID:</b>\n<code>{message.photo[-1].file_id}</code>", parse_mode="HTML")
 
 # ==================== ЗАПУСК ====================
 async def main():
