@@ -796,7 +796,7 @@ async def handle_message(message: types.Message, state: FSMContext):
                 chat_key = key; break
     if not chat_key: return
 
-        chat = active_chats[chat_key]
+    chat = active_chats[chat_key]
     chat["round"] += 1
     client = CLIENT_TYPES[chat["client_type"]]
     phrases = client["phrases"]
@@ -839,6 +839,43 @@ async def handle_message(message: types.Message, state: FSMContext):
             ai_msg = random.choice(phrases["decline"])
             await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {ai_msg}")
         return
+
+    if chat["client_type"] == "normal":
+        if chat["round"] == 2:
+            msg = random.choice(phrases["state_reaction"])
+        elif chat["round"] == 3:
+            msg = random.choice(phrases["delivery_reaction"])
+        elif chat["round"] == 4:
+            msg = random.choice(phrases["reason_reaction"])
+        else:
+            msg = random.choice(phrases["wait"])
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
+    elif chat["client_type"] == "skeptic":
+        if chat["round"] == 2:
+            msg = random.choice(phrases["state_reaction"])
+        elif chat["round"] == 3:
+            msg = random.choice(phrases["delivery_reaction"])
+        elif chat["round"] == 4:
+            msg = random.choice(phrases["reason_reaction"])
+        else:
+            msg = random.choice(phrases["wait"])
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
+    else:
+        seller_prices = re.findall(r'(\d+)', text)
+        if seller_prices:
+            seller_price = int(seller_prices[0])
+            if seller_price < price:
+                new_offer = max(offer, int(seller_price * 0.9))
+                new_offer = (new_offer // 100) * 100 + 99
+                msg = random.choice(phrases["counter"]).format(new_offer=new_offer)
+                chat["offer"] = new_offer
+            else:
+                msg = random.choice(phrases["wait"])
+        else:
+            msg = random.choice(phrases["wait"])
+        await send_msg(user_id, f"👤 <b>Покупатель #{buyer_id}:</b> {msg}")
+        return
+
 # ==================== ЧАТЫ ====================
 @dp.callback_query(F.data == "action_chats", StateFilter(GameState.playing))
 async def show_chats(callback: CallbackQuery):
