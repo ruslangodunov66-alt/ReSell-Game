@@ -851,8 +851,42 @@ async def start_cmd(message: types.Message):
     for skin in check_rep_skins(user_id):
         buy_skin(user_id, skin["id"])
         await send_msg(user_id, f"🎉 <b>НОВЫЙ СКИН!</b>\n{skin['emoji']} {skin['name']} — за репутацию {rep_level(get_rep(user_id)['score'])}!")
+    
     p = players.get(user_id)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    
+    # Приветственное фото для новых игроков
+    if not p or p.get("day", 0) == 0:
+        welcome_text = (
+            "🎮 <b>RESELL TYCOON</b>\n\n"
+            "<b>ЗАРАБАТЫВАЙ • ПРОДАВАЙ • ВЛАСТВУЙ</b>\n\n"
+            "🏭 Покупай товары у поставщиков\n"
+            "💰 Продавай и зарабатывай на перепродаже\n"
+            "🏪 Открывай бизнесы и получай пассивный доход\n"
+            "🚗 Покупай легендарные автомобили\n"
+            "🏠 Покупай недвижимость\n"
+            "👤 Кастомизируй своего персонажа\n\n"
+            "<b>И всё это — абсолютно бесплатно!</b>\n\n"
+            "👇 Выбери действие:"
+        )
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+        ])
+        try:
+            msg = await bot.send_photo(
+                user_id, 
+                "AgACAgIAAxkBAAILVmn7nUTFFZ0bIbIrcdpk3VloWiUWAALwE2sbsr_gS2A_JEo7mNSVAQADAgADeQADOwQ",
+                caption=welcome_text, 
+                parse_mode="HTML", 
+                reply_markup=kb
+            )
+            last_bot_message[user_id] = msg.message_id
+            return
+        except:
+            pass
+    
+    # Для вернувшихся игроков
     if p and p.get("day", 0) > 0:
         txt = f"👋 <b>С ВОЗВРАЩЕНИЕМ!</b>\n📅 День {p['day']} | 💰 {p['balance']}₽\n👤 Скин: {skin['emoji']} {skin['name']}"
         kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -866,12 +900,15 @@ async def start_cmd(message: types.Message):
             [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
             [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
         ])
+    
     if skin.get("image_url"):
         try:
             msg = await bot.send_photo(user_id, skin["image_url"], caption=txt, parse_mode="HTML", reply_markup=kb)
             last_bot_message[user_id] = msg.message_id
-        except: await send_msg(user_id, txt, reply_markup=kb)
-    else: await send_msg(user_id, txt, reply_markup=kb)
+        except: 
+            await send_msg(user_id, txt, reply_markup=kb)
+    else: 
+        await send_msg(user_id, txt, reply_markup=kb)
 
 # ==================== АДМИН-КОМАНДЫ ====================
 @dp.message(Command('admin'))
