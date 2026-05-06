@@ -869,7 +869,7 @@ async def handle_message(message: types.Message, state: FSMContext):
         if decision == "agree":
             if chat["client_type"] == "trader":
                 final_price = chat["offer"]
-                ai_msg = random.choice(phrases["agree"]).format(price=final_price)
+                ai_msg = random.choice(phrases["agree"]).replace("{price}", str(final_price))
             else:
                 final_price = chat["price"]
                 # Выбираем фразу и вручную подставляем цену
