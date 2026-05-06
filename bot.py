@@ -659,21 +659,20 @@ def main_kb(page=1, user_id=None):
     if page == 1:
         return InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="action_buy"), InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="action_inventory")],
-            [InlineKeyboardButton(text=cl, callback_data="action_chats"), InlineKeyboardButton(text="🔨 АУКЦИОН", callback_data="action_auction")],
-            [InlineKeyboardButton(text="💼 РАБОТА", callback_data="action_job"), InlineKeyboardButton(text="📈 СПРОС", callback_data="action_demand")],
-            [InlineKeyboardButton(text="🎮 МИНИ-ИГРЫ", callback_data="action_minigames")],
+            [InlineKeyboardButton(text=cl, callback_data="action_chats"), InlineKeyboardButton(text="📈 СПРОС", callback_data="action_demand")],
+            [InlineKeyboardButton(text="💼 РАБОТА", callback_data="action_job"), InlineKeyboardButton(text="🎮 МИНИ-ИГРЫ", callback_data="action_minigames")],
+            [InlineKeyboardButton(text="🔨 АУКЦИОН", callback_data="action_auction")],
             [InlineKeyboardButton(text="⏩ ДЕНЬ ВПЕРЁД", callback_data="action_nextday")],
-            [InlineKeyboardButton(text="➡️ ВКЛАДКА 2", callback_data="menu_page_2")],
+            [InlineKeyboardButton(text="📊 СТАТЫ", callback_data="action_stats"), InlineKeyboardButton(text="🏅 РЕПУТАЦИЯ", callback_data="action_rep_menu")],
+            [InlineKeyboardButton(text="➡️ ИМУЩЕСТВО", callback_data="menu_page_2")],
             [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
         ])
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🏠 ЖИЛЬЁ", callback_data="action_houses"), InlineKeyboardButton(text="💼 БИЗНЕС", callback_data="action_business")],
-        [InlineKeyboardButton(text="🚗 АВТО", callback_data="action_cars")],
-        [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
-        [InlineKeyboardButton(text="🏆 ЛИДЕРЫ", callback_data="action_leaderboard")],
-        [InlineKeyboardButton(text="📊 СТАТЫ", callback_data="action_stats"), InlineKeyboardButton(text="🏅 РЕПУТАЦИЯ", callback_data="action_rep_menu")],
+        [InlineKeyboardButton(text="🏠 ЖИЛЬЁ", callback_data="action_houses"), InlineKeyboardButton(text="🚗 АВТО", callback_data="action_cars")],
+        [InlineKeyboardButton(text="💼 БИЗНЕС", callback_data="action_business")],
+        [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins"), InlineKeyboardButton(text="🏆 ЛИДЕРЫ", callback_data="action_leaderboard")],
         [InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="action_ref_menu")],
-        [InlineKeyboardButton(text="⬅️ ВКЛАДКА 1", callback_data="menu_page_1"), InlineKeyboardButton(text="🏁 КОНЕЦ", callback_data="action_end")],
+        [InlineKeyboardButton(text="⬅️ ГЛАВНАЯ", callback_data="menu_page_1"), InlineKeyboardButton(text="🏁 КОНЕЦ", callback_data="action_end")],
         [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
     ])
 
@@ -1464,6 +1463,77 @@ async def auction_put_item(callback: CallbackQuery):
     
     await callback.answer("✅ Лот выставлен!")
     await send_msg(user_id, f"📤 <b>ЛОТ НА АУКЦИОНЕ!</b>\n📦 {item['name']}\n💰 Старт: {item['market_price']}₽\n⏳ 1 час")
+
+@dp.callback_query(F.data.startswith("auction_bid_"), StateFilter(GameState.playing))
+async def auction_bid(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    lot_idx = int(callback.data.split("_")[2])
+    
+    ai = [item for item in auction_data.get("items", []) if item.get("active", True)]
+    if lot_idx >= len(ai):
+        return await callback.answer("Лот не найден!")
+    
+    lot = ai[lot_idx]
+    
+    if lot["seller_id"] == user_id:
+        return await callback.answer("Нельзя ставить на свой лот!")
+    
+    min_bid = int(lot.get("current_bid", lot["start_price"]) * 1.1)
+    p = get_player(user_id)
+    
+    if p["balance"] < min_bid:
+        return await callback.answer(f"Недостаточно денег! Минимум: {min_bid}₽")
+    
+    # Снимаем деньги и обновляем ставку
+    p["balance"] -= min_bid
+    
+    # Возвращаем деньги предыдущему участнику
+    if lot.get("bidder_id") and lot["bidder_id"] != user_id:
+        prev_bidder = lot["bidder_id"]
+        if prev_bidder in players:
+            players[prev_bidder]["balance"] += lot["current_bid"]
+    
+    lot["current_bid"] = min_bid
+    lot["bidder_id"] = user_id
+    save_json(AUCTION_FILE, auction_data)
+    
+    await callback.answer(f"✅ Ставка {min_bid}₽ принята!")
+    await show_auction(callback)
+
+@dp.callback_query(F.data.startswith("auction_skin_"), StateFilter(GameState.playing))
+async def auction_put_skin(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    skin_id = callback.data.replace("auction_skin_", "")
+    
+    skin = next((s for s in SKINS if s["id"] == skin_id), None)
+    if not skin:
+        return await callback.answer("Скин не найден")
+    
+    if get_player_skin(user_id) == skin_id:
+        return await callback.answer("Нельзя продать надетый скин!")
+    
+    # Удаляем скин из инвентаря
+    remove_skin_from_inventory(user_id, skin_id)
+    
+    # Добавляем на аукцион
+    auction_data["items"].append({
+        "seller_id": user_id,
+        "item": {
+            "name": f"👤 Скин: {skin['emoji']} {skin['name']}",
+            "cat": "Скин",
+            "buy_price": 0,
+            "market_price": skin["price"]
+        },
+        "start_price": int(skin["price"] * 0.8),
+        "current_bid": int(skin["price"] * 0.8),
+        "bidder_id": None,
+        "end_time": time_module.time() + 7200,
+        "active": True
+    })
+    save_json(AUCTION_FILE, auction_data)
+    
+    await callback.answer("✅ Скин выставлен!")
+    await send_msg(user_id, f"📤 <b>СКИН НА АУКЦИОНЕ!</b>\n{skin['emoji']} {skin['name']}\n💰 Старт: {int(skin['price'] * 0.8)}₽\n⏳ 2 часа")
 
 # ==================== ПУБЛИКАЦИЯ ====================
 @dp.callback_query(F.data.startswith("inv_"), StateFilter(GameState.playing))
