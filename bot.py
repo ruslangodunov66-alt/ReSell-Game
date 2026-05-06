@@ -123,7 +123,7 @@ MARKET_EVENTS = [
 
 CLIENT_TYPES = {
     "normal": {
-        "max_rounds": 5,  # привет → состояние → доставка → причина → решение
+        "max_rounds": 5,
         "phrases": {
             "greet": [
                 "Здравствуйте! Ещё продаёте {item}? Какое состояние?",
@@ -173,7 +173,7 @@ CLIENT_TYPES = {
                 "Ясно, спасибо.",
             ]
         },
-        "persuasion_bonus": 0  # Насколько легко убедить (0 = легко)
+        "persuasion_bonus": 0
     },
     "skeptic": {
         "max_rounds": 5,
@@ -211,7 +211,7 @@ CLIENT_TYPES = {
                 "Надо подумать.",
             ]
         },
-        "persuasion_bonus": 30  # Сложнее убедить (30% шанс отказа даже при хороших ответах)
+        "persuasion_bonus": 30
     },
     "trader": {
         "max_rounds": 3,
