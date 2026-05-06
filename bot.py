@@ -549,11 +549,16 @@ async def complete_sale(user_id, buyer_id, message=None):
     if user_id in published_items and published_items[user_id]:
         pub_item = published_items[user_id].get("item", {})
         if pub_item.get("name") == item_name: sold = pub_item; published_items[user_id] = None
-    if not sold:
-        for i, inv in enumerate(p["inventory"]):
-            if item_name in inv["name"] or inv["name"] in item_name: 
-                sold = p["inventory"].pop(i)
-                break
+       # Ищем в инвентаре
+    for i, inv in enumerate(p["inventory"]):
+        if item_name in inv["name"] or inv["name"] in item_name:
+            sold = p["inventory"].pop(i)
+            # Если товар был опубликован — снимаем с публикации
+            if user_id in published_items and published_items[user_id]:
+                pub = published_items[user_id].get("item", {})
+                if pub.get("name") and (item_name in pub["name"] or pub["name"] in item_name):
+                    published_items[user_id] = None
+            break
 
     if not sold: return None
     sold_items[user_id].add(item_name)
