@@ -528,6 +528,66 @@ def collect_shop_income(user_id):
     
     return income
 
+# ==================== ТАКСОПАРК (ФУНКЦИИ) ====================
+def get_player_taxopark(user_id):
+    uid = str(user_id)
+    if uid not in player_taxopark:
+        player_taxopark[uid] = {"level": "none", "cars": [], "last_collect": time_module.time()}
+    return player_taxopark[uid]
+
+def buy_taxopark(user_id, level_id):
+    uid = str(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == level_id), None)
+    if not level: return False, "Не найден"
+    current = get_player_taxopark(user_id)
+    if current["level"] == level_id: return False, "Уже есть!"
+    p = get_player(user_id)
+    if p["balance"] < level["price"]: return False, "Недостаточно!"
+    p["balance"] -= level["price"]
+    current["level"] = level_id
+    current["last_collect"] = time_module.time()
+    save_json(TAXOPARK_FILE, player_taxopark)
+    return True, f"✅ {level['name']}!"
+
+def add_car_to_taxopark(user_id, car_id):
+    uid = str(user_id)
+    park = get_player_taxopark(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    if level["slots"] == 0: return False, "Купи таксопарк сначала!"
+    if len(park["cars"]) >= level["slots"]: return False, f"Нет мест! Максимум {level['slots']} авто."
+    if car_id in park["cars"]: return False, "Уже в таксопарке!"
+    if car_id not in get_car_collection(user_id): return False, "Сначала купи эту машину!"
+    if level["id"] == "elite":
+        car = next((c for c in CARS if c["id"] == car_id), None)
+        if car and car["price"] < 500000: return False, "Элитный таксопарк — только премиум-авто (от 500 000₽)!"
+    park["cars"].append(car_id)
+    save_json(TAXOPARK_FILE, player_taxopark)
+    return True, "✅ Машина в таксопарке!"
+
+def collect_taxopark_income(user_id):
+    park = get_player_taxopark(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    if level["slots"] == 0 or not park["cars"]: return 0
+    elapsed = time_module.time() - park["last_collect"]
+    income = int(level["income_per_car"] * len(park["cars"]) * (elapsed / 3600))
+    if income > 0:
+        park["last_collect"] = time_module.time()
+        save_json(TAXOPARK_FILE, player_taxopark)
+        if user_id in players: players[user_id]["balance"] += income
+    return income
+
+@dp.callback_query(F.data == "collect_shop_income", StateFilter(GameState.playing))
+async def collect_shop_income_btn(callback: CallbackQuery):
+    income = collect_shop_income(callback.from_user.id)
+    await callback.answer(f"✅ Собрано {income}₽!" if income > 0 else "Пока нечего")
+    await show_shop(callback)
+
+@dp.callback_query(F.data.startswith("buy_shop_"), StateFilter(GameState.playing))
+async def buy_shop_btn(callback: CallbackQuery):
+    success, msg = buy_shop(callback.from_user.id, callback.data.replace("buy_shop_", ""))
+    if success: await callback.answer(msg); await show_shop(callback)
+    else: await callback.answer(msg, show_alert=True)
+
 # ==================== АВТОМОБИЛИ ====================
 def get_player_car(user_id):
     uid = str(user_id)
@@ -1301,123 +1361,40 @@ async def show_shop(callback: CallbackQuery):
     income = int(shop["income_per_hour"] * (elapsed / 3600))
     p = get_player(user_id)
     
-    txt = (
-        f"🏪 <b>МАГАЗИН ОДЕЖДЫ</b>\n\n"
-        f"Текущий: {shop['name']}\n"
-        f"💰 Доход: {shop['income_per_hour']:,}₽/час\n".replace(",", " ")
-        f"💵 Накоплено: {income:,}₽\n\n".replace(",", " ")
-        f"<b>Все уровни:</b>\n"
-    )
+    income_fmt = f"{income:,}".replace(",", " ")
+    
+    txt = f"🏪 <b>МАГАЗИН ОДЕЖДЫ</b>\n\nТекущий: {shop['name']}\n💰 Доход: {shop['income_per_hour']}₽/час\n💵 Накоплено: {income_fmt}₽\n\n<b>Все уровни:</b>\n"
+    
+    shop_income_fmt = f"{shop['income_per_hour']:,}".replace(",", " ")
+    balance_fmt = f"{p['balance']:,}".replace(",", " ")
     
     for s in SHOP_LEVELS:
         if s["id"] == "none":
             continue
         status = "✅" if s["id"] == shop["id"] else "⬜"
-        txt += f"{status} {s['name']} — {s['income_per_hour']:,}₽/ч".replace(",", " ")
+        s_income = f"{s['income_per_hour']:,}".replace(",", " ")
+        s_price = f"{s['price']:,}".replace(",", " ")
+        txt += f"{status} {s['name']} — {s_income}₽/ч"
         if s["id"] != shop["id"]:
-            txt += f" | Цена: {s['price']:,}₽".replace(",", " ")
+            txt += f" | Цена: {s_price}₽"
         txt += "\n"
     
-    txt += f"\n💼 Баланс: {p['balance']:,}₽".replace(",", " ")
+    txt += f"\n💼 Баланс: {balance_fmt}₽"
     
     kb = []
     if income > 0:
-        kb.append([InlineKeyboardButton(text=f"💰 СОБРАТЬ +{income:,}₽".replace(",", " "), callback_data="collect_shop_income")])
+        kb.append([InlineKeyboardButton(text=f"💰 СОБРАТЬ +{income_fmt}₽", callback_data="collect_shop_income")])
     
     for s in SHOP_LEVELS:
         if s["price"] > shop["price"] and p["balance"] >= s["price"]:
-            kb.append([InlineKeyboardButton(text=f"🛒 КУПИТЬ: {s['name']} — {s['price']:,}₽".replace(",", " "), callback_data=f"buy_shop_{s['id']}")])
+            s_price_btn = f"{s['price']:,}".replace(",", " ")
+            kb.append([InlineKeyboardButton(text=f"🛒 КУПИТЬ: {s['name']} — {s_price_btn}₽", callback_data=f"buy_shop_{s['id']}")])
     
     kb.append([InlineKeyboardButton(text="🔙 В БИЗНЕС", callback_data="action_business")])
     await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     try: await callback.message.delete()
     except: pass
 
-def collect_shop_income(user_id):
-    shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(user_id)["level"]), SHOP_LEVELS[0])
-    income = 0
-    elapsed = time_module.time() - get_player_shop(user_id)["last_collect"]
-    
-    # Доход от магазина
-    if shop["id"] != "none":
-        income += int(shop["income_per_hour"] * (elapsed / 3600))
-        if income > 0:
-            get_player_shop(user_id)["last_collect"] = time_module.time()
-            if user_id in players:
-                players[user_id]["balance"] += income
-    
-    # Доход от автомобиля
-    car = next((c for c in CARS if c["id"] == get_player_car(user_id)), None)
-    if car and car["income_per_hour"] > 0:
-        car_income = int(car["income_per_hour"] * (elapsed / 3600))
-        if car_income > 0 and user_id in players:
-            players[user_id]["balance"] += car_income
-            income += car_income
-    
-    # Доход от таксопарка
-    income += collect_taxopark_income(user_id)
-    
-    return income
-
-# ==================== ТАКСОПАРК (ФУНКЦИИ) ====================
-def get_player_taxopark(user_id):
-    uid = str(user_id)
-    if uid not in player_taxopark:
-        player_taxopark[uid] = {"level": "none", "cars": [], "last_collect": time_module.time()}
-    return player_taxopark[uid]
-
-def buy_taxopark(user_id, level_id):
-    uid = str(user_id)
-    level = next((l for l in TAXOPARK_LEVELS if l["id"] == level_id), None)
-    if not level: return False, "Не найден"
-    current = get_player_taxopark(user_id)
-    if current["level"] == level_id: return False, "Уже есть!"
-    p = get_player(user_id)
-    if p["balance"] < level["price"]: return False, "Недостаточно!"
-    p["balance"] -= level["price"]
-    current["level"] = level_id
-    current["last_collect"] = time_module.time()
-    save_json(TAXOPARK_FILE, player_taxopark)
-    return True, f"✅ {level['name']}!"
-
-def add_car_to_taxopark(user_id, car_id):
-    uid = str(user_id)
-    park = get_player_taxopark(user_id)
-    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
-    if level["slots"] == 0: return False, "Купи таксопарк сначала!"
-    if len(park["cars"]) >= level["slots"]: return False, f"Нет мест! Максимум {level['slots']} авто."
-    if car_id in park["cars"]: return False, "Уже в таксопарке!"
-    if car_id not in get_car_collection(user_id): return False, "Сначала купи эту машину!"
-    if level["id"] == "elite":
-        car = next((c for c in CARS if c["id"] == car_id), None)
-        if car and car["price"] < 500000: return False, "Элитный таксопарк — только премиум-авто (от 500 000₽)!"
-    park["cars"].append(car_id)
-    save_json(TAXOPARK_FILE, player_taxopark)
-    return True, "✅ Машина в таксопарке!"
-
-def collect_taxopark_income(user_id):
-    park = get_player_taxopark(user_id)
-    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
-    if level["slots"] == 0 or not park["cars"]: return 0
-    elapsed = time_module.time() - park["last_collect"]
-    income = int(level["income_per_car"] * len(park["cars"]) * (elapsed / 3600))
-    if income > 0:
-        park["last_collect"] = time_module.time()
-        save_json(TAXOPARK_FILE, player_taxopark)
-        if user_id in players: players[user_id]["balance"] += income
-    return income
-
-@dp.callback_query(F.data == "collect_shop_income", StateFilter(GameState.playing))
-async def collect_shop_income_btn(callback: CallbackQuery):
-    income = collect_shop_income(callback.from_user.id)
-    await callback.answer(f"✅ Собрано {income}₽!" if income > 0 else "Пока нечего")
-    await show_shop(callback)
-
-@dp.callback_query(F.data.startswith("buy_shop_"), StateFilter(GameState.playing))
-async def buy_shop_btn(callback: CallbackQuery):
-    success, msg = buy_shop(callback.from_user.id, callback.data.replace("buy_shop_", ""))
-    if success: await callback.answer(msg); await show_shop(callback)
-    else: await callback.answer(msg, show_alert=True)
 
 # ==================== АУКЦИОН ====================
 @dp.callback_query(F.data == "action_auction", StateFilter(GameState.playing))
