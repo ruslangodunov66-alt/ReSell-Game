@@ -35,6 +35,8 @@ AUCTION_FILE = "auction_data.json"
 LEADERBOARD_FILE = "leaderboard.json"
 SKINS_FILE = "player_skins.json"
 SKIN_INVENTORY_FILE = "skin_inventory.json"
+TAXOPARK_FILE = "player_taxopark.json"
+CARS_FILE = "player_cars.json"
 SUPPLIER_ITEMS_FILE = "supplier_items.json"
 
 SKINS = [
@@ -252,6 +254,23 @@ JOBS = [
     {"id": "freelance", "name": "💻 Фриланс (дизайн)", "duration": 300, "reward": 1200, "emoji": "💻"},
 ]
 
+CARS = [
+    {"id": "zhiguli", "name": "🚗 ВАЗ-2106 Жигули", "price": 15000, "speed_bonus": 10, "income_per_hour": 50, "rarity": "обычный", "image_url": "AgACAgIAAxkBAAIKH2n7eaZvhsyGLQOFcU8fmz7BKgWhAAIkGGsbH9_QS0gOkG0ns94lAQADAgADeQADOwQ"},
+    {"id": "granta", "name": "🚙 Лада Гранта", "price": 35000, "speed_bonus": 15, "income_per_hour": 100, "rarity": "обычный", "image_url": "AgACAgIAAxkBAAIKJWn7e2SPU9Y3sbCRzOFO9-nf5Dw5AAIlGGsbH9_QSzJxHsxEUqGUAQADAgADeQADOwQ"},
+    {"id": "cclass", "name": "🚘 Mercedes C-Class 2014", "price": 80000, "speed_bonus": 25, "income_per_hour": 200, "rarity": "редкий", "image_url": "AgACAgIAAxkBAAIKLWn7e3QVhA8tYDpJPzpERwRtMdF3AAIpGGsbH9_QS4t1p3Bhq0TwAQADAgADeQADOwQ"},
+    {"id": "mustang", "name": "🏎 Ford Mustang Кабриолет", "price": 120000, "speed_bonus": 30, "income_per_hour": 300, "rarity": "редкий", "image_url": "AgACAgIAAxkBAAIKK2n7e3Ca7ti-KAq0As2CCsNvasMbAAIoGGsbH9_QS6URKdMbGfwQAQADAgADeQADOwQ"},
+    {"id": "bmwm4", "name": "🏎 BMW M4", "price": 150000, "speed_bonus": 35, "income_per_hour": 350, "rarity": "эпический", "image_url": "AgACAgIAAxkBAAIKKWn7e2wl9oHh_U4ygjOmTNZ-nAmfAAInGGsbH9_QS07bjw42tsNqAQADAgADeQADOwQ"},
+    {"id": "w140", "name": "🚘 Mercedes W140", "price": 180000, "speed_bonus": 35, "income_per_hour": 400, "rarity": "эпический", "image_url": "AgACAgIAAxkBAAIKJ2n7e2jABfB9rbxFh3g5wJsAAUj0CgACJhhrGx_f0Eto1dm5lBmv_AEAAwIAA3kAAzsE"},
+    {"id": "challenger", "name": "🏎 Dodge Challenger", "price": 250000, "speed_bonus": 45, "income_per_hour": 600, "rarity": "легендарный", "image_url": "AgACAgIAAxkBAAIKNWn7e5kR4aOlGwVlwdhsbw5fvc_CAAItGGsbH9_QS6hSbI8YfnInAQADAgADeQADOwQ"},
+    {"id": "ramtrx", "name": "🛻 Dodge Ram TRX", "price": 300000, "speed_bonus": 50, "income_per_hour": 700, "rarity": "легендарный", "image_url": "AgACAgIAAxkBAAIKM2n7e5NrhSVVTc2wUcRsOaBUHDoKAAIsGGsbH9_QS7sNrOC98FMGAQADAgADeQADOwQ"},
+    {"id": "bmwm5", "name": "🏎 BMW M5 F90", "price": 400000, "speed_bonus": 55, "income_per_hour": 900, "rarity": "легендарный", "image_url": "AgACAgIAAxkBAAIKL2n7e3dRS58kxBJIwMbQyfhgSbXHAAIqGGsbH9_QS4JTxjSqqMS3AQADAgADeQADOwQ"},
+    {"id": "sclass", "name": "🚘 Mercedes S-Class", "price": 600000, "speed_bonus": 65, "income_per_hour": 1200, "rarity": "легендарный", "image_url": "AgACAgIAAxkBAAIKMWn7e46bcc2IvFRWXnL99PAMfahNAAIrGGsbH9_QS8WFReLP1qWmAQADAgADeQADOwQ"},
+    {"id": "bmwx7", "name": "🚙 BMW X7", "price": 800000, "speed_bonus": 70, "income_per_hour": 1500, "rarity": "мифический", "image_url": "AgACAgIAAxkBAAIKOWn7e6XgOfa0orm4ZHTXA7BEWqDoAAIvGGsbH9_QS633taC4w8RrAQADAgADeQADOwQ"},
+    {"id": "rollsroyce", "name": "👑 Rolls-Royce Phantom", "price": 1500000, "speed_bonus": 90, "income_per_hour": 3000, "rarity": "мифический", "image_url": "AgACAgIAAxkBAAIKN2n7e6AqWY0zFZGO2P9f4hsCdk8bAAIuGGsbH9_QSzUrOdo8uXGlAQADAgADeQADOwQ"},
+    {"id": "aventador", "name": "🏎 Lamborghini Aventador", "price": 5000000, "speed_bonus": 95, "income_per_hour": 5000, "rarity": "мифический", "image_url": "AgACAgIAAxkBAAIKPGn7f2Rs5K3TIz7TUtspqjTQ5WweAAJaE2sbhKXhSz4-e1I_GY--AQADAgADeQADOwQ"},
+    {"id": "brabus", "name": "👑 Brabus Mansory", "price": 20000000, "speed_bonus": 99, "income_per_hour": 10000, "rarity": "мифический", "image_url": "AgACAgIAAxkBAAIKPmn7f3zPq6X1RER7yHfJKjbkukAgAAJbE2sbhKXhS9npCM9WIdMXAQADAgADeQADOwQ"},
+]
+
 HOUSES = [
     {"id": "room", "name": "🏚 Комната в общаге", "price": 0, "income_bonus": 0, "description": "Бесплатное жильё.", "image_url": "AgACAgIAAxkBAAIDw2n45KI6ja7rOv30n_8DdrWCFQwyAAI-FGsbRxXIS4VB50007zQ3AQADAgADeQADOwQ"},
     {"id": "flat", "name": "🏢 Квартира", "price": 10000, "income_bonus": 150, "description": "Уютная квартира. +150₽/день.", "image_url": "AgACAgIAAxkBAAIBeGn3hGvVcFktYFQJP-YNnKti48v1AAKYGWsbUNy4SzN3yqU-dPZwAQADAgADeQADOwQ"},
@@ -266,6 +285,14 @@ SHOP_LEVELS = [
     {"id": "container", "name": "📦 Контейнер на Садоводе", "price": 15000, "income_per_hour": 300},
     {"id": "store", "name": "🏬 Магазин в ТЦ", "price": 50000, "income_per_hour": 800},
     {"id": "boutique", "name": "👑 Бутик в центре", "price": 150000, "income_per_hour": 2000},
+]
+
+TAXOPARK_LEVELS = [
+    {"id": "none", "name": "Нет таксопарка", "price": 0, "slots": 0, "income_per_car": 0, "description": "У тебя нет таксопарка."},
+    {"id": "small", "name": "🚕 Маленький таксопарк", "price": 500000, "slots": 3, "income_per_car": 5000, "description": "3 слота для авто. Доход: 5 000₽/час с машины."},
+    {"id": "medium", "name": "🚖 Средний таксопарк", "price": 2000000, "slots": 7, "income_per_car": 8000, "description": "7 слотов. Доход: 8 000₽/час с машины."},
+    {"id": "large", "name": "🚗 Крупный таксопарк", "price": 10000000, "slots": 15, "income_per_car": 12000, "description": "15 слотов. Доход: 12 000₽/час с машины."},
+    {"id": "elite", "name": "👑 Элитный таксопарк", "price": 50000000, "slots": 30, "income_per_car": 20000, "description": "30 слотов. Доход: 20 000₽/час с машины. Только премиум-авто!"},
 ]
 
 REPUTATION_LEVELS = {-100: "💀 ЧС", -50: "🔴 Ужасная", 0: "🟡 Нейтральная", 25: "🟢 Хорошая", 50: "🔵 Отличная", 75: "🟣 Легенда", 100: "👑 Бог товарки"}
@@ -295,6 +322,9 @@ player_houses = {}
 player_shops = {}
 player_skins = {}
 skin_inventory = {}  # {user_id: ["skin_id1", "skin_id2", ...]}
+player_cars = {}  # {user_id: "car_id"} — текущая машина игрока
+car_collection = {}  # {user_id: ["car_id1", "car_id2", ...]} — все купленные машины
+player_taxopark = {}  # {user_id: {"level": "none", "cars": [], "last_collect": timestamp}}
 item_descriptions = {}
 auction_data = {"items": []}
 leaderboard_data = {}
@@ -309,7 +339,7 @@ def save_json(filename, data):
     with open(filename, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_all():
-    global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory
+    global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark
     referral_data = defaultdict(lambda: {"invited": [], "bonus_claimed": False}, load_json(REFERRAL_FILE, {}))
     rep_data = load_json(REPUTATION_FILE, {})
     learning_data = load_json(LEARNING_FILE, {})
@@ -320,6 +350,10 @@ def load_all():
     leaderboard_data = load_json(LEADERBOARD_FILE, {})
     supplier_stock = load_json(SUPPLIER_ITEMS_FILE, {"items": [], "last_update": 0})
     skin_inventory = load_json(SKIN_INVENTORY_FILE, {})
+    cars_data = load_json(CARS_FILE, {"player_cars": {}, "car_collection": {}})
+    player_cars.update(cars_data.get("player_cars", {}))
+    car_collection.update(cars_data.get("car_collection", {}))
+    player_taxopark = load_json(TAXOPARK_FILE, {})
 
 load_all()
 check_supplier_update()
@@ -466,13 +500,63 @@ def buy_shop(user_id, shop_id):
 
 def collect_shop_income(user_id):
     shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(user_id)["level"]), SHOP_LEVELS[0])
-    if shop["id"] == "none": return 0
+    income = 0
     elapsed = time_module.time() - get_player_shop(user_id)["last_collect"]
-    income = int(shop["income_per_hour"] * (elapsed / 3600))
-    if income > 0:
-        get_player_shop(user_id)["last_collect"] = time_module.time()
-        if user_id in players: players[user_id]["balance"] += income
+    
+    # Доход от магазина
+    if shop["id"] != "none":
+        shop_income = int(shop["income_per_hour"] * (elapsed / 3600))
+        if shop_income > 0:
+            get_player_shop(user_id)["last_collect"] = time_module.time()
+            if user_id in players:
+                players[user_id]["balance"] += shop_income
+            income += shop_income
+    
+    # Доход от текущей машины
+    car = next((c for c in CARS if c["id"] == get_player_car(user_id)), None)
+    if car and car["income_per_hour"] > 0:
+        car_income = int(car["income_per_hour"] * (elapsed / 3600))
+        if car_income > 0 and user_id in players:
+            players[user_id]["balance"] += car_income
+            income += car_income
+    
+    # Доход от таксопарка
+    taxopark_income = collect_taxopark_income(user_id)
+    income += taxopark_income
+    
     return income
+
+# ==================== АВТОМОБИЛИ ====================
+def get_player_car(user_id):
+    uid = str(user_id)
+    if uid not in player_cars: player_cars[uid] = "none"
+    return player_cars[uid]
+
+def get_car_collection(user_id):
+    uid = str(user_id)
+    if uid not in car_collection: car_collection[uid] = []
+    return car_collection[uid]
+
+def buy_car(user_id, car_id):
+    uid = str(user_id)
+    car = next((c for c in CARS if c["id"] == car_id), None)
+    if not car: return False, "Не найден"
+    if get_player_car(user_id) == car_id: return False, "Уже есть!"
+    p = get_player(user_id)
+    if p["balance"] < car["price"]: return False, "Недостаточно!"
+    p["balance"] -= car["price"]
+    player_cars[uid] = car_id
+    if car_id not in get_car_collection(user_id):
+        car_collection[uid].append(car_id)
+    save_json(CARS_FILE, {"player_cars": player_cars, "car_collection": car_collection})
+    # Ускорение подработок
+    if "speed_bonus" not in p: p["speed_bonus"] = 0
+    p["speed_bonus"] = car["speed_bonus"]
+    return True, f"✅ {car['name']}!"
+
+def get_car_bonus(user_id):
+    car = next((c for c in CARS if c["id"] == get_player_car(user_id)), None)
+    return car["speed_bonus"] if car else 0
 
 # ==================== ИГРА ====================
 def get_player(user_id):
@@ -522,6 +606,7 @@ def main_kb(page=1, user_id=None):
         ])
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🏠 ЖИЛЬЁ", callback_data="action_houses"), InlineKeyboardButton(text="🏪 МАГАЗИН", callback_data="action_shop")],
+        [InlineKeyboardButton(text="🚗 АВТО", callback_data="action_cars")],
         [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
         [InlineKeyboardButton(text="🏆 ЛИДЕРЫ", callback_data="action_leaderboard")],
         [InlineKeyboardButton(text="📊 СТАТЫ", callback_data="action_stats"), InlineKeyboardButton(text="🏅 РЕПУТАЦИЯ", callback_data="action_rep_menu")],
@@ -1189,6 +1274,80 @@ async def show_shop(callback: CallbackQuery):
     try: await callback.message.delete()
     except: pass
 
+def collect_shop_income(user_id):
+    shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(user_id)["level"]), SHOP_LEVELS[0])
+    income = 0
+    elapsed = time_module.time() - get_player_shop(user_id)["last_collect"]
+    
+    # Доход от магазина
+    if shop["id"] != "none":
+        income += int(shop["income_per_hour"] * (elapsed / 3600))
+        if income > 0:
+            get_player_shop(user_id)["last_collect"] = time_module.time()
+            if user_id in players:
+                players[user_id]["balance"] += income
+    
+    # Доход от автомобиля
+    car = next((c for c in CARS if c["id"] == get_player_car(user_id)), None)
+    if car and car["income_per_hour"] > 0:
+        car_income = int(car["income_per_hour"] * (elapsed / 3600))
+        if car_income > 0 and user_id in players:
+            players[user_id]["balance"] += car_income
+            income += car_income
+    
+    # Доход от таксопарка
+    income += collect_taxopark_income(user_id)
+    
+    return income
+
+# ==================== ТАКСОПАРК (ФУНКЦИИ) ====================
+def get_player_taxopark(user_id):
+    uid = str(user_id)
+    if uid not in player_taxopark:
+        player_taxopark[uid] = {"level": "none", "cars": [], "last_collect": time_module.time()}
+    return player_taxopark[uid]
+
+def buy_taxopark(user_id, level_id):
+    uid = str(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == level_id), None)
+    if not level: return False, "Не найден"
+    current = get_player_taxopark(user_id)
+    if current["level"] == level_id: return False, "Уже есть!"
+    p = get_player(user_id)
+    if p["balance"] < level["price"]: return False, "Недостаточно!"
+    p["balance"] -= level["price"]
+    current["level"] = level_id
+    current["last_collect"] = time_module.time()
+    save_json(TAXOPARK_FILE, player_taxopark)
+    return True, f"✅ {level['name']}!"
+
+def add_car_to_taxopark(user_id, car_id):
+    uid = str(user_id)
+    park = get_player_taxopark(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    if level["slots"] == 0: return False, "Купи таксопарк сначала!"
+    if len(park["cars"]) >= level["slots"]: return False, f"Нет мест! Максимум {level['slots']} авто."
+    if car_id in park["cars"]: return False, "Уже в таксопарке!"
+    if car_id not in get_car_collection(user_id): return False, "Сначала купи эту машину!"
+    if level["id"] == "elite":
+        car = next((c for c in CARS if c["id"] == car_id), None)
+        if car and car["price"] < 500000: return False, "Элитный таксопарк — только премиум-авто (от 500 000₽)!"
+    park["cars"].append(car_id)
+    save_json(TAXOPARK_FILE, player_taxopark)
+    return True, "✅ Машина в таксопарке!"
+
+def collect_taxopark_income(user_id):
+    park = get_player_taxopark(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    if level["slots"] == 0 or not park["cars"]: return 0
+    elapsed = time_module.time() - park["last_collect"]
+    income = int(level["income_per_car"] * len(park["cars"]) * (elapsed / 3600))
+    if income > 0:
+        park["last_collect"] = time_module.time()
+        save_json(TAXOPARK_FILE, player_taxopark)
+        if user_id in players: players[user_id]["balance"] += income
+    return income
+
 @dp.callback_query(F.data == "collect_shop_income", StateFilter(GameState.playing))
 async def collect_shop_income_btn(callback: CallbackQuery):
     income = collect_shop_income(callback.from_user.id)
@@ -1431,6 +1590,215 @@ async def supply_click(callback: CallbackQuery):
     
     await show_supply(callback)
 
+# ==================== МЕНЮ АВТОМОБИЛЕЙ ====================
+@dp.callback_query(F.data == "action_cars", StateFilter(GameState.playing))
+async def show_cars_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    current_car = get_player_car(user_id)
+    car_info = next((c for c in CARS if c["id"] == current_car), None)
+    collection = get_car_collection(user_id)
+    p = get_player(user_id)
+    
+    txt = "🚗 <b>АВТОМОБИЛИ</b>\n\n"
+    if car_info:
+        txt += f"Твоя: {car_info['name']}\n⚡ Ускорение: {car_info['speed_bonus']}%\n💰 Доход: {car_info['income_per_hour']}₽/ч\n\n"
+    txt += f"🎮 Куплено: {len(collection)}/{len(CARS)}\n💼 Баланс: {p['balance']:,}₽\n\nВыбери раздел:".replace(",", " ")
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🛒 АВТОСАЛОН", callback_data="cars_showroom")],
+        [InlineKeyboardButton(text="🏠 МОЙ ГАРАЖ", callback_data="cars_garage")],
+        [InlineKeyboardButton(text="🚕 ТАКСОПАРК", callback_data="cars_taxopark")],
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data == "cars_showroom", StateFilter(GameState.playing))
+async def show_cars_catalog(callback: CallbackQuery, page: int = 0):
+    user_id = callback.from_user.id
+    current_car_id = get_player_car(user_id)
+    p = get_player(user_id)
+    collection = get_car_collection(user_id)
+    
+    if page < 0: page = 0
+    if page >= len(CARS): page = len(CARS) - 1
+    
+    car = CARS[page]
+    owned = car["id"] in collection
+    rc = RARITY_COLORS.get(car["rarity"], "⬜")
+    
+    txt = f"🛒 <b>АВТОСАЛОН</b>\n📄 {page+1}/{len(CARS)}\n\n{car['name']}\n{rc} {car['rarity'].upper()}\n⚡ Ускорение: {car['speed_bonus']}%\n💰 Доход: {car['income_per_hour']}₽/час\n"
+    
+    if owned: 
+        txt += "\n✅ <b>КУПЛЕНО</b>"
+        if current_car_id == car["id"]: 
+            txt += "\n🚗 Это твоя текущая машина"
+        act = None
+    elif p["balance"] >= car["price"]: 
+        txt += f"\n💰 Цена: {car['price']:,}₽".replace(",", " ")
+        act = InlineKeyboardButton(text="🛒 КУПИТЬ", callback_data=f"buy_car_{car['id']}")
+    else: 
+        shortage = car['price'] - p['balance']
+        txt += f"\n❌ Нужно {car['price']:,}₽ (не хватает {shortage:,}₽)".replace(",", " ")
+        act = None
+    
+    txt += f"\n\n💼 Баланс: {p['balance']:,}₽".replace(",", " ")
+    
+    nav = []
+    if page > 0: nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"car_page_{page-1}"))
+    if page < len(CARS)-1: nav.append(InlineKeyboardButton(text="➡️", callback_data=f"car_page_{page+1}"))
+    
+    kb = []
+    if nav: kb.append(nav)
+    if act: kb.append([act])
+    if owned and current_car_id != car["id"]:
+        kb.append([InlineKeyboardButton(text="🚗 СДЕЛАТЬ ТЕКУЩЕЙ", callback_data=f"set_car_{car['id']}")])
+    kb.append([InlineKeyboardButton(text="🔙 В АВТОМЕНЮ", callback_data="action_cars")])
+    
+    if car.get("image_url"):
+        try:
+            msg = await bot.send_photo(user_id, car["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+            await del_prev(user_id); last_bot_message[user_id] = msg.message_id
+            try: await callback.message.delete()
+            except: pass
+        except: 
+            await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    else: 
+        await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+
+@dp.callback_query(F.data.startswith("car_page_"), StateFilter(GameState.playing))
+async def car_page_btn(callback: CallbackQuery):
+    await show_cars_catalog(callback, int(callback.data.split("_")[2]))
+
+@dp.callback_query(F.data.startswith("buy_car_"), StateFilter(GameState.playing))
+async def buy_car_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    car_id = callback.data.replace("buy_car_", "")
+    success, msg = buy_car(user_id, car_id)
+    if success: 
+        await callback.answer(msg)
+        await show_cars_catalog(callback)
+    else: 
+        await callback.answer(msg, show_alert=True)
+
+@dp.callback_query(F.data.startswith("set_car_"), StateFilter(GameState.playing))
+async def set_car_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    car_id = callback.data.replace("set_car_", "")
+    if car_id in get_car_collection(user_id):
+        player_cars[str(user_id)] = car_id
+        car = next(c for c in CARS if c["id"] == car_id)
+        if user_id in players: 
+            players[user_id]["speed_bonus"] = car["speed_bonus"]
+        save_json(CARS_FILE, {"player_cars": player_cars, "car_collection": car_collection})
+        await callback.answer(f"✅ {car['name']} — твоя!")
+        await show_cars_menu(callback)
+    else: 
+        await callback.answer("Сначала купи!")
+
+@dp.callback_query(F.data == "cars_garage", StateFilter(GameState.playing))
+async def show_garage(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    collection = get_car_collection(user_id)
+    current = get_player_car(user_id)
+    
+    if not collection:
+        return await send_msg(user_id, "🏠 <b>ГАРАЖ ПУСТ</b>\n\nКупи машины в автосалоне!", 
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🛒 В АВТОСАЛОН", callback_data="cars_showroom")],
+                [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+            ]))
+    
+    txt = "🏠 <b>ТВОЙ ГАРАЖ</b>\n\n"
+    kb = []
+    for car_id in collection:
+        car = next(c for c in CARS if c["id"] == car_id)
+        active = "🚗 ТЕКУЩАЯ" if car_id == current else ""
+        txt += f"{car['name']} {active}\n⚡ +{car['speed_bonus']}% | 💰 +{car['income_per_hour']}₽/ч\n\n"
+        if car_id != current:
+            kb.append([InlineKeyboardButton(text=f"🚗 {car['name']}", callback_data=f"set_car_{car_id}")])
+    
+    kb.append([InlineKeyboardButton(text="🔙 В АВТОМЕНЮ", callback_data="action_cars")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
+
+# ==================== ТАКСОПАРК (ОБРАБОТЧИКИ) ====================
+@dp.callback_query(F.data == "cars_taxopark", StateFilter(GameState.playing))
+async def show_taxopark(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    park = get_player_taxopark(user_id)
+    level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    elapsed = time_module.time() - park["last_collect"]
+    income = int(level["income_per_car"] * len(park["cars"]) * (elapsed / 3600))
+    p = get_player(user_id)
+    
+    txt = f"🚕 <b>ТАКСОПАРК</b>\n\nТекущий: {level['name']}\n"
+    if level["slots"] > 0:
+        txt += f"📊 Слотов: {len(park['cars'])}/{level['slots']}\n"
+        txt += f"💰 Доход: {level['income_per_car']:,}₽/час с машины\n".replace(",", " ")
+        txt += f"💵 Накоплено: {income:,}₽\n\n".replace(",", " ")
+        if park["cars"]:
+            txt += "<b>Машины в таксопарке:</b>\n"
+            for car_id in park["cars"]:
+                car = next((c for c in CARS if c["id"] == car_id), None)
+                if car:
+                    txt += f"• {car['name']}\n"
+    
+    txt += f"\n💼 Баланс: {p['balance']:,}₽".replace(",", " ")
+    
+    kb = []
+    if income > 0:
+        kb.append([InlineKeyboardButton(text=f"💰 СОБРАТЬ +{income:,}₽".replace(",", " "), callback_data="collect_taxopark")])
+    
+    for lvl in TAXOPARK_LEVELS:
+        if lvl["price"] > level["price"] and p["balance"] >= lvl["price"]:
+            kb.append([InlineKeyboardButton(text=f"⬆️ {lvl['name']} — {lvl['price']:,}₽".replace(",", " "), callback_data=f"buy_taxopark_{lvl['id']}")])
+    
+    if level["slots"] > 0 and len(park["cars"]) < level["slots"]:
+        collection = get_car_collection(user_id)
+        available = [c for c in collection if c not in park["cars"]]
+        if level["id"] == "elite":
+            available = [c for c in available if next((car for car in CARS if car["id"] == c), {}).get("price", 0) >= 500000]
+        for car_id in available[:5]:
+            car = next((c for c in CARS if c["id"] == car_id), None)
+            if car:
+                kb.append([InlineKeyboardButton(text=f"➕ {car['name']}", callback_data=f"add_taxopark_{car_id}")])
+    
+    kb.append([InlineKeyboardButton(text="🔙 В АВТОМЕНЮ", callback_data="action_cars")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data == "collect_taxopark", StateFilter(GameState.playing))
+async def collect_taxopark_btn(callback: CallbackQuery):
+    income = collect_taxopark_income(callback.from_user.id)
+    await callback.answer(f"✅ Собрано {income}₽!" if income > 0 else "Пока нечего")
+    await show_taxopark(callback)
+
+@dp.callback_query(F.data.startswith("buy_taxopark_"), StateFilter(GameState.playing))
+async def buy_taxopark_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    level_id = callback.data.replace("buy_taxopark_", "")
+    success, msg = buy_taxopark(user_id, level_id)
+    if success:
+        await callback.answer(msg)
+        await show_taxopark(callback)
+    else: 
+        await callback.answer(msg, show_alert=True)
+
+@dp.callback_query(F.data.startswith("add_taxopark_"), StateFilter(GameState.playing))
+async def add_taxopark_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    car_id = callback.data.replace("add_taxopark_", "")
+    success, msg = add_car_to_taxopark(user_id, car_id)
+    if success:
+        await callback.answer(msg)
+        await show_taxopark(callback)
+    else: 
+        await callback.answer(msg, show_alert=True)
+
 # ==================== ПОДРАБОТКИ ====================
 @dp.callback_query(F.data == "action_job", StateFilter(GameState.playing))
 async def show_jobs(callback: CallbackQuery):
@@ -1450,13 +1818,19 @@ async def start_job(callback: CallbackQuery):
     asyncio.create_task(finish_job(user_id, job_idx))
 
 async def finish_job(user_id, job_idx):
-    await asyncio.sleep(JOBS[job_idx]["duration"])
+    duration = JOBS[job_idx]["duration"]
+    speed_bonus = get_car_bonus(user_id)
+    if speed_bonus > 0:
+        duration = int(duration * (1 - speed_bonus / 100))
+    await asyncio.sleep(duration)
     if user_id in side_jobs and not side_jobs[user_id].get("done", True):
         side_jobs[user_id]["done"] = True
-        if user_id in players: players[user_id]["balance"] += JOBS[job_idx]["reward"]
-        try: await send_msg(user_id, f"✅ <b>ГОТОВО!</b>\n💰 +{JOBS[job_idx]['reward']}₽")
-        except: pass
-
+        if user_id in players: 
+            players[user_id]["balance"] += JOBS[job_idx]["reward"]
+        try: 
+            await send_msg(user_id, f"✅ <b>ГОТОВО!</b>\n💰 +{JOBS[job_idx]['reward']}₽")
+        except: 
+            pass
 # ==================== ОСТАЛЬНЫЕ CALLBACK ====================
 @dp.callback_query(F.data == "action_leaderboard", StateFilter(GameState.playing))
 async def show_leaderboard(callback: CallbackQuery):
