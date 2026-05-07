@@ -278,6 +278,7 @@ HOUSES = [
     {"id": "house", "name": "🏠 Одноэтажный дом", "price": 35000, "income_bonus": 400, "description": "Дом с гаражом. +400₽/день.", "image_url": "AgACAgIAAxkBAAIBemn3hKeq-IxdQ6l6jB7sD10pQPbHAAKUGGsbaAW5S4jG5ecluTqMAQADAgADeQADOwQ"},
     {"id": "villa", "name": "🏰 Богатая вилла", "price": 100000, "income_bonus": 1200, "description": "Вилла с бассейном. +1200₽/день.", "image_url": "AgACAgIAAxkBAAIBfGn3hME0a5rsH1wos1Qyy1AhsYAnAAKVGGsbaAW5SzyFR-E8--65AQADAgADeQADOwQ"},
     {"id": "yacht", "name": "🛥 Яхта", "price": 250000, "income_bonus": 3000, "description": "Яхта у причала. +3000₽/день.", "image_url": "AgACAgIAAxkBAAIBfmn3hNlqZXeSCAxLTetoN0kJMG4RAAKWGGsbaAW5SxNdXNthpgjFAQADAgADeQADOwQ"},
+    {"id": "skyscraper", "name": "🏙 Небоскрёб", "price": 3000000, "income_bonus": 20000, "description": "Небоскрёб в центре города. +20 000₽/день.", "image_url": "AgACAgIAAxkBAAIOGGn80IpHo9UQDHb2EhlAp6cOqCp8AAItF2sb59XpS_EAAVDuV6ZpTwEAAwIAA3kAAzsE"},
 ]
 
 SHOP_LEVELS = [
