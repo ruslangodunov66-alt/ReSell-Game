@@ -2346,7 +2346,7 @@ async def show_garage(callback: CallbackQuery, page: int = 0):
     # Добавить в таксопарк (если таксопарк куплен и есть места)
     park = get_player_taxopark(user_id)
     park_level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
-        if park_level["slots"] > 0 and len(park["cars"]) < park_level["slots"]:
+    if park_level["slots"] > 0 and len(park["cars"]) < park_level["slots"]:
         total_owned = collection.count(car_id)
         in_park = park["cars"].count(car_id)
         if in_park < total_owned:
