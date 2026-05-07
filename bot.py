@@ -26,6 +26,7 @@ ADMIN_ID = 1475910449  # ← ЗАМЕНИ НА СВОЙ TELEGRAM ID (узнат�
 client_openai = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
 # ==================== ФАЙЛЫ ====================
+FRIENDS_FILE = "friends.json"
 REPUTATION_FILE = "reputation_data.json"
 REFERRAL_FILE = "referrals.json"
 LEARNING_FILE = "learning_progress.json"
@@ -310,6 +311,7 @@ class GameState(StatesGroup):
     writing_shopname = State()
 
 # ==================== ХРАНИЛИЩА ====================
+friends_data = {}  # {user_id: [friend_id1, friend_id2, ...]}
 players = {}
 referral_data = defaultdict(lambda: {"invited": [], "bonus_claimed": False})
 rep_data = {}
@@ -345,6 +347,8 @@ def save_json(filename, data):
     with open(filename, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_all():
+    global friends_data
+    friends_data = load_json(FRIENDS_FILE, {})
     global shop_names
     shop_names = load_json(SHOP_NAMES_FILE, {})
     global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark
@@ -397,12 +401,17 @@ def get_nickname(user_id):
 
 def set_nickname(user_id, nickname):
     uid = str(user_id)
-    # Убираем лишние пробелы и проверяем длину
     nickname = nickname.strip()
     if len(nickname) < 2:
         return False, "Минимум 2 символа!"
     if len(nickname) > 20:
         return False, "Максимум 20 символов!"
+    
+    # Проверяем, не занят ли ник другим игроком
+    for other_uid, other_nick in nicknames.items():
+        if other_nick.lower() == nickname.lower() and other_uid != uid:
+            return False, f"Ник '{nickname}' уже занят!"
+    
     nicknames[uid] = nickname
     save_json(NICKNAMES_FILE, nicknames)
     return True, f"✅ Ник: {nickname}"
@@ -413,6 +422,44 @@ def get_display_name(user_id):
     if nick:
         return f"{nick}"
     return f"ID:{user_id}"
+
+def find_user_by_nickname(nickname):
+    """Ищет user_id по никнейму"""
+    for uid, nick in nicknames.items():
+        if nick.lower() == nickname.lower():
+            return int(uid)
+    return None
+
+# ==================== ДРУЗЬЯ ====================
+def get_friends(user_id):
+    uid = str(user_id)
+    if uid not in friends_data:
+        friends_data[uid] = []
+    return friends_data[uid]
+
+def add_friend(user_id, friend_id):
+    uid = str(user_id)
+    fid = str(friend_id)
+    friends = get_friends(user_id)
+    if friend_id == user_id:
+        return False, "Нельзя добавить себя!"
+    if friend_id in friends:
+        return False, "Уже в друзьях!"
+    friends.append(friend_id)
+    save_json(FRIENDS_FILE, friends_data)
+    return True, "✅ Добавлен в друзья!"
+
+def remove_friend(user_id, friend_id):
+    uid = str(user_id)
+    friends = get_friends(user_id)
+    if friend_id not in friends:
+        return False, "Не в друзьях!"
+    friends.remove(friend_id)
+    save_json(FRIENDS_FILE, friends_data)
+    return True, "Удалён из друзей."
+
+def is_friend(user_id, friend_id):
+    return friend_id in get_friends(user_id)
 
 # ==================== АВИТО-АККАУНТ ====================
 def get_shop_name(user_id):
@@ -684,23 +731,6 @@ def get_car_collection(user_id):
     if uid not in car_collection: car_collection[uid] = []
     return car_collection[uid]
 
-def buy_car(user_id, car_id):
-    uid = str(user_id)
-    car = next((c for c in CARS if c["id"] == car_id), None)
-    if not car: return False, "Не найден"
-    if get_player_car(user_id) == car_id: return False, "Уже есть!"
-    p = get_player(user_id)
-    if p["balance"] < car["price"]: return False, "Недостаточно!"
-    p["balance"] -= car["price"]
-    player_cars[uid] = car_id
-    if car_id not in get_car_collection(user_id):
-        car_collection[uid].append(car_id)
-    save_json(CARS_FILE, {"player_cars": player_cars, "car_collection": car_collection})
-    # Ускорение подработок
-    if "speed_bonus" not in p: p["speed_bonus"] = 0
-    p["speed_bonus"] = car["speed_bonus"]
-    return True, f"✅ {car['name']}!"
-
 def get_car_bonus(user_id):
     car = next((c for c in CARS if c["id"] == get_player_car(user_id)), None)
     return car["speed_bonus"] if car else 0
@@ -741,6 +771,15 @@ async def send_menu_with_skin(user_id, text, page=1):
 def main_kb(page=1, user_id=None):
     bc = get_active_buyers_count(user_id) if user_id else 0
     cl = f"💬 ЧАТЫ ({bc})" if bc > 0 else "💬 ЧАТЫ"
+    
+    # Информация о игроке
+    player_info = ""
+    if user_id:
+        nick = get_nickname(user_id) or f"ID:{user_id}"
+        shop = get_shop_name(user_id)
+        rating = get_avito_rating(user_id)
+        player_info = f"👤 {nick} | 📱 {shop}\n⭐ {rating}\n\n"
+    
     if page == 1:
         return InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="action_buy"), InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="action_inventory")],
@@ -756,7 +795,8 @@ def main_kb(page=1, user_id=None):
         [InlineKeyboardButton(text="🏠 ЖИЛЬЁ", callback_data="action_houses"), InlineKeyboardButton(text="🚗 АВТО", callback_data="action_cars")],
         [InlineKeyboardButton(text="💼 БИЗНЕС", callback_data="action_business")],
         [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins"), InlineKeyboardButton(text="🏆 ЛИДЕРЫ", callback_data="action_leaderboard")],
-        [InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="action_ref_menu")],
+        [InlineKeyboardButton(text="💸 ПЕРЕВОД", callback_data="action_pay"), InlineKeyboardButton(text="🔗 РЕФЕРАЛЫ", callback_data="action_ref_menu")],
+        [InlineKeyboardButton(text="👥 ДРУЗЬЯ", callback_data="action_friends"), InlineKeyboardButton(text="💸 ПЕРЕВОД", callback_data="action_pay")],
         [InlineKeyboardButton(text="⬅️ ГЛАВНАЯ", callback_data="menu_page_1"), InlineKeyboardButton(text="🏁 КОНЕЦ", callback_data="action_end")],
         [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
     ])
@@ -1088,10 +1128,19 @@ async def nick_cmd(message: types.Message):
 @dp.message(Command('pay'))
 async def pay_cmd(message: types.Message):
     user_id = message.from_user.id
-    args = message.text.split()
+    args = message.text.split(maxsplit=2)
     
     if len(args) < 3:
-        return await message.answer("💸 <b>ПЕРЕВОД ДЕНЕГ</b>\n\n/pay ID сумма — перевести игроку\n/pay @username сумма — перевести по юзернейму\n\nПример: /pay 123456789 1000", parse_mode="HTML")
+        return await message.answer(
+            "💸 <b>ПЕРЕВОД ДЕНЕГ</b>\n\n"
+            "/pay ID сумма — перевести по ID\n"
+            "/pay @username сумма — перевести по юзернейму\n"
+            "/pay ник сумма — перевести по никнейму\n\n"
+            "Примеры:\n"
+            "/pay 123456789 1000\n"
+            "/pay Барыга 5000",
+            parse_mode="HTML"
+        )
     
     target = args[1]
     try:
@@ -1110,24 +1159,30 @@ async def pay_cmd(message: types.Message):
     target_id = None
     target_name = target
     
-    # По ID
+    # По ID (цифры)
     if target.isdigit():
         target_id = int(target)
         try:
             target_user = await bot.get_chat(target_id)
-            target_name = target_user.first_name or f"ID:{target_id}"
+            target_name = get_display_name(target_id)
         except:
             return await message.answer("❌ Игрок не найден!")
-    # По username
+    
+    # По username (@...)
     elif target.startswith("@"):
         try:
             target_user = await bot.get_chat(target)
             target_id = target_user.id
-            target_name = target_user.first_name or target
+            target_name = get_display_name(target_id)
         except:
             return await message.answer("❌ Пользователь не найден!")
+    
+    # По никнейму (текст)
     else:
-        return await message.answer("❌ Укажи ID или @username получателя!")
+        target_id = find_user_by_nickname(target)
+        if not target_id:
+            return await message.answer(f"❌ Игрок с ником '{target}' не найден!")
+        target_name = target
     
     if target_id == user_id:
         return await message.answer("❌ Нельзя перевести самому себе!")
@@ -1138,6 +1193,8 @@ async def pay_cmd(message: types.Message):
     # Перевод
     p["balance"] -= amount
     target_p["balance"] += amount
+    
+    sender_name = get_display_name(user_id)
     
     await message.answer(
         f"💸 <b>ПЕРЕВОД ВЫПОЛНЕН!</b>\n\n"
@@ -1151,7 +1208,7 @@ async def pay_cmd(message: types.Message):
         await bot.send_message(
             target_id,
             f"💰 <b>ПОЛУЧЕН ПЕРЕВОД!</b>\n\n"
-            f"От: {get_display_name(user_id)}\n"
+            f"От: {sender_name}\n"
             f"Сумма: +{amount}₽\n"
             f"💼 Новый баланс: {target_p['balance']}₽",
             parse_mode="HTML"
@@ -1176,6 +1233,83 @@ async def shopname_cmd(message: types.Message):
     name = args[1]
     success, msg = set_shop_name(user_id, name)
     await message.answer(f"<b>{msg}</b>" if success else msg, parse_mode="HTML")
+
+@dp.message(Command('friend'))
+async def friend_cmd(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split(maxsplit=1)
+    
+    if len(args) < 2:
+        friends = get_friends(user_id)
+        if not friends:
+            return await message.answer(
+                "👥 <b>ДРУЗЬЯ</b>\n\n"
+                "У тебя пока нет друзей!\n"
+                "Добавить: /friend add ник\n"
+                "Или: /friend add ID\n\n"
+                "Список команд:\n"
+                "/friend list — список друзей\n"
+                "/friend add ник — добавить\n"
+                "/friend remove ник — удалить",
+                parse_mode="HTML"
+            )
+        return await message.answer(
+            "👥 <b>ДРУЗЬЯ</b>\n\n"
+            f"У тебя {len(friends)} друзей.\n\n"
+            "Команды:\n"
+            "/friend list — список\n"
+            "/friend add ник — добавить\n"
+            "/friend remove ник — удалить",
+            parse_mode="HTML"
+        )
+    
+    cmd = args[1].split()
+    
+    if cmd[0] == "list":
+        friends = get_friends(user_id)
+        if not friends:
+            return await message.answer("👥 У тебя пока нет друзей!")
+        
+        txt = f"👥 <b>ТВОИ ДРУЗЬЯ ({len(friends)}):</b>\n\n"
+        for i, fid in enumerate(friends, 1):
+            name = get_display_name(fid)
+            txt += f"{i}. {name}\n"
+        
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="👤 ПОСМОТРЕТЬ ДРУГА", callback_data="friend_view_menu")],
+        ])
+        await message.answer(txt, parse_mode="HTML", reply_markup=kb)
+    
+    elif cmd[0] == "add" and len(cmd) >= 2:
+        target_name = " ".join(cmd[1:])
+        
+        # Поиск по нику
+        target_id = find_user_by_nickname(target_name)
+        # Поиск по ID
+        if not target_id and target_name.isdigit():
+            target_id = int(target_name)
+        
+        if not target_id:
+            return await message.answer(f"❌ Игрок '{target_name}' не найден!")
+        
+        success, msg = add_friend(user_id, target_id)
+        if success:
+            target_display = get_display_name(target_id)
+            await message.answer(f"👥 <b>{msg}</b>\nТеперь {target_display} у тебя в друзьях!", parse_mode="HTML")
+        else:
+            await message.answer(f"❌ {msg}")
+    
+    elif cmd[0] == "remove" and len(cmd) >= 2:
+        target_name = " ".join(cmd[1:])
+        target_id = find_user_by_nickname(target_name)
+        if not target_id and target_name.isdigit():
+            target_id = int(target_name)
+        
+        if not target_id:
+            return await message.answer(f"❌ Игрок '{target_name}' не найден!")
+        
+        success, msg = remove_friend(user_id, target_id)
+        await message.answer(f"{'✅' if success else '❌'} {msg}")
 
 @dp.message(F.photo)
 async def get_photo_links(message: types.Message):
@@ -2081,16 +2215,22 @@ async def show_cars_catalog(callback: CallbackQuery, page: int = 0):
 async def car_page_btn(callback: CallbackQuery):
     await show_cars_catalog(callback, int(callback.data.split("_")[2]))
 
-@dp.callback_query(F.data.startswith("buy_car_"), StateFilter(GameState.playing))
-async def buy_car_btn(callback: CallbackQuery):
-    user_id = callback.from_user.id
-    car_id = callback.data.replace("buy_car_", "")
-    success, msg = buy_car(user_id, car_id)
-    if success: 
-        await callback.answer(msg)
-        await show_cars_catalog(callback)
-    else: 
-        await callback.answer(msg, show_alert=True)
+def buy_car(user_id, car_id):
+    uid = str(user_id)
+    car = next((c for c in CARS if c["id"] == car_id), None)
+    if not car: return False, "Не найден"
+    p = get_player(user_id)
+    if p["balance"] < car["price"]: return False, "Недостаточно!"
+    p["balance"] -= car["price"]
+    # Добавляем в коллекцию (можно много одинаковых)
+    car_collection[uid].append(car_id)
+    # Делаем текущей только если первая
+    if len(car_collection[uid]) == 1 or get_player_car(user_id) == "none":
+        player_cars[uid] = car_id
+        if "speed_bonus" not in p: p["speed_bonus"] = 0
+        p["speed_bonus"] = car["speed_bonus"]
+    save_json(CARS_FILE, {"player_cars": player_cars, "car_collection": car_collection})
+    return True, f"✅ {car['name']}!"
 
 @dp.callback_query(F.data.startswith("set_car_"), StateFilter(GameState.playing))
 async def set_car_btn(callback: CallbackQuery):
@@ -2108,7 +2248,7 @@ async def set_car_btn(callback: CallbackQuery):
         await callback.answer("Сначала купи!")
 
 @dp.callback_query(F.data == "cars_garage", StateFilter(GameState.playing))
-async def show_garage(callback: CallbackQuery):
+async def show_garage(callback: CallbackQuery, page: int = 0):
     user_id = callback.from_user.id
     collection = get_car_collection(user_id)
     current = get_player_car(user_id)
@@ -2120,19 +2260,78 @@ async def show_garage(callback: CallbackQuery):
                 [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
             ]))
     
-    txt = "🏠 <b>ТВОЙ ГАРАЖ</b>\n\n"
+    if page < 0: page = 0
+    if page >= len(collection): page = len(collection) - 1
+    
+    car_id = collection[page]
+    car = next((c for c in CARS if c["id"] == car_id), None)
+    if not car:
+        return await show_garage(callback)
+    
+    is_current = car_id == current
+    rc = RARITY_COLORS.get(car["rarity"], "⬜")
+    
+    txt = (
+        f"🏠 <b>ТВОЙ ГАРАЖ</b>\n"
+        f"📄 {page+1}/{len(collection)}\n\n"
+        f"{car['name']}\n"
+        f"{rc} {car['rarity'].upper()}\n"
+        f"⚡ Ускорение: {car['speed_bonus']}%\n"
+        f"💰 Доход: {car['income_per_hour']}₽/час\n"
+    )
+    if is_current:
+        txt += "\n✅ <b>ТЕКУЩАЯ МАШИНА</b>"
+    
+    # Навигация
+    nav = []
+    if page > 0:
+        nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"garage_page_{page-1}"))
+    if page < len(collection)-1:
+        nav.append(InlineKeyboardButton(text="➡️", callback_data=f"garage_page_{page+1}"))
+    
     kb = []
-    for car_id in collection:
-        car = next(c for c in CARS if c["id"] == car_id)
-        active = "🚗 ТЕКУЩАЯ" if car_id == current else ""
-        txt += f"{car['name']} {active}\n⚡ +{car['speed_bonus']}% | 💰 +{car['income_per_hour']}₽/ч\n\n"
-        if car_id != current:
-            kb.append([InlineKeyboardButton(text=f"🚗 {car['name']}", callback_data=f"set_car_{car_id}")])
+    if nav:
+        kb.append(nav)
+    
+    # Кнопки действий
+    if not is_current:
+        kb.append([InlineKeyboardButton(text="🚗 СДЕЛАТЬ ТЕКУЩЕЙ", callback_data=f"set_car_{car_id}")])
+    
+    # Добавить в таксопарк (если таксопарк куплен и есть места)
+    park = get_player_taxopark(user_id)
+    park_level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    if park_level["slots"] > 0 and len(park["cars"]) < park_level["slots"] and car_id not in park["cars"]:
+        if park_level["id"] != "elite" or car["price"] >= 500000:
+            kb.append([InlineKeyboardButton(text="🚕 В ТАКСОПАРК", callback_data=f"garage_to_taxopark_{car_id}")])
     
     kb.append([InlineKeyboardButton(text="🔙 В АВТОМЕНЮ", callback_data="action_cars")])
-    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-    try: await callback.message.delete()
-    except: pass
+    
+    if car.get("image_url"):
+        try:
+            msg = await bot.send_photo(user_id, car["image_url"], caption=txt, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+            await del_prev(user_id); last_bot_message[user_id] = msg.message_id
+            try: await callback.message.delete()
+            except: pass
+        except:
+            await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    else:
+        await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+
+@dp.callback_query(F.data.startswith("garage_page_"), StateFilter(GameState.playing))
+async def garage_page_btn(callback: CallbackQuery):
+    await show_garage(callback, int(callback.data.split("_")[2]))
+
+@dp.callback_query(F.data.startswith("garage_to_taxopark_"), StateFilter(GameState.playing))
+async def garage_to_taxopark_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    car_id = callback.data.replace("garage_to_taxopark_", "")
+    success, msg = add_car_to_taxopark(user_id, car_id)
+    if success:
+        await callback.answer("✅ Добавлена в таксопарк!")
+        # Показываем таксопарк
+        await show_taxopark(callback)
+    else:
+        await callback.answer(msg, show_alert=True)
 
 # ==================== ТАКСОПАРК (ОБРАБОТЧИКИ) ====================
 @dp.callback_query(F.data == "cars_taxopark", StateFilter(GameState.playing))
@@ -2352,18 +2551,43 @@ async def buy_house_btn(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "menu_page_1")
 async def menu_page_1(callback: CallbackQuery):
-    p = get_player(callback.from_user.id); skin = next((s for s in SKINS if s["id"] == get_player_skin(callback.from_user.id)), SKINS[0])
-    await send_menu_with_skin(callback.from_user.id, f"📅 <b>МЕНЮ 1/2</b>\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", 1)
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    nick = get_nickname(user_id) or f"ID:{user_id}"
+    shop = get_shop_name(user_id)
+    rating = get_avito_rating(user_id)
+    
+    txt = (
+        f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n"
+        f"👤 {nick} | 📱 {shop}\n"
+        f"⭐ {rating}\n"
+        f"👤 Скин: {skin['emoji']} {skin['name']}\n\n"
+        f"📊 <b>СПРОС:</b>\n{fmt_demand(p)}"
+    )
+    await send_menu_with_skin(user_id, txt, 1)
     try: await callback.message.delete()
     except: pass
 
 @dp.callback_query(F.data == "menu_page_2")
 async def menu_page_2(callback: CallbackQuery):
-    p = get_player(callback.from_user.id); skin = next((s for s in SKINS if s["id"] == get_player_skin(callback.from_user.id)), SKINS[0])
-    await send_menu_with_skin(callback.from_user.id, f"📅 <b>МЕНЮ 2/2</b>\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}", 2)
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    nick = get_nickname(user_id) or f"ID:{user_id}"
+    shop = get_shop_name(user_id)
+    rating = get_avito_rating(user_id)
+    
+    txt = (
+        f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n"
+        f"👤 {nick} | 📱 {shop}\n"
+        f"⭐ {rating}\n"
+        f"👤 Скин: {skin['emoji']} {skin['name']}\n\n"
+        f"📊 <b>СПРОС:</b>\n{fmt_demand(p)}"
+    )
+    await send_menu_with_skin(user_id, txt, 2)
     try: await callback.message.delete()
     except: pass
-
 @dp.callback_query(F.data == "start_new_game")
 async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id; r = get_rep(user_id)
@@ -2372,7 +2596,9 @@ async def start_new_game_btn(callback: CallbackQuery, state: FSMContext):
     if event: apply_event(p, event)
     await state.set_state(GameState.playing)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await send_menu_with_skin(user_id, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
+    nick = get_nickname(user_id) or f"ID:{user_id}"
+    shop = get_shop_name(user_id)
+    await send_menu_with_skin(user_id, f"🚀 <b>ИГРА НАЧАЛАСЬ!</b>\n💰 5 000₽\n👤 {nick} | 📱 {shop}\n👤 Скин: {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
 
 @dp.callback_query(F.data == "continue_game")
 async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
@@ -2384,7 +2610,10 @@ async def continue_game_btn(callback: CallbackQuery, state: FSMContext):
         if event: apply_event(p, event)
     await state.set_state(GameState.playing)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await send_menu_with_skin(user_id, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
+    nick = get_nickname(user_id) or f"ID:{user_id}"
+    shop = get_shop_name(user_id)
+    rating = get_avito_rating(user_id)
+    await send_menu_with_skin(user_id, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {nick} | 📱 {shop}\n⭐ {rating}\n👤 Скин: {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
 
 @dp.callback_query(F.data == "restart_game_confirm")
 async def restart_confirm(callback: CallbackQuery):
@@ -2515,6 +2744,152 @@ async def rep_menu_callback(callback: CallbackQuery):
     try: await callback.message.delete()
     except: pass
 
+@dp.callback_query(F.data == "action_pay", StateFilter(GameState.playing))
+async def pay_menu_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    
+    txt = (
+        "💸 <b>ПЕРЕВОД ДЕНЕГ</b>\n\n"
+        "Отправь команду:\n"
+        "<code>/pay ник сумма</code>\n\n"
+        "Примеры:\n"
+        "<code>/pay Барыга 5000</code> — по нику\n"
+        "<code>/pay 123456789 1000</code> — по ID\n"
+        "<code>/pay @user 1000</code> — по юзернейму\n\n"
+        f"💼 Твой баланс: {p['balance']}₽"
+    )
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ ЗАКРЫТЬ", callback_data="action_back")]
+    ]))
+    await callback.answer()
+
+@dp.callback_query(F.data == "action_friends", StateFilter(GameState.playing))
+async def friends_menu_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    friends = get_friends(user_id)
+    
+    if not friends:
+        txt = (
+            "👥 <b>ДРУЗЬЯ</b>\n\n"
+            "У тебя пока нет друзей!\n\n"
+            "Добавить друга:\n"
+            "<code>/friend add ник</code>\n\n"
+            "Пример:\n"
+            "<code>/friend add Барыга</code>"
+        )
+        return await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]
+        ]))
+    
+    txt = f"👥 <b>ТВОИ ДРУЗЬЯ ({len(friends)}):</b>\n\n"
+    kb = []
+    for fid in friends:
+        name = get_display_name(fid)
+        rating = get_avito_rating(fid)
+        txt += f"• {name} | {rating}\n"
+        kb.append([InlineKeyboardButton(text=f"👤 {name}", callback_data=f"view_friend_{fid}")])
+    
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await callback.answer()
+
+@dp.callback_query(F.data == "friend_view_menu", StateFilter(GameState.playing))
+async def friend_view_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    friends = get_friends(user_id)
+    
+    if not friends:
+        return await callback.answer("Нет друзей!")
+    
+    txt = "👤 <b>ВЫБЕРИ ДРУГА:</b>\n\n"
+    kb = []
+    for fid in friends:
+        name = get_display_name(fid)
+        txt += f"• {name}\n"
+        kb.append([InlineKeyboardButton(text=f"👤 {name}", callback_data=f"view_friend_{fid}")])
+    
+    kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_friends")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("view_friend_"), StateFilter(GameState.playing))
+async def view_friend(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    friend_id = int(callback.data.replace("view_friend_", ""))
+    
+    if not is_friend(user_id, friend_id):
+        return await callback.answer("Не в друзьях!")
+    
+    name = get_display_name(friend_id)
+    shop = get_shop_name(friend_id)
+    rating = get_avito_rating(friend_id)
+    lvl = get_rep_level(friend_id)
+    rep = get_rep(friend_id)
+    
+    # Информация о машинах
+    car_col = get_car_collection(friend_id)
+    current_car = get_player_car(friend_id)
+    car_info = next((c for c in CARS if c["id"] == current_car), None)
+    car_text = f"🚗 {car_info['name']}" if car_info else "🚗 Нет машины"
+    car_text += f" | 🎮 {len(car_col)} шт."
+    
+    # Информация о таксопарке
+    park = get_player_taxopark(friend_id)
+    park_lvl = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
+    park_text = f"{park_lvl['name']}"
+    if park_lvl["slots"] > 0:
+        park_text += f" ({len(park['cars'])}/{park_lvl['slots']})"
+    
+    txt = (
+        f"👤 <b>ПРОФИЛЬ ДРУГА</b>\n\n"
+        f"Имя: {name}\n"
+        f"📱 Магазин: {shop}\n"
+        f"⭐ Рейтинг: {rating}\n"
+        f"Уровень: {lvl}\n"
+        f"📦 Продаж: {rep['total_sales']}\n"
+        f"💰 Прибыль: {rep['total_profit']}₽\n\n"
+        f"{car_text}\n"
+        f"🚕 Таксопарк: {park_text}"
+    )
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💸 ПЕРЕВЕСТИ", callback_data=f"pay_friend_{friend_id}")],
+        [InlineKeyboardButton(text="❌ УДАЛИТЬ ИЗ ДРУЗЕЙ", callback_data=f"remove_friend_{friend_id}")],
+        [InlineKeyboardButton(text="🔙 К ДРУЗЬЯМ", callback_data="action_friends")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("pay_friend_"), StateFilter(GameState.playing))
+async def pay_friend_btn(callback: CallbackQuery):
+    friend_id = int(callback.data.replace("pay_friend_", ""))
+    name = get_display_name(friend_id)
+    
+    txt = (
+        f"💸 <b>ПЕРЕВОД ДРУГУ</b>\n\n"
+        f"Получатель: {name}\n\n"
+        f"Отправь команду:\n"
+        f"<code>/pay {name} сумма</code>"
+    )
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data=f"view_friend_{friend_id}")]
+    ]))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("remove_friend_"), StateFilter(GameState.playing))
+async def remove_friend_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    friend_id = int(callback.data.replace("remove_friend_", ""))
+    name = get_display_name(friend_id)
+    
+    success, msg = remove_friend(user_id, friend_id)
+    if success:
+        await callback.answer(f"{name} удалён из друзей!")
+        await friends_menu_callback(callback)
+    else:
+        await callback.answer(msg)
+
 @dp.callback_query(F.data == "action_ref_menu")
 async def ref_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2600,8 +2975,18 @@ async def restart_game(callback: CallbackQuery):
 async def back_to_menu(callback: CallbackQuery):
     user_id = callback.from_user.id; p = get_player(user_id)
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
-    await send_menu_with_skin(user_id, f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
-
+    nick = get_nickname(user_id) or f"ID:{user_id}"
+    shop = get_shop_name(user_id)
+    rating = get_avito_rating(user_id)
+    
+    txt = (
+        f"📅 <b>День {p['day']}</b> | 💰 {p['balance']}₽\n"
+        f"👤 {nick} | 📱 {shop}\n"
+        f"⭐ {rating}\n"
+        f"👤 Скин: {skin['emoji']} {skin['name']}\n\n"
+        f"📊 <b>СПРОС:</b>\n{fmt_demand(p)}"
+    )
+    await send_menu_with_skin(user_id, txt)
 @dp.callback_query(F.data == "back_to_start")
 async def back_start(callback: CallbackQuery):
     skin = next((s for s in SKINS if s["id"] == get_player_skin(callback.from_user.id)), SKINS[0])
