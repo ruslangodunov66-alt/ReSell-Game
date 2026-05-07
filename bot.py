@@ -2232,6 +2232,35 @@ def buy_car(user_id, car_id):
     save_json(CARS_FILE, {"player_cars": player_cars, "car_collection": car_collection})
     return True, f"✅ {car['name']}!"
 
+@dp.callback_query(F.data.startswith("buy_car_"), StateFilter(GameState.playing))
+async def buy_car_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    car_id = callback.data.replace("buy_car_", "")
+    
+    car = next((c for c in CARS if c["id"] == car_id), None)
+    if not car:
+        return await callback.answer("Машина не найдена!")
+    
+    p = get_player(user_id)
+    if p["balance"] < car["price"]:
+        return await callback.answer(f"Недостаточно денег! Нужно {car['price']}₽", show_alert=True)
+    
+    p["balance"] -= car["price"]
+    uid = str(user_id)
+    if uid not in car_collection:
+        car_collection[uid] = []
+    car_collection[uid].append(car_id)
+    
+    if len(car_collection[uid]) == 1 or get_player_car(user_id) == "none":
+        player_cars[uid] = car_id
+        p["speed_bonus"] = car["speed_bonus"]
+    
+    save_json(CARS_FILE, {"player_cars": player_cars, "car_collection": car_collection})
+    
+    await callback.answer(f"✅ {car['name']} куплена!")
+    await show_cars_catalog(callback)
+
+
 @dp.callback_query(F.data.startswith("set_car_"), StateFilter(GameState.playing))
 async def set_car_btn(callback: CallbackQuery):
     user_id = callback.from_user.id
