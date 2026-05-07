@@ -2179,6 +2179,9 @@ async def show_cars_catalog(callback: CallbackQuery, page: int = 0):
     
     if is_current: 
         txt += "\n✅ <b>ТВОЯ ТЕКУЩАЯ МАШИНА</b>"
+        # ВСЕГДА показываем кнопку покупки, даже если это текущая машина
+        if p["balance"] >= car["price"]:
+            act = InlineKeyboardButton(text="🛒 КУПИТЬ ЕЩЁ", callback_data=f"buy_car_{car['id']}")
     elif owned:
         txt += "\n✅ <b>КУПЛЕНО</b> (в гараже)"
         if p["balance"] >= car["price"]:
@@ -2254,7 +2257,8 @@ async def buy_car_btn(callback: CallbackQuery):
         car_collection[uid] = []
     car_collection[uid].append(car_id)
     
-    if len(car_collection[uid]) == 1 or get_player_car(user_id) == "none":
+    # Делаем текущей только если это первая машина
+    if get_player_car(user_id) == "none":
         player_cars[uid] = car_id
         p["speed_bonus"] = car["speed_bonus"]
     
