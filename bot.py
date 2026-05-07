@@ -26,6 +26,7 @@ ADMIN_ID = 1475910449  # ← ЗАМЕНИ НА СВОЙ TELEGRAM ID (узнат�
 client_openai = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
 # ==================== ФАЙЛЫ ====================
+TRADING_FILE = "trading_data.json"
 FRIENDS_FILE = "friends.json"
 REPUTATION_FILE = "reputation_data.json"
 REFERRAL_FILE = "referrals.json"
@@ -123,6 +124,16 @@ MARKET_EVENTS = [
     {"text": "📰 Кроссовки в тренде!", "cat": "👟 Кроссы", "mult": 1.5},
     {"text": "📰 Джинсы падают.", "cat": "👖 Джинсы", "mult": 0.6},
 ]
+# Биржевые товары
+TRADING_ITEMS = {
+    "👖 Джинсы": {"name": "Джинсы", "base_price": 500, "volatility": 0.15},
+    "👕 Футболки": {"name": "Футболки", "base_price": 300, "volatility": 0.12},
+    "🧥 Куртки": {"name": "Куртки", "base_price": 800, "volatility": 0.18},
+    "👟 Кроссовки": {"name": "Кроссовки", "base_price": 600, "volatility": 0.20},
+    "🧢 Кепки": {"name": "Кепки", "base_price": 200, "volatility": 0.10},
+}
+
+trading_prices = {}  # {"категория": {"price": int, "trend": float, "history": [...]}}
 
 CLIENT_TYPES = {
     "normal": {
@@ -312,6 +323,7 @@ class GameState(StatesGroup):
     writing_shopname = State()
 
 # ==================== ХРАНИЛИЩА ====================
+trading_data = {}  # {user_id: {"portfolio": {"категория": amount}, "invested": 0, "last_update": timestamp}}
 friends_data = {}  # {user_id: [friend_id1, friend_id2, ...]}
 players = {}
 referral_data = defaultdict(lambda: {"invited": [], "bonus_claimed": False})
@@ -348,6 +360,8 @@ def save_json(filename, data):
     with open(filename, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_all():
+    global trading_data
+    trading_data = load_json(TRADING_FILE, {})
     global friends_data
     friends_data = load_json(FRIENDS_FILE, {})
     global shop_names
@@ -730,6 +744,66 @@ async def buy_shop_btn(callback: CallbackQuery):
     success, msg = buy_shop(callback.from_user.id, callback.data.replace("buy_shop_", ""))
     if success: await callback.answer(msg); await show_shop(callback)
     else: await callback.answer(msg, show_alert=True)
+
+# ==================== ТРЕЙДИНГ ====================
+def init_trading():
+    if not trading_prices:
+        for cat, data in TRADING_ITEMS.items():
+            trading_prices[cat] = {
+                "price": data["base_price"],
+                "trend": random.uniform(-0.05, 0.05),
+                "history": [data["base_price"]] * 5
+            }
+
+def update_trading():
+    for cat, data in trading_prices.items():
+        item = TRADING_ITEMS[cat]
+        change = random.uniform(-item["volatility"], item["volatility"])
+        data["trend"] += random.uniform(-0.02, 0.02)
+        data["trend"] = max(-0.1, min(0.1, data["trend"]))
+        new_price = int(data["price"] * (1 + change + data["trend"]))
+        new_price = max(item["base_price"] // 3, new_price)
+        data["price"] = new_price
+        data["history"].append(new_price)
+        if len(data["history"]) > 10:
+            data["history"].pop(0)
+
+def get_trader(user_id):
+    uid = str(user_id)
+    if uid not in trading_data:
+        trading_data[uid] = {"portfolio": {}, "invested": 0, "last_update": time_module.time()}
+    return trading_data[uid]
+
+def buy_trading_item(user_id, category, amount):
+    trader = get_trader(user_id)
+    price = trading_prices[category]["price"]
+    total = price * amount
+    p = get_player(user_id)
+    if p["balance"] < total:
+        return False, "Недостаточно денег!"
+    p["balance"] -= total
+    if category not in trader["portfolio"]:
+        trader["portfolio"][category] = 0
+    trader["portfolio"][category] += amount
+    trader["invested"] += total
+    save_json(TRADING_FILE, trading_data)
+    return True, f"✅ Куплено {amount} ед. за {total}₽"
+
+def sell_trading_item(user_id, category, amount):
+    trader = get_trader(user_id)
+    if category not in trader["portfolio"] or trader["portfolio"][category] < amount:
+        return False, "Недостаточно товара!"
+    price = trading_prices[category]["price"]
+    total = price * amount
+    p = get_player(user_id)
+    p["balance"] += total
+    trader["portfolio"][category] -= amount
+    if trader["portfolio"][category] == 0:
+        del trader["portfolio"][category]
+    save_json(TRADING_FILE, trading_data)
+    return True, f"✅ Продано {amount} ед. за {total}₽"
+
+init_trading()
 
 # ==================== АВТОМОБИЛИ ====================
 def get_player_car(user_id):
@@ -2019,14 +2093,16 @@ async def show_minigames(callback: CallbackQuery):
         f"🎮 <b>МИНИ-ИГРЫ</b>\n\n"
         f"<b>📦 РАЗБЕРИ ПОСТАВКУ</b>\n"
         f"💰 Цена: 10 000₽\n"
-        f"🎁 Секретный бокс от поставщика — как на реальной оптовке!\n"
-        f"Никогда не знаешь, попадётся бренд или обычный мусор.\n"
-        f"🔄 Шанс найти вещь: 40%\n"
-        f"💎 Можно найти редкий, эпический или даже легендарный товар!\n\n"
+        f"🎁 Секретный бокс от поставщика\n"
+        f"🔄 Шанс найти вещь: 40%\n\n"
+        f"<b>📊 ТРЕЙДИНГ</b>\n"
+        f"💵 Покупай и продавай товары\n"
+        f"📈 Следи за рынком и зарабатывай\n\n"
         f"💼 Твой баланс: {p['balance']}₽"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📦 РАЗОБРАТЬ ПОСТАВКУ (10 000₽)", callback_data="action_supply")],
+        [InlineKeyboardButton(text="📊 ТРЕЙДИНГ", callback_data="action_trading")],
         [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
     ])
     await send_msg(user_id, txt, reply_markup=kb)
@@ -2517,6 +2593,101 @@ async def add_taxopark_btn(callback: CallbackQuery):
     else: 
         await callback.answer(msg, show_alert=True)
 
+# ==================== ТРЕЙДИНГ ====================
+@dp.callback_query(F.data == "action_trading", StateFilter(GameState.playing))
+async def show_trading(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    trader = get_trader(user_id)
+    
+    txt = "📊 <b>БИРЖА ТОВАРОВ</b>\n\n"
+    txt += "📈 <b>Текущие цены:</b>\n"
+    kb = []
+    
+    for cat, data in trading_prices.items():
+        item = TRADING_ITEMS[cat]
+        trend_emoji = "📈" if data["trend"] > 0 else "📉"
+        owned = trader["portfolio"].get(cat, 0)
+        txt += f"{trend_emoji} {cat}: <b>{data['price']}₽</b> | У тебя: {owned} ед.\n"
+        kb.append([
+            InlineKeyboardButton(text=f"🟢 {cat}", callback_data=f"trade_buy_{cat}"),
+            InlineKeyboardButton(text=f"🔴 {cat}", callback_data=f"trade_sell_{cat}")
+        ])
+    
+    txt += f"\n💼 Баланс: {p['balance']}₽"
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data.startswith("trade_buy_"), StateFilter(GameState.playing))
+async def trade_buy_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    category = callback.data.replace("trade_buy_", "")
+    price = trading_prices[category]["price"]
+    p = get_player(user_id)
+    
+    # Спрашиваем количество
+    txt = (
+        f"📊 <b>ПОКУПКА {category}</b>\n\n"
+        f"Цена: {price}₽ за ед.\n"
+        f"💼 Баланс: {p['balance']}₽\n\n"
+        f"Сколько ед. купить? Отправь число в чат."
+    )
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=f"1 ед. ({price}₽)", callback_data=f"trade_confirm_buy_{category}_1")],
+        [InlineKeyboardButton(text=f"5 ед. ({price*5}₽)", callback_data=f"trade_confirm_buy_{category}_5")],
+        [InlineKeyboardButton(text=f"10 ед. ({price*10}₽)", callback_data=f"trade_confirm_buy_{category}_10")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_trading")],
+    ]))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("trade_confirm_buy_"), StateFilter(GameState.playing))
+async def trade_confirm_buy(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    parts = callback.data.split("_")
+    category = parts[3]
+    amount = int(parts[4])
+    
+    success, msg = buy_trading_item(user_id, category, amount)
+    await callback.answer(msg)
+    await show_trading(callback)
+
+@dp.callback_query(F.data.startswith("trade_sell_"), StateFilter(GameState.playing))
+async def trade_sell_btn(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    category = callback.data.replace("trade_sell_", "")
+    trader = get_trader(user_id)
+    owned = trader["portfolio"].get(category, 0)
+    price = trading_prices[category]["price"]
+    
+    if owned <= 0:
+        return await callback.answer("У тебя нет этого товара!")
+    
+    txt = (
+        f"📊 <b>ПРОДАЖА {category}</b>\n\n"
+        f"Цена: {price}₽ за ед.\n"
+        f"У тебя: {owned} ед.\n\n"
+        f"Сколько ед. продать?"
+    )
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=f"1 ед. ({price}₽)", callback_data=f"trade_confirm_sell_{category}_1")],
+        [InlineKeyboardButton(text=f"Все ({owned} ед. = {price*owned}₽)", callback_data=f"trade_confirm_sell_{category}_{owned}")],
+        [InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_trading")],
+    ]))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("trade_confirm_sell_"), StateFilter(GameState.playing))
+async def trade_confirm_sell(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    parts = callback.data.split("_")
+    category = parts[3]
+    amount = int(parts[4])
+    
+    success, msg = sell_trading_item(user_id, category, amount)
+    await callback.answer(msg)
+    await show_trading(callback)
+
 # ==================== ПОДРАБОТКИ ====================
 @dp.callback_query(F.data == "action_job", StateFilter(GameState.playing))
 async def show_jobs(callback: CallbackQuery):
@@ -2994,6 +3165,7 @@ async def next_day(callback: CallbackQuery):
     house = next((h for h in HOUSES if h["id"] == get_player_house(user_id)), HOUSES[0])
     bonus = house["income_bonus"]; shop_income = collect_shop_income(user_id)
     p["balance"] += bonus; p["day"] += 1
+    update_trading()
     # Обновляем спрос
     for c in CATEGORIES: p["market_demand"][c] = max(0.3, min(3.0, p["market_demand"][c] * random.uniform(0.85, 1.15)))
     event = daily_event(); p["current_event"] = event
