@@ -36,24 +36,24 @@ LEADERBOARD_FILE = "leaderboard.json"
 SKINS_FILE = "player_skins.json"
 SKIN_INVENTORY_FILE = "skin_inventory.json"
 TAXOPARK_FILE = "player_taxopark.json"
+NICKNAMES_FILE = "nicknames.json"
+SHOP_NAMES_FILE = "shop_names.json"
 CARS_FILE = "player_cars.json"
 SUPPLIER_ITEMS_FILE = "supplier_items.json"
 
 SKINS = [
-    # Бесплатные (за репутацию)
-    {"id": "default", "name": "Новичок", "price": 0, "rarity": "обычный", "rep_required": 0, "emoji": "👶", "description": "Базовый скин.", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE", "limited": False, "max_count": 0},
-    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "обычный", "rep_required": 25, "emoji": "😎", "description": "Репутация 🟢 Хорошая (25).", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "обычный", "rep_required": 50, "emoji": "🕴", "description": "Репутация 🔵 Отличная (50).", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    # Платные
-    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "редкий", "rep_required": 0, "emoji": "💻", "description": "Редкий скин.", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    {"id": "cyber", "name": "Кибер-барыга", "price": 80000, "rarity": "эпический", "rep_required": 0, "emoji": "🤖", "description": "Эпический скин.", "avatar_config": {"face": "surprised", "hair": "none", "clothes": "hoodie", "accessory": "headphones", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDxWn45SvUS8m2sFIRTRarzV3ylymgAAJGFGsbRxXISwzuA4OGtBJyAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    {"id": "casual", "name": "Кэжуал барыга", "price": 5000, "rarity": "обычный", "rep_required": 0, "emoji": "👕", "description": "Обычный скин. Повседневный стиль.", "avatar_config": {"face": "default", "hair": "short", "clothes": "hoodie", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDyWn45lfPG9qMGWwqqtVvghaY-OpXAAJPFGsbRxXIS30JjvcuwnwHAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    {"id": "cyberpunk", "name": "Барыга-киберпанк", "price": 120000, "rarity": "эпический", "rep_required": 0, "emoji": "🦾", "description": "Эпический скин в стиле киберпанк.", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDy2n45wzQNDGj-mZOhvUo3ToyI8MVAAJTFGsbRxXIS-Qrt13FcYnwAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    {"id": "legend", "name": "Бог товарки", "price": 150000, "rarity": "легендарный", "rep_required": 0, "emoji": "👑", "description": "Легендарный скин.", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    {"id": "oldmoney", "name": "Олд мани барыга", "price": 180000, "rarity": "эпический", "rep_required": 0, "emoji": "🎩", "description": "Эпический скин в стиле old money.", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDzWn457hhlWHg6jBASBq0EcTDmWEpAAJUFGsbRxXIS1Xa-QcoURaAAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    {"id": "bazaar", "name": "Базарный барыга", "price": 35000, "rarity": "редкий", "rep_required": 0, "emoji": "🗣", "description": "Редкий скин. Настоящий базарный.", "avatar_config": {"face": "angry", "hair": "cap", "clothes": "jacket", "accessory": "chain", "background": "gray"}, "image_url": "AgACAgIAAxkBAAID0Wn46ouAFjuzjq1yQyOG4FahoM-CAAJlFGsbRxXIS-9X56WNZeVnAQADAgADeQADOwQ", "limited": False, "max_count": 0},
-    # Лимитированный мифический
-    {"id": "creator", "name": "Создатель", "price": 0, "rarity": "мифический", "rep_required": 0, "emoji": "💎", "description": "💎 МИФИЧЕСКИЙ СКИН. Лимит: 3 шт. Только для избранных.", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDz2n46ShGgxc6Z-mfB73cEzOvS74oAAJjFGsbRxXIS67XdFNB5viXAQADAgADeQADOwQ", "limited": True, "max_count": 3},
+    # Бесплатные (за репутацию/продажи)
+    {"id": "default", "name": "Новичок", "price": 0, "rarity": "обычный", "sales_required": 0, "emoji": "👶", "description": "Базовый скин.", "avatar_config": {"face": "default", "hair": "short", "clothes": "tshirt", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDHGn4w7w3AAGnzzdBPwI4mNZEgoIjsAACzhhrG8bbwEsN1TBcMS6PhwEAAwIAA3kAAzsE", "limited": False, "max_count": 0},
+    {"id": "hustler", "name": "Темщик", "price": 0, "rarity": "обычный", "sales_required": 5, "emoji": "😎", "description": "⭐ Продано 5 товаров.", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "gray"}, "image_url": "AgACAgIAAxkBAAIDLGn4xLrV_G5vUn9b0lfZbRt9uSNpAAIjE2sbRxXIS2ta2c2uvaRDAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "boss", "name": "Мажор", "price": 0, "rarity": "обычный", "sales_required": 15, "emoji": "🕴", "description": "🏅 Продано 15 товаров.", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDIGn4w8SxLumhkkue8rlTXiUqetBaAALQGGsbxtvAS3sUKevJKpGYAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "coffee", "name": "Кофейный барыга", "price": 25000, "rarity": "редкий", "sales_required": 0, "emoji": "💻", "description": "Редкий скин.", "avatar_config": {"face": "smile", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDImn4w8m4lmlm6AYS1kBkt8Dx7ZyXAAL9GGsbxtvAS_vggWeGPBAgAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "cyber", "name": "Кибер-барыга", "price": 80000, "rarity": "эпический", "sales_required": 0, "emoji": "🤖", "description": "Эпический скин.", "avatar_config": {"face": "surprised", "hair": "none", "clothes": "hoodie", "accessory": "headphones", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDxWn45SvUS8m2sFIRTRarzV3ylymgAAJGFGsbRxXISwzuA4OGtBJyAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "casual", "name": "Кэжуал барыга", "price": 5000, "rarity": "обычный", "sales_required": 0, "emoji": "👕", "description": "Обычный скин.", "avatar_config": {"face": "default", "hair": "short", "clothes": "hoodie", "accessory": "none", "background": "white"}, "image_url": "AgACAgIAAxkBAAIDyWn45lfPG9qMGWwqqtVvghaY-OpXAAJPFGsbRxXIS30JjvcuwnwHAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "cyberpunk", "name": "Барыга-киберпанк", "price": 120000, "rarity": "эпический", "sales_required": 0, "emoji": "🦾", "description": "Эпический скин.", "avatar_config": {"face": "cool", "hair": "mohawk", "clothes": "jacket", "accessory": "sunglasses", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDy2n45wzQNDGj-mZOhvUo3ToyI8MVAAJTFGsbRxXIS-Qrt13FcYnwAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "legend", "name": "Бог товарки", "price": 500000, "rarity": "легендарный", "sales_required": 0, "emoji": "👑", "description": "Легендарный скин.", "avatar_config": {"face": "cool", "hair": "long", "clothes": "rich", "accessory": "headphones", "background": "green"}, "image_url": "AgACAgIAAxkBAAIDJGn4w8wheVk6HY-7qpII5w8hQ4lyAAL_GGsbxtvAS2S7TonuV3alAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "oldmoney", "name": "Олд мани барыга", "price": 180000, "rarity": "эпический", "sales_required": 0, "emoji": "🎩", "description": "Эпический скин.", "avatar_config": {"face": "cool", "hair": "short", "clothes": "suit", "accessory": "glasses", "background": "blue"}, "image_url": "AgACAgIAAxkBAAIDzWn457hhlWHg6jBASBq0EcTDmWEpAAJUFGsbRxXIS1Xa-QcoURaAAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "bazaar", "name": "Базарный барыга", "price": 35000, "rarity": "редкий", "sales_required": 0, "emoji": "🗣", "description": "Редкий скин.", "avatar_config": {"face": "angry", "hair": "cap", "clothes": "jacket", "accessory": "chain", "background": "gray"}, "image_url": "AgACAgIAAxkBAAID0Wn46ouAFjuzjq1yQyOG4FahoM-CAAJlFGsbRxXIS-9X56WNZeVnAQADAgADeQADOwQ", "limited": False, "max_count": 0},
+    {"id": "creator", "name": "Создатель", "price": 0, "rarity": "мифический", "sales_required": 0, "emoji": "💎", "description": "💎 МИФИЧЕСКИЙ СКИН.", "avatar_config": {"face": "cool", "hair": "cap", "clothes": "rich", "accessory": "chain", "background": "purple"}, "image_url": "AgACAgIAAxkBAAIDz2n46ShGgxc6Z-mfB73cEzOvS74oAAJjFGsbRxXIS67XdFNB5viXAQADAgADeQADOwQ", "limited": True, "max_count": 3},
 ]
 
 RARITY_COLORS = {"обычный": "⬜", "редкий": "🟦", "эпический": "🟪", "легендарный": "🟨", "мифический": "💎"}
@@ -306,6 +306,8 @@ dp = Dispatcher(storage=MemoryStorage())
 class GameState(StatesGroup):
     playing = State()
     writing_description = State()
+    writing_nickname = State()
+    writing_shopname = State()
 
 # ==================== ХРАНИЛИЩА ====================
 players = {}
@@ -327,6 +329,8 @@ skin_inventory = {}  # {user_id: ["skin_id1", "skin_id2", ...]}
 player_cars = {}  # {user_id: "car_id"} — текущая машина игрока
 car_collection = {}  # {user_id: ["car_id1", "car_id2", ...]} — все купленные машины
 player_taxopark = {}  # {user_id: {"level": "none", "cars": [], "last_collect": timestamp}}
+nicknames = {}  # {user_id: "nickname"}
+shop_names = {}  # {user_id: "Название магазина"}
 item_descriptions = {}
 auction_data = {"items": []}
 leaderboard_data = {}
@@ -341,6 +345,8 @@ def save_json(filename, data):
     with open(filename, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_all():
+    global shop_names
+    shop_names = load_json(SHOP_NAMES_FILE, {})
     global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark
     referral_data = defaultdict(lambda: {"invited": [], "bonus_claimed": False}, load_json(REFERRAL_FILE, {}))
     rep_data = load_json(REPUTATION_FILE, {})
@@ -356,6 +362,8 @@ def load_all():
     player_cars.update(cars_data.get("player_cars", {}))
     car_collection.update(cars_data.get("car_collection", {}))
     player_taxopark = load_json(TAXOPARK_FILE, {})
+    global nicknames
+    nicknames = load_json(NICKNAMES_FILE, {})
 
 load_all()
 check_supplier_update()
@@ -382,33 +390,104 @@ async def send_msg(user_id, text, parse_mode="HTML", reply_markup=None):
 def gen_ref(user_id): return hashlib.md5(str(user_id).encode()).hexdigest()[:8]
 def ref_link(user_id): return f"https://t.me/{BOT_USERNAME}?start=ref_{gen_ref(user_id)}"
 
+# ==================== НИКНЕЙМЫ ====================
+def get_nickname(user_id):
+    uid = str(user_id)
+    return nicknames.get(uid, None)
+
+def set_nickname(user_id, nickname):
+    uid = str(user_id)
+    # Убираем лишние пробелы и проверяем длину
+    nickname = nickname.strip()
+    if len(nickname) < 2:
+        return False, "Минимум 2 символа!"
+    if len(nickname) > 20:
+        return False, "Максимум 20 символов!"
+    nicknames[uid] = nickname
+    save_json(NICKNAMES_FILE, nicknames)
+    return True, f"✅ Ник: {nickname}"
+
+def get_display_name(user_id):
+    """Возвращает ник или ID для отображения"""
+    nick = get_nickname(user_id)
+    if nick:
+        return f"{nick}"
+    return f"ID:{user_id}"
+
+# ==================== АВИТО-АККАУНТ ====================
+def get_shop_name(user_id):
+    uid = str(user_id)
+    return shop_names.get(uid, "Без названия")
+
+def set_shop_name(user_id, name):
+    uid = str(user_id)
+    name = name.strip()
+    if len(name) < 2:
+        return False, "Минимум 2 символа!"
+    if len(name) > 30:
+        return False, "Максимум 30 символов!"
+    shop_names[uid] = name
+    save_json(SHOP_NAMES_FILE, shop_names)
+    return True, f"✅ Магазин: {name}"
+
 # ==================== РЕПУТАЦИЯ ====================
 def get_rep(user_id):
     uid = str(user_id)
-    if uid not in rep_data: rep_data[uid] = {"score": 0, "total_sales": 0, "total_profit": 0}
+    if uid not in rep_data: 
+        rep_data[uid] = {"score": 0, "total_sales": 0, "total_profit": 0, "rating": 0, "reviews": 0}
     return rep_data[uid]
 
-def rep_level(score):
-    for t in sorted(REPUTATION_LEVELS.keys(), reverse=True):
-        if score >= t: return REPUTATION_LEVELS[t]
-    return REPUTATION_LEVELS[-100]
+def get_avito_rating(user_id):
+    """Возвращает рейтинг в звёздах как на Авито"""
+    rep = get_rep(user_id)
+    sales = rep.get("total_sales", 0)
+    
+    if sales == 0:
+        return "⭐ Новый продавец"
+    elif sales < 3:
+        return "⭐ 1.0"
+    elif sales < 5:
+        return "⭐⭐ 2.0"
+    elif sales < 10:
+        return "⭐⭐⭐ 3.0"
+    elif sales < 25:
+        return "⭐⭐⭐⭐ 4.0"
+    elif sales < 50:
+        return "⭐⭐⭐⭐ 4.5"
+    elif sales < 100:
+        return "⭐⭐⭐⭐⭐ 4.8"
+    elif sales < 250:
+        return "👑 ⭐⭐⭐⭐⭐ 5.0"
+    else:
+        return "💎 👑 ⭐⭐⭐⭐⭐ 5.0"
 
-def add_rep(user_id, amount): 
-    get_rep(user_id)["score"] = max(-100, min(100, get_rep(user_id)["score"] + amount))
+def get_rep_level(user_id):
+    """Возвращает уровень продавца"""
+    rep = get_rep(user_id)
+    sales = rep.get("total_sales", 0)
+    
+    if sales == 0: return "🆕 Новичок"
+    elif sales < 5: return "🔰 Начинающий"
+    elif sales < 15: return "⭐ Проверенный"
+    elif sales < 50: return "🏅 Надёжный"
+    elif sales < 100: return "👑 Профессионал"
+    elif sales < 250: return "💎 Легенда"
+    else: return "🌟 Бог Авито"
+
+def update_avito_rep(user_id):
+    """Обновляет репутацию после продажи"""
+    rep = get_rep(user_id)
+    rep["total_sales"] += 1
+    rep["reviews"] += 1
+    # Рейтинг растёт от успешных продаж
+    sales = rep["total_sales"]
+    if sales <= 10:
+        rep["rating"] = min(50, sales * 5)
+    elif sales <= 50:
+        rep["rating"] = min(75, 50 + (sales - 10) * 1)
+    else:
+        rep["rating"] = min(100, 75 + (sales - 50) * 0.5)
     save_json(REPUTATION_FILE, rep_data)
-
-def update_leaderboard(user_id, profit, sales):
-    uid = str(user_id); week = datetime.now().strftime("%Y-W%W")
-    if uid not in leaderboard_data or leaderboard_data[uid].get("week") != week:
-        leaderboard_data[uid] = {"total_profit": 0, "total_sales": 0, "week": week}
-    leaderboard_data[uid]["total_profit"] += profit
-    leaderboard_data[uid]["total_sales"] += sales
-    save_json(LEADERBOARD_FILE, leaderboard_data)
-
-def get_top_players(limit=10):
-    top = [(int(uid), d["total_profit"], d["total_sales"]) for uid, d in leaderboard_data.items()]
-    top.sort(key=lambda x: x[1], reverse=True)
-    return top[:limit]
 
 # ==================== СКИНЫ ====================
 def get_player_skin(user_id):
@@ -427,21 +506,27 @@ def buy_skin(user_id, skin_id):
         if count >= skin["max_count"]:
             return False, f"Лимит исчерпан! ({skin['max_count']} шт.)"
     
+    # Проверка скинов за продажи (sales_required)
+    if skin.get("sales_required", 0) > 0:
+        rep = get_rep(user_id)
+        if rep["total_sales"] < skin["sales_required"]:
+            return False, f"Нужно {skin['sales_required']} продаж! (у тебя {rep['total_sales']})"
+    
     p = get_player(user_id)
-    if skin["price"] > 0 and p["balance"] < skin["price"]: return False, "Недостаточно!"
-    if skin["price"] > 0: p["balance"] -= skin["price"]
+    if skin["price"] > 0 and p["balance"] < skin["price"]: 
+        return False, f"Недостаточно! Нужно {skin['price']}₽"
+    if skin["price"] > 0: 
+        p["balance"] -= skin["price"]
     
-    # Добавляем в инвентарь скинов
     add_skin_to_inventory(user_id, skin_id)
-    
-    # Надеваем скин
     player_skins[str(user_id)] = skin_id
     save_json(SKINS_FILE, player_skins)
     return True, f"✅ {skin['name']}!"
 
 def check_rep_skins(user_id):
-    rep_score = get_rep(user_id)["score"]
-    return [s for s in SKINS if s["rep_required"] > 0 and rep_score >= s["rep_required"] and get_player_skin(user_id) != s["id"]]
+    rep = get_rep(user_id)
+    sales = rep["total_sales"]
+    return [s for s in SKINS if s.get("sales_required", 0) > 0 and sales >= s["sales_required"] and get_player_skin(user_id) != s["id"]]
 
 def get_skin_inventory(user_id):
     uid = str(user_id)
@@ -768,6 +853,7 @@ async def spawn_buyers(user_id):
     ])
     
     await send_msg(user_id, txt, reply_markup=kb)
+
 async def complete_sale(user_id, buyer_id, message=None):
     chat_key = f"{user_id}_{buyer_id}"
     chat = active_chats.get(chat_key)
@@ -795,6 +881,7 @@ async def complete_sale(user_id, buyer_id, message=None):
     p["balance"] += final; p["total_earned"] += profit; p["items_sold"] += 1
     p["stat_earned_today"] += profit
     add_rep(user_id, random.randint(2, 5))
+    update_avito_rep(user_id)
     update_leaderboard(user_id, profit, 1)
     chat["finished"] = True
     if user_id in active_chat_for_user: del active_chat_for_user[user_id]
@@ -870,8 +957,7 @@ async def start_cmd(message: types.Message):
             "👇 Выбери действие:"
         )
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
-            [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+            [InlineKeyboardButton(text="🚀 НАЧАТЬ РЕГИСТРАЦИЮ", callback_data="start_register")],
         ])
         try:
             msg = await bot.send_photo(
@@ -984,9 +1070,190 @@ async def play_cmd(message: types.Message, state: FSMContext):
     skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
     await send_menu_with_skin(user_id, f"🌟 <b>ДЕНЬ 1</b>\n💰 5 000₽\n👤 {skin['emoji']} {skin['name']}\n\n📊 <b>СПРОС:</b>\n{fmt_demand(p)}")
 
+@dp.message(Command('nick'))
+async def nick_cmd(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split(maxsplit=1)
+    
+    if len(args) < 2:
+        current = get_nickname(user_id)
+        if current:
+            return await message.answer(f"👤 Твой ник: <b>{current}</b>\nИзменить: /nick НовоеИмя", parse_mode="HTML")
+        return await message.answer("👤 У тебя нет ника!\nУстанови: /nick ТвойНик")
+    
+    nickname = args[1]
+    success, msg = set_nickname(user_id, nickname)
+    await message.answer(f"<b>{msg}</b>" if success else msg, parse_mode="HTML")
+
+@dp.message(Command('pay'))
+async def pay_cmd(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split()
+    
+    if len(args) < 3:
+        return await message.answer("💸 <b>ПЕРЕВОД ДЕНЕГ</b>\n\n/pay ID сумма — перевести игроку\n/pay @username сумма — перевести по юзернейму\n\nПример: /pay 123456789 1000", parse_mode="HTML")
+    
+    target = args[1]
+    try:
+        amount = int(args[2])
+    except:
+        return await message.answer("❌ Сумма должна быть числом!")
+    
+    if amount < 100:
+        return await message.answer("❌ Минимальная сумма перевода: 100₽")
+    
+    p = get_player(user_id)
+    if p["balance"] < amount:
+        return await message.answer(f"❌ Недостаточно денег! У тебя: {p['balance']}₽")
+    
+    # Поиск получателя
+    target_id = None
+    target_name = target
+    
+    # По ID
+    if target.isdigit():
+        target_id = int(target)
+        try:
+            target_user = await bot.get_chat(target_id)
+            target_name = target_user.first_name or f"ID:{target_id}"
+        except:
+            return await message.answer("❌ Игрок не найден!")
+    # По username
+    elif target.startswith("@"):
+        try:
+            target_user = await bot.get_chat(target)
+            target_id = target_user.id
+            target_name = target_user.first_name or target
+        except:
+            return await message.answer("❌ Пользователь не найден!")
+    else:
+        return await message.answer("❌ Укажи ID или @username получателя!")
+    
+    if target_id == user_id:
+        return await message.answer("❌ Нельзя перевести самому себе!")
+    
+    # Проверяем что получатель есть в игре
+    target_p = get_player(target_id)
+    
+    # Перевод
+    p["balance"] -= amount
+    target_p["balance"] += amount
+    
+    await message.answer(
+        f"💸 <b>ПЕРЕВОД ВЫПОЛНЕН!</b>\n\n"
+        f"Получатель: {target_name}\n"
+        f"Сумма: {amount}₽\n"
+        f"💼 Твой баланс: {p['balance']}₽",
+        parse_mode="HTML"
+    )
+    
+    try:
+        await bot.send_message(
+            target_id,
+            f"💰 <b>ПОЛУЧЕН ПЕРЕВОД!</b>\n\n"
+            f"От: {get_display_name(user_id)}\n"
+            f"Сумма: +{amount}₽\n"
+            f"💼 Новый баланс: {target_p['balance']}₽",
+            parse_mode="HTML"
+        )
+    except:
+        pass
+
+@dp.message(Command('shopname'))
+async def shopname_cmd(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split(maxsplit=1)
+    
+    if len(args) < 2:
+        current = get_shop_name(user_id)
+        return await message.answer(
+            f"📱 <b>ТВОЙ АВИТО-АККАУНТ</b>\n\n"
+            f"Название: <b>{current}</b>\n\n"
+            f"Изменить: /shopname НовоеНазвание",
+            parse_mode="HTML"
+        )
+    
+    name = args[1]
+    success, msg = set_shop_name(user_id, name)
+    await message.answer(f"<b>{msg}</b>" if success else msg, parse_mode="HTML")
+
 @dp.message(F.photo)
 async def get_photo_links(message: types.Message):
     await message.answer(f"✅ <b>FILE ID:</b>\n<code>{message.photo[-1].file_id}</code>", parse_mode="HTML")
+
+# ==================== РЕГИСТРАЦИЯ ====================
+@dp.callback_query(F.data == "start_register")
+async def start_register(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    await state.set_state(GameState.writing_nickname)
+    await send_msg(
+        user_id,
+        "👤 <b>ШАГ 1/2: ТВОЙ НИКНЕЙМ</b>\n\n"
+        "Придумай себе имя (от 2 до 20 символов).\n"
+        "Оно будет отображаться в игре.\n\n"
+        "✍️ Напиши никнейм в чат:"
+    )
+    await callback.answer()
+
+@dp.message(StateFilter(GameState.writing_nickname))
+async def handle_nickname(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    nickname = message.text.strip()
+    
+    if len(nickname) < 2:
+        return await message.answer("❌ Минимум 2 символа! Попробуй ещё раз:")
+    if len(nickname) > 20:
+        return await message.answer("❌ Максимум 20 символов! Попробуй ещё раз:")
+    
+    success, msg = set_nickname(user_id, nickname)
+    if not success:
+        return await message.answer(f"❌ {msg} Попробуй ещё раз:")
+    
+    await state.set_state(GameState.writing_shopname)
+    await send_msg(
+        user_id,
+        f"✅ Никнейм: <b>{nickname}</b>\n\n"
+        f"📱 <b>ШАГ 2/2: НАЗВАНИЕ МАГАЗИНА</b>\n\n"
+        f"Придумай название для своего Авито-аккаунта\n"
+        f"(от 2 до 30 символов).\n\n"
+        f"✍️ Напиши название в чат:",
+        parse_mode="HTML"
+    )
+    pending_messages[user_id].append(message.message_id)
+
+@dp.message(StateFilter(GameState.writing_shopname))
+async def handle_shopname(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    shopname = message.text.strip()
+    
+    if len(shopname) < 2:
+        return await message.answer("❌ Минимум 2 символа! Попробуй ещё раз:")
+    if len(shopname) > 30:
+        return await message.answer("❌ Максимум 30 символов! Попробуй ещё раз:")
+    
+    success, msg = set_shop_name(user_id, shopname)
+    if not success:
+        return await message.answer(f"❌ {msg} Попробуй ещё раз:")
+    
+    await state.set_state(GameState.playing)
+    nick = get_nickname(user_id)
+    shop = get_shop_name(user_id)
+    skin = next((s for s in SKINS if s["id"] == get_player_skin(user_id)), SKINS[0])
+    
+    txt = (
+        f"🎉 <b>РЕГИСТРАЦИЯ ЗАВЕРШЕНА!</b>\n\n"
+        f"👤 Ник: {nick}\n"
+        f"📱 Магазин: {shop}\n"
+        f"👤 Скин: {skin['emoji']} {skin['name']}\n\n"
+        f"Теперь ты готов начать!\n"
+        f"Жми 🚀 НАЧАТЬ ИГРУ!"
+    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 НАЧАТЬ ИГРУ", callback_data="start_new_game")],
+        [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    pending_messages[user_id].append(message.message_id)
 
 # ==================== ЧАТ С ПОКУПАТЕЛЯМИ ====================
 @dp.message(StateFilter(GameState.playing))
@@ -1172,12 +1439,12 @@ async def show_skins_menu(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "skins_paid")
 async def show_skins_paid(callback: CallbackQuery, page: int = 0):
-    paid_skins = [s for s in SKINS if s["rep_required"] == 0 and s["price"] > 0 and not s.get("limited")]
+    paid_skins = [s for s in SKINS if s.get("sales_required", 0) == 0 and s["price"] > 0 and not s.get("limited")]
     await show_skins_catalog(callback, page, paid_skins, "💰 ПЛАТНЫЕ СКИНЫ")
 
 @dp.callback_query(F.data == "skins_free")
 async def show_skins_free(callback: CallbackQuery, page: int = 0):
-    free_skins = [s for s in SKINS if (s["rep_required"] > 0 or s["price"] == 0) and not s.get("limited")]
+    free_skins = [s for s in SKINS if (s.get("sales_required", 0) > 0 or s["price"] == 0) and not s.get("limited")]
     await show_skins_catalog(callback, page, free_skins, "🏆 ЗА ДОСТИЖЕНИЯ")
 
 async def show_skins_catalog(callback: CallbackQuery, page: int, skin_list: list, title: str):
@@ -2132,10 +2399,31 @@ async def restart_yes(callback: CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == "action_stats", StateFilter(GameState.playing))
 async def show_stats(callback: CallbackQuery):
-    p = get_player(callback.from_user.id)
-    house = next((h for h in HOUSES if h["id"] == get_player_house(callback.from_user.id)), HOUSES[0])
-    shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(callback.from_user.id)["level"]), SHOP_LEVELS[0])
-    await send_msg(callback.from_user.id, f"📊 <b>СТАТИСТИКА</b>\n💰 Баланс: {p['balance']}₽\n📦 Товаров: {len(p['inventory'])}\n📅 День: {p['day']}\n📋 Продано: {p['items_sold']}\n💸 Прибыль: {p['total_earned']}₽\n🛒 Потрачено: {p['total_spent']}₽\n🏠 Жильё: {house['name']}\n🏪 Магазин: {shop['name']}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    house = next((h for h in HOUSES if h["id"] == get_player_house(user_id)), HOUSES[0])
+    shop = next((s for s in SHOP_LEVELS if s["id"] == get_player_shop(user_id)["level"]), SHOP_LEVELS[0])
+    shop_name = get_shop_name(user_id)
+    rating = get_avito_rating(user_id)
+    display_name = get_display_name(user_id)
+    
+    txt = (
+        f"📊 <b>СТАТИСТИКА</b>\n\n"
+        f"👤 Имя: {display_name}\n"
+        f"📱 Магазин: {shop_name}\n"
+        f"⭐ Рейтинг: {rating}\n"
+        f"💰 Баланс: {p['balance']}₽\n"
+        f"📦 Товаров: {len(p['inventory'])}\n"
+        f"📅 День: {p['day']}\n"
+        f"📋 Продано: {p['items_sold']}\n"
+        f"💸 Прибыль: {p['total_earned']}₽\n"
+        f"🛒 Потрачено: {p['total_spent']}₽\n"
+        f"🏠 Жильё: {house['name']}\n"
+        f"🏪 Магазин: {shop['name']}"
+    )
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]
+    ]))
     try: await callback.message.delete()
     except: pass
 
@@ -2207,10 +2495,23 @@ async def show_demand(callback: CallbackQuery):
 @dp.callback_query(F.data == "action_rep_menu")
 async def rep_menu_callback(callback: CallbackQuery):
     u = get_rep(callback.from_user.id)
-    lvl = rep_level(u['score'])
-    bar = "█" * int((u['score']+100)/200*10) + "░" * (10-int((u['score']+100)/200*10))
-    txt = f"🏅 <b>РЕПУТАЦИЯ: {lvl}</b>\n📊 [{bar}] {u['score']}/100\n\n📦 Всего продаж: {u['total_sales']}\n💰 Общая прибыль: {u['total_profit']}₽\n\n<i>Повышай репутацию — получай скины!</i>"
-    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")], [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")]]))
+    lvl = get_rep_level(callback.from_user.id)
+    rating = get_avito_rating(callback.from_user.id)
+    
+    txt = (
+        f"⭐ <b>РЕПУТАЦИЯ АВИТО</b>\n\n"
+        f"Уровень: <b>{lvl}</b>\n"
+        f"Рейтинг: {rating}\n"
+        f"📦 Продаж: {u['total_sales']}\n"
+        f"💰 Прибыль: {u['total_profit']}₽\n\n"
+        f"<i>Продавай больше — получай скины!\n"
+        f"5 продаж → Темщик\n"
+        f"15 продаж → Мажор</i>"
+    )
+    await send_msg(callback.from_user.id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="👤 СКИНЫ", callback_data="action_skins")],
+        [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
+    ]))
     try: await callback.message.delete()
     except: pass
 
