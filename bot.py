@@ -2170,22 +2170,25 @@ async def show_cars_catalog(callback: CallbackQuery, page: int = 0):
     
     car = CARS[page]
     owned = car["id"] in collection
+    is_current = current_car_id == car["id"]
     rc = RARITY_COLORS.get(car["rarity"], "⬜")
     
     txt = f"🛒 <b>АВТОСАЛОН</b>\n📄 {page+1}/{len(CARS)}\n\n{car['name']}\n{rc} {car['rarity'].upper()}\n⚡ Ускорение: {car['speed_bonus']}%\n💰 Доход: {car['income_per_hour']}₽/час\n"
     
-    if owned: 
-        txt += "\n✅ <b>КУПЛЕНО</b>"
-        if current_car_id == car["id"]: 
-            txt += "\n🚗 Это твоя текущая машина"
-        act = None
+    act = None
+    
+    if is_current: 
+        txt += "\n✅ <b>ТВОЯ ТЕКУЩАЯ МАШИНА</b>"
+    elif owned:
+        txt += "\n✅ <b>КУПЛЕНО</b> (в гараже)"
+        if p["balance"] >= car["price"]:
+            act = InlineKeyboardButton(text="🛒 КУПИТЬ ЕЩЁ", callback_data=f"buy_car_{car['id']}")
     elif p["balance"] >= car["price"]: 
         txt += f"\n💰 Цена: {car['price']:,}₽".replace(",", " ")
         act = InlineKeyboardButton(text="🛒 КУПИТЬ", callback_data=f"buy_car_{car['id']}")
     else: 
         shortage = car['price'] - p['balance']
         txt += f"\n❌ Нужно {car['price']:,}₽ (не хватает {shortage:,}₽)".replace(",", " ")
-        act = None
     
     txt += f"\n\n💼 Баланс: {p['balance']:,}₽".replace(",", " ")
     
@@ -2196,7 +2199,7 @@ async def show_cars_catalog(callback: CallbackQuery, page: int = 0):
     kb = []
     if nav: kb.append(nav)
     if act: kb.append([act])
-    if owned and current_car_id != car["id"]:
+    if owned and not is_current:
         kb.append([InlineKeyboardButton(text="🚗 СДЕЛАТЬ ТЕКУЩЕЙ", callback_data=f"set_car_{car['id']}")])
     kb.append([InlineKeyboardButton(text="🔙 В БИЗНЕС", callback_data="action_business")])
     
