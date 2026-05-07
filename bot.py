@@ -687,11 +687,21 @@ def add_car_to_taxopark(user_id, car_id):
     level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
     if level["slots"] == 0: return False, "Купи таксопарк сначала!"
     if len(park["cars"]) >= level["slots"]: return False, f"Нет мест! Максимум {level['slots']} авто."
-    if car_id in park["cars"]: return False, "Уже в таксопарке!"
-    if car_id not in get_car_collection(user_id): return False, "Сначала купи эту машину!"
+    
+    # Проверяем что машина есть в гараже и не вся коллекция уже в таксопарке
+    collection = get_car_collection(user_id)
+    # Считаем сколько таких машин у игрока всего
+    total_owned = collection.count(car_id)
+    # Считаем сколько уже в таксопарке
+    in_park = park["cars"].count(car_id)
+    
+    if in_park >= total_owned:
+        return False, "Купи ещё такую машину в автосалоне!"
+    
     if level["id"] == "elite":
         car = next((c for c in CARS if c["id"] == car_id), None)
         if car and car["price"] < 500000: return False, "Элитный таксопарк — только премиум-авто (от 500 000₽)!"
+    
     park["cars"].append(car_id)
     save_json(TAXOPARK_FILE, player_taxopark)
     return True, "✅ Машина в таксопарке!"
@@ -2336,9 +2346,12 @@ async def show_garage(callback: CallbackQuery, page: int = 0):
     # Добавить в таксопарк (если таксопарк куплен и есть места)
     park = get_player_taxopark(user_id)
     park_level = next((l for l in TAXOPARK_LEVELS if l["id"] == park["level"]), TAXOPARK_LEVELS[0])
-    if park_level["slots"] > 0 and len(park["cars"]) < park_level["slots"] and car_id not in park["cars"]:
-        if park_level["id"] != "elite" or car["price"] >= 500000:
-            kb.append([InlineKeyboardButton(text="🚕 В ТАКСОПАРК", callback_data=f"garage_to_taxopark_{car_id}")])
+        if park_level["slots"] > 0 and len(park["cars"]) < park_level["slots"]:
+        total_owned = collection.count(car_id)
+        in_park = park["cars"].count(car_id)
+        if in_park < total_owned:
+            if park_level["id"] != "elite" or car["price"] >= 500000:
+                kb.append([InlineKeyboardButton(text="🚕 В ТАКСОПАРК", callback_data=f"garage_to_taxopark_{car_id}")])
     
     kb.append([InlineKeyboardButton(text="🔙 В АВТОМЕНЮ", callback_data="action_cars")])
     
@@ -2431,7 +2444,10 @@ async def show_taxopark(callback: CallbackQuery):
     
     if level["slots"] > 0 and len(park["cars"]) < level["slots"]:
         collection = get_car_collection(user_id)
-        available = [c for c in collection if c not in park["cars"]]
+        available = []
+        for c in set(collection):
+            if park["cars"].count(c) < collection.count(c):
+                available.append(c)
         if level["id"] == "elite":
             available = [c for c in available if next((car for car in CARS if car["id"] == c), {}).get("price", 0) >= 500000]
         if available:
