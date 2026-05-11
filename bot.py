@@ -554,6 +554,11 @@ def update_avito_rep(user_id):
         rep["rating"] = min(100, 75 + (sales - 50) * 0.5)
     save_json(REPUTATION_FILE, rep_data)
 
+def add_rep(user_id, amount):
+    rep = get_rep(user_id)
+    rep["score"] = max(-100, min(100, rep["score"] + amount))
+    save_json(REPUTATION_FILE, rep_data)
+
 # ==================== СКИНЫ ====================
 def get_player_skin(user_id):
     uid = str(user_id)
@@ -1758,14 +1763,14 @@ async def show_skins_catalog(callback: CallbackQuery, page: int, skin_list: list
         return await send_msg(user_id, "В этой категории пока нет скинов.")
     
     skin = skin_list[page]; owned = get_player_skin(user_id) == skin["id"]
-    p = get_player(user_id); rep_score = get_rep(user_id)["score"]
+    p = get_player(user_id); rep = get_rep(user_id); rep_score = rep["total_sales"]
     rc = RARITY_COLORS.get(skin["rarity"], "⬜")
     
     txt = f"👤 <b>{title}</b>\n📄 {page+1}/{len(skin_list)}\n\n{skin['emoji']} <b>{skin['name']}</b>\n{rc} {skin['rarity'].upper()}\n📝 {skin['description']}\n"
     
     if owned: txt += "\n✅ <b>НАДЕТ</b>"; act = None
-    elif skin["rep_required"] > 0:
-        if rep_score >= skin["rep_required"]: txt += "\n🎁 <b>ДОСТУПЕН!</b>"; act = InlineKeyboardButton(text="🎁 ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}")
+    elif skin.get("sales_required", 0) > 0:
+    if rep["total_sales"] >= skin.get("sales_required", 0): txt += "\n🎁 <b>ДОСТУПЕН!</b>"; act = InlineKeyboardButton(text="🎁 ПОЛУЧИТЬ", callback_data=f"buy_skin_{skin['id']}")
         else: txt += f"\n🔒 Нужно {skin['rep_required']} реп. (у тебя {rep_score})"; act = None
     else:
         if skin.get("limited"):
@@ -1886,7 +1891,7 @@ async def buy_skin_btn(callback: CallbackQuery):
     user_id = callback.from_user.id; skin_id = callback.data.replace("buy_skin_", "")
     skin = next((s for s in SKINS if s["id"] == skin_id), None)
     if not skin: return await callback.answer("Не найден")
-    if skin["rep_required"] > 0 and get_rep(user_id)["score"] < skin["rep_required"]: return await callback.answer(f"Нужно {skin['rep_required']} реп.!")
+    if skin.get("sales_required", 0) > 0 and get_rep(user_id)["total_sales"] < skin.get("sales_required", 0): return await callback.answer(f"Нужно {skin['rep_required']} реп.!")
     success, msg = buy_skin(user_id, skin_id)
     if success: await callback.answer(msg); await show_skins_menu(callback)
     else: await callback.answer(msg, show_alert=True)
