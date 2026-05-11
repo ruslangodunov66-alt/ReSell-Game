@@ -26,6 +26,7 @@ ADMIN_ID = 1475910449  # ← ЗАМЕНИ НА СВОЙ TELEGRAM ID (узнат�
 client_openai = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
 # ==================== ФАЙЛЫ ====================
+RACE_FILE = "races.json"
 TRADING_FILE = "trading_data.json"
 FRIENDS_FILE = "friends.json"
 REPUTATION_FILE = "reputation_data.json"
@@ -321,8 +322,10 @@ class GameState(StatesGroup):
     writing_description = State()
     writing_nickname = State()
     writing_shopname = State()
+    racing = State()
 
 # ==================== ХРАНИЛИЩА ====================
+active_races = {}  # {race_id: {creator, opponent, creator_car, opponent_car, bet, phase, creator_score, opponent_score, status}}
 trading_data = {}  # {user_id: {"portfolio": {"категория": amount}, "invested": 0, "last_update": timestamp}}
 friends_data = {}  # {user_id: [friend_id1, friend_id2, ...]}
 players = {}
@@ -804,6 +807,87 @@ def sell_trading_item(user_id, category, amount):
     return True, f"✅ Продано {amount} ед. за {total}₽"
 
 init_trading()
+
+# ==================== ГОНКИ ====================
+def get_car_stats(car_id):
+    """Возвращает характеристики машины для гонки"""
+    car = next((c for c in CARS if c["id"] == car_id), None)
+    if not car:
+        return {"speed": 50, "handling": 50, "accel": 50}
+    return {
+        "speed": car.get("speed_bonus", 50),
+        "handling": min(100, car.get("speed_bonus", 50) + random.randint(-10, 10)),
+        "accel": min(100, car.get("speed_bonus", 50) + random.randint(-5, 15))
+    }
+
+def calculate_race_score(car_id, action, phase):
+    """Считает очки за фазу гонки"""
+    stats = get_car_stats(car_id)
+    base = stats["speed"] * 0.4 + stats["accel"] * 0.3 + stats["handling"] * 0.3
+    luck = random.randint(-15, 15)
+    
+    if action == "boost":
+        base *= 1.3
+        if random.random() < 0.2:  # 20% шанс поломки
+            base *= 0.5
+            return int(base + luck), "⚠️ Двигатель перегрет!"
+    elif action == "nitro":
+        base *= 1.5
+        return int(base + luck), "🔥 НИТРО! +50%"
+    else:  # normal
+        base *= 1.1
+        return int(base + luck), "🛡 Ровный ход"
+    
+    return int(base + luck), "✅"
+
+def create_race(creator_id, car_id, bet):
+    p = get_player(creator_id)
+    if p["balance"] < bet:
+        return None, "Недостаточно денег!"
+    if bet < 5000:
+        return None, "Минимальная ставка: 5 000₽"
+    if car_id not in get_car_collection(creator_id):
+        return None, "Этой машины нет в гараже!"
+    
+    p["balance"] -= bet
+    race_id = f"race_{int(time_module.time()) % 100000:05d}"
+    active_races[race_id] = {
+        "creator": creator_id,
+        "opponent": None,
+        "creator_car": car_id,
+        "opponent_car": None,
+        "bet": bet,
+        "phase": 0,
+        "creator_score": 0,
+        "opponent_score": 0,
+        "creator_actions": [],
+        "opponent_actions": [],
+        "prize_pool": bet * 2,
+        "status": "waiting_opponent"
+    }
+    save_json(RACE_FILE, active_races)
+    return race_id, "🏎 Гонка создана!"
+
+def join_race(race_id, opponent_id, car_id):
+    if race_id not in active_races:
+        return False, "Гонка не найдена!"
+    race = active_races[race_id]
+    if race["creator"] == opponent_id:
+        return False, "Нельзя гонять с собой!"
+    if car_id not in get_car_collection(opponent_id):
+        return False, "Этой машины нет в гараже!"
+    
+    p = get_player(opponent_id)
+    if p["balance"] < race["bet"]:
+        return False, "Недостаточно денег!"
+    
+    p["balance"] -= race["bet"]
+    race["opponent"] = opponent_id
+    race["opponent_car"] = car_id
+    race["status"] = "phase_1"
+    race["prize_pool"] = race["bet"] * 2
+    save_json(RACE_FILE, active_races)
+    return True, "🏎 Ты в гонке!"
 
 # ==================== АВТОМОБИЛИ ====================
 def get_player_car(user_id):
@@ -2098,11 +2182,15 @@ async def show_minigames(callback: CallbackQuery):
         f"<b>📊 ТРЕЙДИНГ</b>\n"
         f"💵 Покупай и продавай товары\n"
         f"📈 Следи за рынком и зарабатывай\n\n"
+        f"<b>🏎 ГОНКИ</b>\n"
+        f"⚡ Гоняй с друзьями на своих машинах\n"
+        f"🏆 Победитель забирает банк\n\n"
         f"💼 Твой баланс: {p['balance']}₽"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📦 РАЗОБРАТЬ ПОСТАВКУ (10 000₽)", callback_data="action_supply")],
         [InlineKeyboardButton(text="📊 ТРЕЙДИНГ", callback_data="action_trading")],
+        [InlineKeyboardButton(text="🏎 ГОНКИ", callback_data="action_race")],
         [InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")],
     ])
     await send_msg(user_id, txt, reply_markup=kb)
@@ -2687,6 +2775,300 @@ async def trade_confirm_sell(callback: CallbackQuery):
     success, msg = sell_trading_item(user_id, category, amount)
     await callback.answer(msg)
     await show_trading(callback)
+
+# ==================== ГОНКИ (ОБРАБОТЧИКИ) ====================
+@dp.callback_query(F.data == "action_race", StateFilter(GameState.playing))
+async def race_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    p = get_player(user_id)
+    current_car = get_player_car(user_id)
+    
+    # Показываем активные гонки
+    txt = "🏎 <b>ГОНКИ</b>\n\n"
+    txt += "<b>Твои гонки:</b>\n"
+    
+    my_races = [r for r_id, r in active_races.items() 
+                if (r["creator"] == user_id or r["opponent"] == user_id) and r["status"] != "finished"]
+    
+    if my_races:
+        for r in my_races:
+            c_car = next((c for c in CARS if c["id"] == r["creator_car"]), {"name": "?"})
+            txt += f"🏎 {c_car['name']} | Ставка: {r['bet']}₽ | {r['status']}\n"
+    
+    # Открытые гонки
+    open_races = [r for r_id, r in active_races.items() 
+                  if r["status"] == "waiting_opponent" and r["creator"] != user_id]
+    
+    if open_races:
+        txt += f"\n<b>Открытые гонки ({len(open_races)}):</b>\n"
+    
+    kb = []
+    kb.append([InlineKeyboardButton(text="🏎 СОЗДАТЬ ГОНКУ", callback_data="race_create")])
+    
+    if open_races:
+        for r_id, r in list(open_races)[:3]:
+            creator_name = get_display_name(r["creator"])
+            c_car = next((c for c in CARS if c["id"] == r["creator_car"]), {"name": "?"})
+            kb.append([InlineKeyboardButton(
+                text=f"🏎 {creator_name} | {c_car['name']} | {r['bet']}₽",
+                callback_data=f"race_join_{r_id}"
+            )])
+    
+    kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try: await callback.message.delete()
+    except: pass
+
+@dp.callback_query(F.data == "race_create", StateFilter(GameState.playing))
+async def race_create_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    collection = get_car_collection(user_id)
+    
+    if not collection:
+        return await callback.answer("Нет машин в гараже!")
+    
+    txt = "🏎 <b>ВЫБЕРИ МАШИНУ ДЛЯ ГОНКИ:</b>\n\n"
+    kb = []
+    for car_id in collection:
+        car = next((c for c in CARS if c["id"] == car_id), None)
+        if car:
+            txt += f"• {car['name']} (⚡{car['speed_bonus']}%)\n"
+            kb.append([InlineKeyboardButton(
+                text=f"🏎 {car['name']} — ставка 5 000₽",
+                callback_data=f"race_start_{car_id}_5000"
+            )])
+            kb.append([InlineKeyboardButton(
+                text=f"🏎 {car['name']} — ставка 25 000₽",
+                callback_data=f"race_start_{car_id}_25000"
+            )])
+    
+    kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_race")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("race_start_"), StateFilter(GameState.playing))
+async def race_start(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    parts = callback.data.split("_")
+    car_id = parts[2]
+    bet = int(parts[3])
+    
+    race_id, msg = create_race(user_id, car_id, bet)
+    if not race_id:
+        return await callback.answer(msg, show_alert=True)
+    
+    car = next((c for c in CARS if c["id"] == car_id), {"name": "?"})
+    
+    txt = (
+        f"🏎 <b>ГОНКА СОЗДАНА!</b>\n\n"
+        f"Машина: {car['name']}\n"
+        f"Ставка: {bet}₽\n"
+        f"ID гонки: <code>{race_id}</code>\n\n"
+        f"Отправь другу:\n"
+        f"<code>/race join {race_id}</code>\n\n"
+        f"Или жди соперника!"
+    )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 К ГОНКАМ", callback_data="action_race")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("race_join_"), StateFilter(GameState.playing))
+async def race_join_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    race_id = callback.data.replace("race_join_", "")
+    collection = get_car_collection(user_id)
+    
+    if not collection:
+        return await callback.answer("Нет машин в гараже!")
+    
+    txt = "🏎 <b>ВЫБЕРИ МАШИНУ ДЛЯ ГОНКИ:</b>\n\n"
+    kb = []
+    for car_id in collection:
+        car = next((c for c in CARS if c["id"] == car_id), None)
+        if car:
+            txt += f"• {car['name']} (⚡{car['speed_bonus']}%)\n"
+            kb.append([InlineKeyboardButton(
+                text=f"🏎 {car['name']}",
+                callback_data=f"race_confirm_{race_id}_{car_id}"
+            )])
+    
+    kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_race")])
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("race_confirm_"), StateFilter(GameState.playing))
+async def race_confirm(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    parts = callback.data.split("_")
+    race_id = parts[2]
+    car_id = parts[3]
+    
+    success, msg = join_race(race_id, user_id, car_id)
+    if not success:
+        return await callback.answer(msg, show_alert=True)
+    
+    # Запускаем первую фазу гонки
+    await start_race_phase(race_id)
+    await callback.answer("🏎 ГОНКА НАЧАЛАСЬ!")
+    await show_race_phase(race_id, user_id)
+
+async def start_race_phase(race_id):
+    race = active_races[race_id]
+    race["phase"] = 1
+
+async def show_race_phase(race_id, user_id):
+    race = active_races[race_id]
+    phase = race["phase"]
+    car_id = race["creator_car"] if user_id == race["creator"] else race["opponent_car"]
+    car = next((c for c in CARS if c["id"] == car_id), {"name": "?", "speed_bonus": 50})
+    
+    txt = (
+        f"🏎 <b>ГОНКА — ФАЗА {phase}/3</b>\n\n"
+        f"Твоя машина: {car['name']}\n"
+        f"⚡ Скорость: {car['speed_bonus']}%\n"
+        f"📊 Твои очки: {race['creator_score'] if user_id == race['creator'] else race['opponent_score']}\n\n"
+        f"<b>Выбери действие:</b>"
+    )
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 ГАЗ В ПОЛ (+30%, риск 20%)", callback_data=f"race_action_{race_id}_boost")],
+        [InlineKeyboardButton(text="🛡 РОВНЫЙ ХОД (+10%)", callback_data=f"race_action_{race_id}_normal")],
+        [InlineKeyboardButton(text="🔥 НИТРО (+50%, -5% ставки)", callback_data=f"race_action_{race_id}_nitro")],
+    ])
+    await send_msg(user_id, txt, reply_markup=kb)
+
+@dp.callback_query(F.data.startswith("race_action_"), StateFilter(GameState.playing))
+async def race_action(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    parts = callback.data.split("_")
+    race_id = parts[2]
+    action = parts[3]
+    
+    race = active_races.get(race_id)
+    if not race:
+        return await callback.answer("Гонка не найдена!")
+    
+    # Определяем игрока
+    is_creator = user_id == race["creator"]
+    car_id = race["creator_car"] if is_creator else race["opponent_car"]
+    
+    # Считаем очки
+    if action == "nitro":
+        # Комиссия за нитро
+        fee = int(race["bet"] * 0.05)
+        get_player(user_id)["balance"] -= fee
+        race["prize_pool"] += fee
+    
+    score, msg = calculate_race_score(car_id, action, race["phase"])
+    
+    if is_creator:
+        race["creator_score"] += score
+        race["creator_actions"].append(action)
+    else:
+        race["opponent_score"] += score
+        race["opponent_actions"].append(action)
+    
+    await callback.answer(f"Фаза {race['phase']}: {msg} +{score} очков!")
+    
+    # Проверяем завершение фазы
+    if race["phase"] >= 3:
+        # Финальная фаза — определяем победителя
+        await finish_race(race_id)
+        await show_race_result(race_id, user_id)
+    else:
+        race["phase"] += 1
+        save_json(RACE_FILE, active_races)
+        await show_race_phase(race_id, user_id)
+
+async def finish_race(race_id):
+    race = active_races[race_id]
+    creator_total = race["creator_score"]
+    opponent_total = race["opponent_score"]
+    
+    if creator_total > opponent_total:
+        winner_id = race["creator"]
+        loser_id = race["opponent"]
+    elif opponent_total > creator_total:
+        winner_id = race["opponent"]
+        loser_id = race["creator"]
+    else:
+        # Ничья — возврат ставок
+        get_player(race["creator"])["balance"] += race["bet"]
+        get_player(race["opponent"])["balance"] += race["bet"]
+        race["status"] = "draw"
+        save_json(RACE_FILE, active_races)
+        return
+    
+    # Победитель забирает банк
+    get_player(winner_id)["balance"] += race["prize_pool"]
+    race["status"] = "finished"
+    race["winner"] = winner_id
+    save_json(RACE_FILE, active_races)
+
+async def show_race_result(race_id, user_id):
+    race = active_races[race_id]
+    c_car = next((c for c in CARS if c["id"] == race["creator_car"]), {"name": "?"})
+    o_car = next((c for c in CARS if c["id"] == race["opponent_car"]), {"name": "?"})
+    
+    winner_name = get_display_name(race.get("winner", 0))
+    
+    txt = (
+        f"🏁 <b>ГОНКА ЗАВЕРШЕНА!</b>\n\n"
+        f"Создатель: {get_display_name(race['creator'])} — {c_car['name']}\n"
+        f"📊 Очки: {race['creator_score']}\n"
+        f"Действия: {', '.join(race['creator_actions'])}\n\n"
+        f"Соперник: {get_display_name(race['opponent'])} — {o_car['name']}\n"
+        f"📊 Очки: {race['opponent_score']}\n"
+        f"Действия: {', '.join(race['opponent_actions'])}\n\n"
+    )
+    
+    if race["status"] == "draw":
+        txt += "🤝 <b>НИЧЬЯ!</b> Ставки возвращены."
+    else:
+        txt += f"🏆 <b>ПОБЕДИТЕЛЬ: {winner_name}</b>\n💰 Выигрыш: {race['prize_pool']}₽"
+    
+    await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🏎 К ГОНКАМ", callback_data="action_race")],
+    ]))
+
+@dp.message(Command('race'))
+async def race_cmd(message: types.Message):
+    user_id = message.from_user.id
+    args = message.text.split()
+    
+    if len(args) < 2:
+        return await message.answer(
+            "🏎 <b>ГОНКИ</b>\n\n"
+            "/race — меню гонок\n"
+            "/race join ID — присоединиться к гонке\n"
+            "/race create — создать гонку",
+            parse_mode="HTML"
+        )
+    
+    if args[1] == "join" and len(args) >= 3:
+        race_id = args[2]
+        # Показываем меню выбора машины
+        collection = get_car_collection(user_id)
+        if not collection:
+            return await message.answer("❌ Нет машин в гараже!")
+        
+        txt = "🏎 <b>ВЫБЕРИ МАШИНУ:</b>\n\n"
+        kb = []
+        for car_id in collection:
+            car = next((c for c in CARS if c["id"] == car_id), None)
+            if car:
+                txt += f"• {car['name']} (⚡{car['speed_bonus']}%)\n"
+                kb.append([InlineKeyboardButton(
+                    text=f"🏎 {car['name']}",
+                    callback_data=f"race_confirm_{race_id}_{car_id}"
+                )])
+        
+        kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_race")])
+        await send_msg(user_id, txt, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    else:
+        await message.answer("Используй кнопки в меню гонок! 🏎")
 
 # ==================== ПОДРАБОТКИ ====================
 @dp.callback_query(F.data == "action_job", StateFilter(GameState.playing))
