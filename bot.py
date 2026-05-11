@@ -2819,12 +2819,12 @@ async def race_menu(callback: CallbackQuery):
     kb.append([InlineKeyboardButton(text="🏎 СОЗДАТЬ ГОНКУ", callback_data="race_create")])
     
     if open_races:
-        for r_id, r in list(open_races)[:3]:
+        for r in list(open_races)[:3]:
             creator_name = get_display_name(r["creator"])
             c_car = next((c for c in CARS if c["id"] == r["creator_car"]), {"name": "?"})
             kb.append([InlineKeyboardButton(
                 text=f"🏎 {creator_name} | {c_car['name']} | {r['bet']}₽",
-                callback_data=f"race_join_{r_id}"
+                callback_data=f"race_join_{r['race_id']}"
             )])
     
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
