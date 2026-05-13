@@ -2797,7 +2797,6 @@ async def race_menu(callback: CallbackQuery):
     p = get_player(user_id)
     current_car = get_player_car(user_id)
     
-    # Показываем активные гонки
     txt = "🏎 <b>ГОНКИ</b>\n\n"
     txt += "<b>Твои гонки:</b>\n"
     
@@ -2811,27 +2810,21 @@ async def race_menu(callback: CallbackQuery):
     else:
         txt += "Нет активных гонок\n"
     
-    # Открытые гонки
-    open_races_count = 0
-    for r_id, r in active_races.items():
-        if r["status"] == "waiting_opponent" and r["creator"] != user_id:
-            open_races_count += 1
+    txt += f"\n💼 Баланс: {p['balance']}₽"
     
-    if open_races_count > 0:
-        txt += f"\n<b>Открытые гонки ({open_races_count}):</b>\n"
-    
+    # Кнопки
     kb = []
     kb.append([InlineKeyboardButton(text="🏎 СОЗДАТЬ ГОНКУ", callback_data="race_create")])
     
-    # Кнопки для открытых гонок
+    # Открытые гонки
     for r_id, r in active_races.items():
         if r["status"] == "waiting_opponent" and r["creator"] != user_id:
             creator_name = get_display_name(r["creator"])
             c_car = next((c for c in CARS if c["id"] == r["creator_car"]), {"name": "?"})
+            print(f"BUTTON: callback=race_join_{r_id}")
             kb.append([InlineKeyboardButton(
                 text=f"🏎 {creator_name} | {c_car['name']} | {r['bet']}₽",
                 callback_data=f"race_join_{r_id}"
-    print(f"BUTTON: callback=race_join_{r_id}")
             )])
     
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
