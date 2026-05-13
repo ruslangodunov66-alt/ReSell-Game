@@ -868,7 +868,7 @@ def create_race(creator_id, car_id, bet):
         "creator_actions": [],
         "opponent_actions": [],
         "prize_pool": bet * 2,
-        "status": "waiting_opponent"
+        "status": "wait"  # ← ИСПРАВЛЕНО
     }
     save_json(RACE_FILE, active_races)
     return race_id, "🏎 Гонка создана!"
@@ -878,7 +878,7 @@ def join_race(race_id, opponent_id, car_id):
     if race_id not in active_races:
         return False, "Гонка не найдена!"
     race = active_races[race_id]
-    if race["status"] != "waiting_opponent":
+    if race["status"] != "wait":  # ← ИСПРАВЛЕНО
         return False, "Гонка уже началась!"
     if race["creator"] == opponent_id:
         return False, "Нельзя гонять с собой!"
