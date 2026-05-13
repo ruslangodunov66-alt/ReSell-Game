@@ -874,6 +874,7 @@ def create_race(creator_id, car_id, bet):
     return race_id, "🏎 Гонка создана!"
 
 def join_race(race_id, opponent_id, car_id):
+    print(f"JOIN: race_id={race_id}, active_races={list(active_races.keys())}")
     if race_id not in active_races:
         return False, "Гонка не найдена!"
     race = active_races[race_id]
@@ -2830,6 +2831,7 @@ async def race_menu(callback: CallbackQuery):
             kb.append([InlineKeyboardButton(
                 text=f"🏎 {creator_name} | {c_car['name']} | {r['bet']}₽",
                 callback_data=f"race_join_{r_id}"
+    print(f"BUTTON: callback=race_join_{r_id}")
             )])
     
     kb.append([InlineKeyboardButton(text="🏠 В МЕНЮ", callback_data="action_back")])
