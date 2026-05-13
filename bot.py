@@ -3624,6 +3624,10 @@ async def learn_btn(callback: CallbackQuery):
 # ==================== ЗАПУСК ====================
 async def main():
     print("🎮 ReSell Tycoon FULL запущен!")
+    
+    # Удаляем webhook перед polling
+    await bot.delete_webhook(drop_pending_updates=True)
+    
     await dp.start_polling(bot, skip_updates=True)
 
 if __name__ == '__main__':
