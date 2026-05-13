@@ -878,6 +878,8 @@ def join_race(race_id, opponent_id, car_id):
     if race_id not in active_races:
         return False, "Гонка не найдена!"
     race = active_races[race_id]
+    if race["status"] != "waiting_opponent":
+        return False, "Гонка уже началась!"
     if race["creator"] == opponent_id:
         return False, "Нельзя гонять с собой!"
     if car_id not in get_car_collection(opponent_id):
@@ -2818,7 +2820,7 @@ async def race_menu(callback: CallbackQuery):
     
     # Открытые гонки
     for r_id, r in active_races.items():
-        if r["status"] == "waiting_opponent" and r["creator"] != user_id:
+        if r["status"] == "wait" and r["creator"] != user_id:
             creator_name = get_display_name(r["creator"])
             c_car = next((c for c in CARS if c["id"] == r["creator_car"]), {"name": "?"})
             print(f"BUTTON: callback=race_join_{r_id}")
