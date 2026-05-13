@@ -2907,9 +2907,10 @@ async def race_join_menu(callback: CallbackQuery):
         car = next((c for c in CARS if c["id"] == car_id), None)
         if car:
             txt += f"• {car['name']} (⚡{car['speed_bonus']}%)\n"
+            # Используем | как разделитель вместо _
             kb.append([InlineKeyboardButton(
                 text=f"🏎 {car['name']}",
-                callback_data=f"race_confirm_{race_id}_{car_id}"
+                callback_data=f"race_confirm_{race_id}|{car_id}"
             )])
     
     kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_race")])
@@ -2919,15 +2920,15 @@ async def race_join_menu(callback: CallbackQuery):
 @dp.callback_query(F.data.startswith("race_confirm_"), StateFilter(GameState.playing))
 async def race_confirm(callback: CallbackQuery):
     user_id = callback.from_user.id
-    parts = callback.data.split("_")
-    race_id = parts[2]
-    car_id = parts[3]
+    data = callback.data.replace("race_confirm_", "")
+    parts = data.split("|")  # разделитель |
+    race_id = parts[0]  # "race_12345"
+    car_id = parts[1]   # "zhiguli"
     
     success, msg = join_race(race_id, user_id, car_id)
     if not success:
         return await callback.answer(msg, show_alert=True)
     
-    # Запускаем первую фазу гонки
     await start_race_phase(race_id)
     await callback.answer("🏎 ГОНКА НАЧАЛАСЬ!")
     await show_race_phase(race_id, user_id)
