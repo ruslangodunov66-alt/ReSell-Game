@@ -2921,9 +2921,9 @@ async def race_join_menu(callback: CallbackQuery):
 async def race_confirm(callback: CallbackQuery):
     user_id = callback.from_user.id
     data = callback.data.replace("race_confirm_", "")
-    parts = data.split("|")  # разделитель |
-    race_id = parts[0]  # "race_12345"
-    car_id = parts[1]   # "zhiguli"
+    parts = data.split("|")
+    race_id = parts[0]
+    car_id = parts[1]
     
     success, msg = join_race(race_id, user_id, car_id)
     if not success:
@@ -3081,7 +3081,7 @@ async def race_cmd(message: types.Message):
                 txt += f"• {car['name']} (⚡{car['speed_bonus']}%)\n"
                 kb.append([InlineKeyboardButton(
                     text=f"🏎 {car['name']}",
-                    callback_data=f"race_confirm_{race_id}_{car_id}"
+                    callback_data=f"race_confirm_{race_id}|{car_id}"
                 )])
         
         kb.append([InlineKeyboardButton(text="🔙 НАЗАД", callback_data="action_race")])
