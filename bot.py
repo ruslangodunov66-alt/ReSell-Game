@@ -369,7 +369,8 @@ def load_all():
     friends_data = load_json(FRIENDS_FILE, {})
     global shop_names
     shop_names = load_json(SHOP_NAMES_FILE, {})
-    global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark
+    global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark, active_races  # ← ДОБАВИТЬ active_races
+    
     referral_data = defaultdict(lambda: {"invited": [], "bonus_claimed": False}, load_json(REFERRAL_FILE, {}))
     rep_data = load_json(REPUTATION_FILE, {})
     learning_data = load_json(LEARNING_FILE, {})
@@ -386,6 +387,9 @@ def load_all():
     player_taxopark = load_json(TAXOPARK_FILE, {})
     global nicknames
     nicknames = load_json(NICKNAMES_FILE, {})
+    
+    global active_races  # ← ДОБАВИТЬ ЭТУ СТРОКУ
+    active_races = load_json(RACE_FILE, {})
 
 load_all()
 check_supplier_update()
