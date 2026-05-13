@@ -363,14 +363,14 @@ def save_json(filename, data):
     with open(filename, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_all():
-    global trading_data
+    global trading_data, friends_data, shop_names, referral_data, rep_data, learning_data
+    global player_houses, player_shops, player_skins, auction_data, leaderboard_data
+    global supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark
+    global nicknames, active_races
+
     trading_data = load_json(TRADING_FILE, {})
-    global friends_data
     friends_data = load_json(FRIENDS_FILE, {})
-    global shop_names
     shop_names = load_json(SHOP_NAMES_FILE, {})
-    global referral_data, rep_data, learning_data, player_houses, player_shops, player_skins, auction_data, leaderboard_data, supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark, active_races
-    
     referral_data = defaultdict(lambda: {"invited": [], "bonus_claimed": False}, load_json(REFERRAL_FILE, {}))
     rep_data = load_json(REPUTATION_FILE, {})
     learning_data = load_json(LEARNING_FILE, {})
@@ -382,14 +382,17 @@ def load_all():
     supplier_stock = load_json(SUPPLIER_ITEMS_FILE, {"items": [], "last_update": 0})
     skin_inventory = load_json(SKIN_INVENTORY_FILE, {})
     cars_data = load_json(CARS_FILE, {"player_cars": {}, "car_collection": {}})
+    player_cars.clear()
     player_cars.update(cars_data.get("player_cars", {}))
+    car_collection.clear()
     car_collection.update(cars_data.get("car_collection", {}))
     player_taxopark = load_json(TAXOPARK_FILE, {})
-    global nicknames
     nicknames = load_json(NICKNAMES_FILE, {})
-    
-    global active_races  # ← ЭТА СТРОКА ВАЖНА!
-    active_races = load_json(RACE_FILE, {})
+
+    # Принудительная загрузка гонок
+    active_races.clear()
+    active_races.update(load_json(RACE_FILE, {}))
+    print(f"[RACES] Загружено гонок: {len(active_races)}")
 
 load_all()
 check_supplier_update()
@@ -849,50 +852,60 @@ def calculate_race_score(car_id, action, phase):
     
     return int(base + luck), "✅"
 
-def create_race(creator_id, car_id, bet):
-    p = get_player(creator_id)
-    if p["balance"] < bet:
-        return None, "Недостаточно денег!"
-    if bet < 5000:
-        return None, "Минимальная ставка: 5 000₽"
-    if car_id not in get_car_collection(creator_id):
+
+def create_race(user_id, car_id, bet):
+    """Создание новой гонки"""
+    global active_races
+
+    if car_id not in get_car_collection(user_id):
         return None, "Этой машины нет в гараже!"
-    
-    p["balance"] -= bet
-    race_id = f"race_{int(time_module.time()) % 100000:05d}"
-    active_races[race_id] = {
-        "creator": creator_id,
+
+    player = get_player(user_id)
+    if player["balance"] < bet:
+        return None, "Недостаточно денег!"
+
+    player["balance"] -= bet
+
+    race_id = str(random.randint(100000, 999999))
+
+    while race_id in active_races:
+        race_id = str(random.randint(100000, 999999))
+
+    active_races[str(race_id)] = {
+        "creator": user_id,
         "opponent": None,
         "creator_car": car_id,
         "opponent_car": None,
         "bet": bet,
+        "prize_pool": bet,
         "phase": 0,
         "creator_score": 0,
         "opponent_score": 0,
-        "creator_actions": [],
-        "opponent_actions": [],
-        "prize_pool": bet * 2,
-        "status": "wait"  # ← ИСПРАВЛЕНО
+        "status": "wait",
+        "created_at": int(time_module.time())
     }
+
     save_json(RACE_FILE, active_races)
-    return race_id, "🏎 Гонка создана!"
+    return str(race_id), "🏎 Гонка создана!"
 
 def join_race(race_id, opponent_id, car_id):
-    print(f"JOIN: race_id={race_id}, active_races={list(active_races.keys())}")
+    global active_races
+    race_id = str(race_id).strip()
+    print(f"JOIN: race_id={race_id}, active_races keys={list(active_races.keys())}")
     if race_id not in active_races:
         return False, "Гонка не найдена!"
     race = active_races[race_id]
-    if race["status"] != "wait":  # ← ИСПРАВЛЕНО
+    if race["status"] != "wait":
         return False, "Гонка уже началась!"
     if race["creator"] == opponent_id:
         return False, "Нельзя гонять с собой!"
     if car_id not in get_car_collection(opponent_id):
         return False, "Этой машины нет в гараже!"
-    
+
     p = get_player(opponent_id)
     if p["balance"] < race["bet"]:
         return False, "Недостаточно денег!"
-    
+
     p["balance"] -= race["bet"]
     race["opponent"] = opponent_id
     race["opponent_car"] = car_id
@@ -3631,10 +3644,8 @@ async def learn_btn(callback: CallbackQuery):
 # ==================== ЗАПУСК ====================
 async def main():
     print("🎮 ReSell Tycoon FULL запущен!")
-    
-    # Удаляем webhook перед polling
+    print("Загруженные гонки при старте:", list(active_races.keys()))  # ← диагностика
     await bot.delete_webhook(drop_pending_updates=True)
-    
     await dp.start_polling(bot, skip_updates=True)
 
 if __name__ == '__main__':
