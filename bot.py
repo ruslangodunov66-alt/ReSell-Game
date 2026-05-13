@@ -2809,8 +2809,11 @@ async def race_menu(callback: CallbackQuery):
             txt += f"🏎 {c_car['name']} | Ставка: {r['bet']}₽ | {r['status']}\n"
     
     # Открытые гонки
-    open_races = [r for r_id, r in active_races.items() 
-                  if r["status"] == "waiting_opponent" and r["creator"] != user_id]
+    open_races = []
+    for r_id, r in active_races.items():
+        if r["status"] == "waiting_opponent" and r["creator"] != user_id:
+            r["race_id"] = r_id
+            open_races.append(r)
     
     if open_races:
         txt += f"\n<b>Открытые гонки ({len(open_races)}):</b>\n"
