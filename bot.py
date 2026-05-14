@@ -2960,6 +2960,7 @@ async def race_action(callback: CallbackQuery):
     
     score, msg = calculate_race_score(car_id, action, race["phase"])
     
+    # Записываем результат (без дублирования!)
     if is_creator:
         race["creator_score"] += score
         if "creator_actions" not in race:
@@ -2981,6 +2982,7 @@ async def race_action(callback: CallbackQuery):
         race["phase"] += 1
         save_json(RACE_FILE, active_races)
         await show_race_phase(race_id, user_id)
+
 
 async def finish_race(race_id):
     race = active_races[race_id]
@@ -3004,6 +3006,7 @@ async def finish_race(race_id):
     race["status"] = "finished"
     race["winner"] = winner_id
     save_json(RACE_FILE, active_races)
+
 
 async def show_race_result(race_id, user_id):
     race = active_races[race_id]
