@@ -853,44 +853,9 @@ def calculate_race_score(car_id, action, phase):
     return int(base + luck), "✅"
 
 
-def create_race(user_id, car_id, bet):
-    """Создание новой гонки"""
-    global active_races
-
-    if car_id not in get_car_collection(user_id):
-        return None, "Этой машины нет в гараже!"
-
-    player = get_player(user_id)
-    if player["balance"] < bet:
-        return None, "Недостаточно денег!"
-
-    player["balance"] -= bet
-
-    race_id = str(random.randint(100000, 999999))
-
-    while race_id in active_races:
-        race_id = str(random.randint(100000, 999999))
-
-    active_races[str(race_id)] = {
-        "creator": user_id,
-        "opponent": None,
-        "creator_car": car_id,
-        "opponent_car": None,
-        "bet": bet,
-        "prize_pool": bet,
-        "phase": 0,
-        "creator_score": 0,
-        "opponent_score": 0,
-        "status": "wait",
-        "created_at": int(time_module.time())
-    }
-
-    save_json(RACE_FILE, active_races)
-    return str(race_id), "🏎 Гонка создана!"
 
 def join_race(race_id, opponent_id, car_id):
     global active_races
-    race_id = str(race_id).strip()
     print(f"JOIN: race_id={race_id}, active_races keys={list(active_races.keys())}")
     if race_id not in active_races:
         return False, "Гонка не найдена!"
@@ -2981,15 +2946,14 @@ async def race_action(callback: CallbackQuery):
     
     race = active_races.get(race_id)
     if not race:
-        return await callback.answer("Гонка не найдена!")
+        return await callback.answer("Гонка не найдена!", show_alert=True)
     
-    # Определяем игрока
+    # Определяем, кто нажал
     is_creator = user_id == race["creator"]
     car_id = race["creator_car"] if is_creator else race["opponent_car"]
     
     # Считаем очки
     if action == "nitro":
-        # Комиссия за нитро
         fee = int(race["bet"] * 0.05)
         get_player(user_id)["balance"] -= fee
         race["prize_pool"] += fee
@@ -2998,16 +2962,19 @@ async def race_action(callback: CallbackQuery):
     
     if is_creator:
         race["creator_score"] += score
+        if "creator_actions" not in race:
+            race["creator_actions"] = []
         race["creator_actions"].append(action)
     else:
         race["opponent_score"] += score
+        if "opponent_actions" not in race:
+            race["opponent_actions"] = []
         race["opponent_actions"].append(action)
     
     await callback.answer(f"Фаза {race['phase']}: {msg} +{score} очков!")
     
-    # Проверяем завершение фазы
+    # Переход к следующей фазе или завершение
     if race["phase"] >= 3:
-        # Финальная фаза — определяем победителя
         await finish_race(race_id)
         await show_race_result(race_id, user_id)
     else:
@@ -3017,15 +2984,13 @@ async def race_action(callback: CallbackQuery):
 
 async def finish_race(race_id):
     race = active_races[race_id]
-    creator_total = race["creator_score"]
-    opponent_total = race["opponent_score"]
+    creator_total = race.get("creator_score", 0)
+    opponent_total = race.get("opponent_score", 0)
     
     if creator_total > opponent_total:
         winner_id = race["creator"]
-        loser_id = race["opponent"]
     elif opponent_total > creator_total:
         winner_id = race["opponent"]
-        loser_id = race["creator"]
     else:
         # Ничья — возврат ставок
         get_player(race["creator"])["balance"] += race["bet"]
@@ -3045,16 +3010,16 @@ async def show_race_result(race_id, user_id):
     c_car = next((c for c in CARS if c["id"] == race["creator_car"]), {"name": "?"})
     o_car = next((c for c in CARS if c["id"] == race["opponent_car"]), {"name": "?"})
     
-    winner_name = get_display_name(race.get("winner", 0))
+    winner_name = get_display_name(race.get("winner", 0)) if race.get("winner") else "никто"
     
     txt = (
         f"🏁 <b>ГОНКА ЗАВЕРШЕНА!</b>\n\n"
         f"Создатель: {get_display_name(race['creator'])} — {c_car['name']}\n"
-        f"📊 Очки: {race['creator_score']}\n"
-        f"Действия: {', '.join(race['creator_actions'])}\n\n"
+        f"📊 Очки: {race.get('creator_score', 0)}\n"
+        f"Действия: {', '.join(race.get('creator_actions', []))}\n\n"
         f"Соперник: {get_display_name(race['opponent'])} — {o_car['name']}\n"
-        f"📊 Очки: {race['opponent_score']}\n"
-        f"Действия: {', '.join(race['opponent_actions'])}\n\n"
+        f"📊 Очки: {race.get('opponent_score', 0)}\n"
+        f"Действия: {', '.join(race.get('opponent_actions', []))}\n\n"
     )
     
     if race["status"] == "draw":
