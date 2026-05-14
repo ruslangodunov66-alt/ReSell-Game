@@ -43,6 +43,7 @@ NICKNAMES_FILE = "nicknames.json"
 SHOP_NAMES_FILE = "shop_names.json"
 CARS_FILE = "player_cars.json"
 SUPPLIER_ITEMS_FILE = "supplier_items.json"
+PLAYERS_FILE = "players.json"
 
 SKINS = [
     # Бесплатные (за репутацию/продажи)
@@ -366,7 +367,7 @@ def load_all():
     global trading_data, friends_data, shop_names, referral_data, rep_data, learning_data
     global player_houses, player_shops, player_skins, auction_data, leaderboard_data
     global supplier_stock, skin_inventory, car_collection, player_cars, player_taxopark
-    global nicknames, active_races
+    global nicknames, active_races, players          # ← добавили players
 
     trading_data = load_json(TRADING_FILE, {})
     friends_data = load_json(FRIENDS_FILE, {})
@@ -393,6 +394,13 @@ def load_all():
     active_races.clear()
     active_races.update(load_json(RACE_FILE, {}))
     print(f"[RACES] Загружено гонок: {len(active_races)}")
+
+    # ========== НОВЫЙ БЛОК: загрузка игроков ==========
+    global players
+    players = load_json(PLAYERS_FILE, {})
+    # Конвертируем ключи из строки в int (Telegram ID – числа)
+    players = {int(k) if k.isdigit() else k: v for k, v in players.items()}
+    print(f"[PLAYERS] Загружено игроков: {len(players)}")
 
 load_all()
 check_supplier_update()
@@ -591,6 +599,7 @@ def buy_skin(user_id, skin_id):
     
     p = get_player(user_id)
     if skin["price"] > 0 and p["balance"] < skin["price"]: 
+        save_players()  # ← ДОБАВИТЬ
         return False, f"Недостаточно! Нужно {skin['price']}₽"
     if skin["price"] > 0: 
         p["balance"] -= skin["price"]
@@ -642,6 +651,7 @@ def buy_house(user_id, house_id):
     p = get_player(user_id)
     if p["balance"] < house["price"]: return False, "Недостаточно!"
     p["balance"] -= house["price"]; player_houses[str(user_id)] = house_id
+    save_players()  # ← ДОБАВИТЬ
     save_json(HOUSES_FILE, player_houses)
     return True, f"✅ {house['name']}!"
 
@@ -658,6 +668,7 @@ def buy_shop(user_id, shop_id):
     p = get_player(user_id)
     if p["balance"] < shop["price"]: return False, "Недостаточно!"
     p["balance"] -= shop["price"]
+    save_players()
     player_shops[str(user_id)]["level"] = shop_id
     save_json(SHOPS_FILE, player_shops)
     return True, f"✅ {shop['name']}!"
@@ -865,6 +876,7 @@ def create_race(creator_id, car_id, bet):
         return None, "Этой машины нет в гараже!"
     
     p["balance"] -= bet
+    save_players()  # ← ДОБАВИТЬ
     race_id = f"race_{int(time_module.time()) % 100000:05d}"
     
     active_races[race_id] = {
@@ -905,6 +917,7 @@ def join_race(race_id, opponent_id, car_id):
         return False, "Недостаточно денег!"
 
     p["balance"] -= race["bet"]
+    save_players()  # ← ДОБАВИТЬ
     race["opponent"] = opponent_id
     race["opponent_car"] = car_id
     race["status"] = "phase_1"
@@ -928,11 +941,17 @@ def get_car_bonus(user_id):
     car = next((c for c in CARS if c["id"] == get_player_car(user_id)), None)
     return car["speed_bonus"] if car else 0
 
+# ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+def update_leaderboard(user_id, profit, sales):
+    """Временная заглушка для таблицы лидеров"""
+    pass
+
 # ==================== ИГРА ====================
 def get_player(user_id):
     if user_id not in players:
         r = get_rep(user_id)
         players[user_id] = {"balance": 5000, "reputation": max(0, r["score"]), "inventory": [], "day": 1, "total_earned": 0, "total_spent": 0, "items_sold": r["total_sales"], "market_demand": {cat: 1.0 for cat in CATEGORIES}, "current_event": None, "stat_earned_today": 0, "stat_sold_today": 0}
+        save_players()  # ← ДОБАВИТЬ
     return players[user_id]
 
 def market_price(base, demand): return int(base * demand * random.uniform(0.9, 1.3))
@@ -1113,6 +1132,7 @@ async def complete_sale(user_id, buyer_id, message=None):
     profit = final - sold["buy_price"]
     p["balance"] += final; p["total_earned"] += profit; p["items_sold"] += 1
     p["stat_earned_today"] += profit
+    save_players()  # ← ДОБАВИТЬ
     add_rep(user_id, random.randint(2, 5))
     update_avito_rep(user_id)
     update_leaderboard(user_id, profit, 1)
@@ -1386,6 +1406,7 @@ async def pay_cmd(message: types.Message):
     # Перевод
     p["balance"] -= amount
     target_p["balance"] += amount
+    save_players()  # ← ДОБАВИТЬ
     
     sender_name = get_display_name(user_id)
     
@@ -2435,6 +2456,7 @@ def buy_car(user_id, car_id):
     p = get_player(user_id)
     if p["balance"] < car["price"]: return False, "Недостаточно!"
     p["balance"] -= car["price"]
+    save_players()  # ← ДОБАВИТЬ
     # Добавляем в коллекцию (можно много одинаковых)
     car_collection[uid].append(car_id)
     # Делаем текущей только если первая
@@ -2459,6 +2481,7 @@ async def buy_car_btn(callback: CallbackQuery):
         return await callback.answer(f"Недостаточно денег! Нужно {car['price']}₽", show_alert=True)
     
     p["balance"] -= car["price"]
+    save_players()  # ← ДОБАВИТЬ
     uid = str(user_id)
     if uid not in car_collection:
         car_collection[uid] = []
@@ -3000,6 +3023,7 @@ async def race_action(callback: CallbackQuery):
     if action == "nitro":
         fee = int(race["bet"] * 0.05)
         get_player(user_id)["balance"] -= fee
+        save_players()  # ← ДОБАВИТЬ
         race["prize_pool"] += fee
     
     score, msg = calculate_race_score(car_id, action, race["phase"])
@@ -3032,15 +3056,22 @@ async def finish_race(race_id):
     
     if creator_total > opponent_total:
         winner_id = race["creator"]
+        get_player(winner_id)["balance"] += race["prize_pool"]
+        save_players()  # ← ДОБАВИТЬ
     elif opponent_total > creator_total:
         winner_id = race["opponent"]
+        get_player(winner_id)["balance"] += race["prize_pool"]
+        save_players()  # ← ДОБАВИТЬ
     else:
         # Ничья — возврат ставок
         get_player(race["creator"])["balance"] += race["bet"]
         get_player(race["opponent"])["balance"] += race["bet"]
+        save_players()  # ← ДОБАВИТЬ
         race["status"] = "draw"
         save_json(RACE_FILE, active_races)
         return
+    
+    # ... остальной код
     
     # Победитель забирает банк
     get_player(winner_id)["balance"] += race["prize_pool"]
@@ -3589,6 +3620,7 @@ async def next_day(callback: CallbackQuery):
     house = next((h for h in HOUSES if h["id"] == get_player_house(user_id)), HOUSES[0])
     bonus = house["income_bonus"]; shop_income = collect_shop_income(user_id)
     p["balance"] += bonus; p["day"] += 1
+    save_players()  # ← ДОБАВИТЬ
     update_trading()
     # Обновляем спрос
     for c in CATEGORIES: p["market_demand"][c] = max(0.3, min(3.0, p["market_demand"][c] * random.uniform(0.85, 1.15)))
@@ -3650,8 +3682,15 @@ async def learn_btn(callback: CallbackQuery):
     try: await callback.message.delete()
     except: pass
 
+async def auto_save():
+    while True:
+        await asyncio.sleep(60)
+        save_players()
+        print("[AUTOSAVE] Players saved")
+
 # ==================== ЗАПУСК ====================
 async def main():
+    asyncio.create_task(auto_save())   # ← добавить
     print("🎮 ReSell Tycoon FULL запущен!")
     print("Загруженные гонки при старте:", list(active_races.keys()))  # ← диагностика
     await bot.delete_webhook(drop_pending_updates=True)
