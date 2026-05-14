@@ -852,7 +852,40 @@ def calculate_race_score(car_id, action, phase):
     
     return int(base + luck), "✅"
 
-
+def create_race(creator_id, car_id, bet):
+    """Создает новую гонку"""
+    global active_races
+    
+    p = get_player(creator_id)
+    if p["balance"] < bet:
+        return None, "Недостаточно денег!"
+    if bet < 5000:
+        return None, "Минимальная ставка: 5 000₽"
+    if car_id not in get_car_collection(creator_id):
+        return None, "Этой машины нет в гараже!"
+    
+    p["balance"] -= bet
+    race_id = f"race_{int(time_module.time()) % 100000:05d}"
+    
+    active_races[race_id] = {
+        "creator": creator_id,
+        "opponent": None,
+        "creator_car": car_id,
+        "opponent_car": None,
+        "bet": bet,
+        "phase": 0,
+        "creator_score": 0,
+        "opponent_score": 0,
+        "creator_actions": [],
+        "opponent_actions": [],
+        "prize_pool": bet * 2,
+        "status": "wait",
+        "created_at": int(time_module.time())
+    }
+    
+    save_json(RACE_FILE, active_races)
+    print(f"[RACE CREATED] {race_id}, всего гонок: {len(active_races)}")
+    return race_id, "🏎 Гонка создана!"
 
 def join_race(race_id, opponent_id, car_id):
     global active_races
