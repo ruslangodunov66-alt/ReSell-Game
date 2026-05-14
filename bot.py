@@ -878,7 +878,7 @@ def create_race(creator_id, car_id, bet):
         "opponent_score": 0,
         "creator_actions": [],
         "opponent_actions": [],
-        "prize_pool": bet * 2,
+        "prize_pool": bet,   # вместо bet * 2,
         "status": "wait",
         "created_at": int(time_module.time())
     }
@@ -908,7 +908,8 @@ def join_race(race_id, opponent_id, car_id):
     race["opponent"] = opponent_id
     race["opponent_car"] = car_id
     race["status"] = "phase_1"
-    race["prize_pool"] = race["bet"] * 2
+    race["phase"] = 1
+    race["prize_pool"] += race["bet"]   # вместо race["prize_pool"] = race["bet"] * 2
     save_json(RACE_FILE, active_races)
     return True, "🏎 Ты в гонке!"
 
@@ -2973,19 +2974,29 @@ async def show_race_phase(race_id, user_id):
 @dp.callback_query(F.data.startswith("race_action_"), StateFilter(GameState.playing))
 async def race_action(callback: CallbackQuery):
     user_id = callback.from_user.id
-    parts = callback.data.split("_")
-    race_id = parts[2]
-    action = parts[3]
+    # Формат: race_action_{race_id}_{action}
+    data = callback.data
+    prefix = "race_action_"
+    if not data.startswith(prefix):
+        return
+    suffix = data[len(prefix):]                     # убираем префикс
+    last_underscore = suffix.rfind("_")             # ищем последний _
+    if last_underscore == -1:
+        return
+    race_id = suffix[:last_underscore]              # всё, кроме последнего слова
+    action = suffix[last_underscore + 1:]           # последнее слово
+    
+    print(f"🔍 race_action: race_id='{race_id}', action='{action}', active_races.keys={list(active_races.keys())}")
     
     race = active_races.get(race_id)
     if not race:
-        return await callback.answer("Гонка не найдена!", show_alert=True)
+        await callback.answer("❌ Гонка не найдена! Возможно, она уже завершена.", show_alert=True)
+        return
     
-    # Определяем, кто нажал
+    # --- дальше код без изменений ---
     is_creator = user_id == race["creator"]
     car_id = race["creator_car"] if is_creator else race["opponent_car"]
     
-    # Считаем очки
     if action == "nitro":
         fee = int(race["bet"] * 0.05)
         get_player(user_id)["balance"] -= fee
@@ -2993,7 +3004,6 @@ async def race_action(callback: CallbackQuery):
     
     score, msg = calculate_race_score(car_id, action, race["phase"])
     
-    # Записываем результат (без дублирования!)
     if is_creator:
         race["creator_score"] += score
         if "creator_actions" not in race:
@@ -3007,7 +3017,6 @@ async def race_action(callback: CallbackQuery):
     
     await callback.answer(f"Фаза {race['phase']}: {msg} +{score} очков!")
     
-    # Переход к следующей фазе или завершение
     if race["phase"] >= 3:
         await finish_race(race_id)
         await show_race_result(race_id, user_id)
@@ -3015,7 +3024,6 @@ async def race_action(callback: CallbackQuery):
         race["phase"] += 1
         save_json(RACE_FILE, active_races)
         await show_race_phase(race_id, user_id)
-
 
 async def finish_race(race_id):
     race = active_races[race_id]
