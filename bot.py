@@ -30,6 +30,10 @@ BOT_USERNAME = 'buygame61_bot'
 ADMIN_ID = 1475910449
 DB_PATH = "game.db"
 
+def save_players():
+    """Заглушка для совместимости со старым кодом. Данные сохраняются через SQLite."""
+    pass
+
 # ==================== БАЗОВЫЕ ДАННЫЕ ====================
 CATEGORIES = ["👖 Джинсы", "👕 Худи", "🧥 Куртки", "👟 Кроссы", "🎒 Аксессуары"]
 
@@ -169,7 +173,7 @@ TRADING_ITEMS = {
     "🧢 Кепки": {"name": "Кепки", "base_price": 200, "volatility": 0.10},
 }
 
-# ==================== ГЛОБАЛЬНЫЕ ХРАНИЛИЩА (ОПЕРАТИВНАЯ ПАМЯТЬ) ====================
+# ==================== ГЛОБАЛЬНЫЕ ХРАНИЛИЩА ====================
 active_races = {}
 active_chats = {}
 published_items = {}
@@ -182,12 +186,7 @@ side_jobs = {}
 last_bot_message = {}
 pending_messages = defaultdict(list)
 
-def save_players():
-    """Заглушка для совместимости со старым кодом. Данные сохраняются через SQLite."""
-    pass
-
 async def send_msg(user_id, text, parse_mode="HTML", reply_markup=None):
-    """Отправляет сообщение и сохраняет его ID"""
     msg = await bot.send_message(user_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
     last_bot_message[user_id] = msg.message_id
     return msg
@@ -199,7 +198,7 @@ class PlayerAction(BaseModel):
     action: str
     data: Dict[str, Any] = {}
 
-# ==================== БАЗА ДАННЫХ SQLITE (ФУНКЦИИ) ====================
+# ==================== БАЗА ДАННЫХ SQLITE ====================
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -275,7 +274,7 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
-# ==================== ФУНКЦИИ РАБОТЫ С БАЗОЙ ДАННЫХ ====================
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -651,16 +650,15 @@ async def finish_job_async(player_id: int, job_idx: int):
         if player:
             reward = JOBS[job_idx]["reward"]
             update_player_data(player_id, {"balance": player.get("balance", 0) + reward})
-# ==================== FASTAPI ЭНДПОИНТЫ (СЕРВЕРНАЯ ЧАСТЬ) ====================
+
+# ==================== FASTAPI ЭНДПОИНТЫ ====================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup
     init_db()
     generate_supplier_items()
     init_trading()
     asyncio.create_task(update_trading_loop())
     yield
-    # shutdown (при необходимости)
 
 app = FastAPI(title="Resell Tycoon API", lifespan=lifespan)
 
@@ -1280,13 +1278,17 @@ async def handle_action(action: PlayerAction):
                 "message": f"📦 Поставка разобрана! Найдено {len(drop['found'])} вещей."
             }
         else:
+            if found_item:
+                msg_part = f"Найдено: {found_item['name']}!"
+            else:
+                msg_part = "Ничего..."
             return {
                 "success": True,
                 "finished": False,
                 "remaining": remaining,
                 "found_item": found_item,
                 "found_count": len(drop["found"]),
-                "message": f"🔍 Клик {drop['clicks']}/10. {f'Найдено: {found_item["name"]}!' if found_item else 'Ничего...'}"
+                "message": f"🔍 Клик {drop['clicks']}/10. {msg_part}"
             }
     
     # ---------- ОБУЧЕНИЕ ----------
@@ -1558,34 +1560,27 @@ async def handle_action(action: PlayerAction):
         new_player_id = action.data.get("new_player_id")
         if not inviter_id or not new_player_id:
             return {"success": False, "message": "Ошибка параметров"}
-        
-        # Добавляем нового игрока в список приглашенных у инвайтера
         ref_data = get_referral_data(inviter_id)
         invited = ref_data.get("invited", [])
         if new_player_id not in invited:
             invited.append(new_player_id)
             update_referral_data(inviter_id, {"invited": invited, "bonus_claimed": False})
-            
-            # Начисляем бонус пригласившему 10 000₽
             inviter = get_player_data(inviter_id)
             if inviter:
                 update_player_data(inviter_id, {"balance": inviter.get("balance", 0) + 10000})
-            
-            # Начисляем бонус новому игроку 5 000₽
             new_player = get_player_data(new_player_id)
             if new_player:
                 update_player_data(new_player_id, {"balance": new_player.get("balance", 0) + 5000})
-            
             return {"success": True, "message": "Реферал добавлен, бонусы начислены"}
         return {"success": False, "message": "Уже приглашен"}
 
     else:
         return {"success": False, "message": f"Неизвестное действие: {action.action}"}
-# ==================== TELEGRAM БОТ (КЛИЕНТСКАЯ ЧАСТЬ) ====================
+
+# ==================== TELEGRAM БОТ ====================
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# ---------- FSM СОСТОЯНИЯ ----------
 class Form(StatesGroup):
     waiting_for_description = State()
     waiting_for_auction_price = State()
@@ -1595,7 +1590,6 @@ class Form(StatesGroup):
     waiting_for_transfer_amount = State()
     waiting_for_transfer_nickname = State()
 
-# ---------- КЛАВИАТУРЫ ----------
 def make_main_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🏭 ЗАКУП", callback_data="buy_menu"), InlineKeyboardButton(text="📦 ИНВЕНТАРЬ", callback_data="inventory_menu")],
@@ -1610,39 +1604,25 @@ def make_main_kb():
         [InlineKeyboardButton(text="💸 ПЕРЕВОД", callback_data="transfer_menu"), InlineKeyboardButton(text="🏠 МЕНЮ", callback_data="back_to_menu")],
     ])
 
-# ---------- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ ВЫЗОВА API ИЗ БОТА ----------
 async def api_call(user_id: int, action: str, data: dict = None) -> dict:
-    """Упрощённый вызов API (использует тот же lifespan, вызывает handle_action напрямую)"""
-    # В unified версии мы можем вызывать handle_action как функцию, минуя HTTP
-    # Но проще создать временный объект PlayerAction и вызвать handle_action
-    from fastapi import Request
     req_action = PlayerAction(platform="tg", platform_id=user_id, action=action, data=data or {})
-    # Эмулируем вызов эндпоинта
-    result = await handle_action(req_action)
-    return result
+    return await handle_action(req_action)
 
-# ---------- ОБРАБОТЧИКИ КОМАНД ----------
 @dp.message(Command('start'))
 async def start_cmd(message: Message):
     user_id = message.from_user.id
     args = message.text.split()
-    
-    # Обработка реферального кода
     if len(args) > 1 and args[1].startswith("ref_"):
         ref_code = args[1][4:]
         try:
             inviter_id = int(ref_code)
             if inviter_id != user_id:
-                # Проверяем, существует ли уже игрок (через вызов get_stats)
                 check = await api_call(user_id, "get_stats")
                 if not check.get("success") or check.get("stats", {}).get("balance", 0) == 5000:
-                    # Новый игрок – добавляем реферала и бонусы
                     await api_call(user_id, "add_referral", {"inviter_id": inviter_id, "new_player_id": user_id})
                     await message.answer("🎁 Вы перешли по реферальной ссылке! Получено +5 000₽")
         except:
             pass
-    
-    # Далее стандартное получение статистики и вывод меню
     result = await api_call(user_id, "get_stats")
     if result.get("success"):
         s = result.get("stats", {})
@@ -1713,7 +1693,6 @@ async def pay_command(message: Message, state: FSMContext):
     else:
         await message.answer(f"❌ {r.get('message', 'Ошибка')}")
 
-# ---------- ОБРАБОТЧИКИ CALLBACK (МЕНЮ) ----------
 @dp.callback_query(lambda c: c.data == "back_to_menu")
 async def back_to_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -1774,7 +1753,6 @@ async def next_day_callback(callback: CallbackQuery):
     else:
         await callback.answer(r.get("message", "Ошибка"), show_alert=True)
 
-# ---------- ЗАКУПКА ----------
 @dp.callback_query(lambda c: c.data == "buy_menu")
 async def buy_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -1810,7 +1788,6 @@ async def buy_item_callback(callback: CallbackQuery):
     else:
         await callback.answer(r.get("message", "Ошибка"), show_alert=True)
 
-# ---------- ИНВЕНТАРЬ ----------
 @dp.callback_query(lambda c: c.data == "inventory_menu")
 async def inventory_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -1855,7 +1832,6 @@ async def handle_description(message: Message, state: FSMContext):
         await message.answer(f"❌ {r.get('message', 'Ошибка')}")
     await state.clear()
 
-# ---------- ЧАТЫ С ПОКУПАТЕЛЯМИ ----------
 @dp.callback_query(lambda c: c.data == "chats_menu")
 async def chats_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -1916,7 +1892,6 @@ async def handle_chat_message(message: Message, state: FSMContext):
         if "завершён" in r.get("message", ""):
             await state.update_data(current_buyer_id=None)
 
-# ---------- АВТОМОБИЛИ ----------
 @dp.callback_query(lambda c: c.data == "cars_menu")
 async def cars_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -1938,7 +1913,6 @@ async def cars_menu_callback(callback: CallbackQuery):
     owned = car["id"] in collection.get("cars", []) if collection.get("success") else []
     current_car = await api_call(user_id, "get_current_car")
     is_current = current_car.get("car_id") == car["id"] if current_car.get("success") else False
-    
     txt = f"🛒 <b>АВТОСАЛОН</b>\n📄 {page+1}/{total}\n\n{car['name']}\n⭐ {car['rarity'].upper()}\n⚡ Ускорение: {car['speed_bonus']}%\n💰 Доход: {car['income_per_hour']}₽/час\n"
     if is_current:
         txt += "\n✅ <b>ТВОЯ ТЕКУЩАЯ МАШИНА</b>"
@@ -1953,7 +1927,6 @@ async def cars_menu_callback(callback: CallbackQuery):
         txt += f"\n❌ Нужно {car['price']:,}₽ (не хватает {car['price'] - balance:,}₽)"
         act = None
     txt += f"\n\n💼 Баланс: {balance:,}₽"
-    
     nav = []
     if page > 0:
         nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"car_page_{page-1}"))
@@ -1966,7 +1939,6 @@ async def cars_menu_callback(callback: CallbackQuery):
         kb.append([act])
     kb.append([InlineKeyboardButton(text="🏠 МОЙ ГАРАЖ", callback_data="garage_menu")])
     kb.append([InlineKeyboardButton(text="🔙 В МЕНЮ", callback_data="back_to_menu")])
-    
     if car.get("image_url"):
         try:
             await callback.message.delete()
@@ -2012,38 +1984,26 @@ async def garage_menu_callback(callback: CallbackQuery):
         ]))
         await callback.answer()
         return
-    
-    # Пагинация
     if not hasattr(garage_menu_callback, "page"):
         garage_menu_callback.page = {}
     page = garage_menu_callback.page.get(user_id, 0)
     total = len(cars)
     if page < 0: page = 0
     if page >= total: page = total - 1
-    car_ref = cars[page]  # это {"id": ..., "name": ..., "is_current": ...}
-    
-    # Получаем полные данные из глобального списка CARS
+    car_ref = cars[page]
     full_car = next((c for c in CARS if c["id"] == car_ref["id"]), None)
     if not full_car:
         await callback.answer("Ошибка: машина не найдена", show_alert=True)
         return
-    
-    # Добавляем флаг is_current в полные данные
     full_car["is_current"] = car_ref.get("is_current", False)
-    
-    # Формируем текст
     text = f"🏠 <b>ТВОЙ ГАРАЖ</b>\n📄 {page+1}/{total}\n\n{full_car['name']}\n⭐ {full_car.get('rarity', 'обычный').upper()}\n⚡ Ускорение: {full_car.get('speed_bonus', 0)}%\n💰 Доход: {full_car.get('income_per_hour', 0)}₽/час\n"
     if full_car.get("is_current"):
         text += "\n✅ <b>ТЕКУЩАЯ МАШИНА</b>"
-    
-    # Навигация
     nav = []
     if page > 0:
         nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"garage_page_{page-1}"))
     if page < total - 1:
         nav.append(InlineKeyboardButton(text="➡️", callback_data=f"garage_page_{page+1}"))
-    
-    # Кнопки действий
     kb = []
     if nav:
         kb.append(nav)
@@ -2052,8 +2012,6 @@ async def garage_menu_callback(callback: CallbackQuery):
     kb.append([InlineKeyboardButton(text="🚕 ТАКСОПАРК", callback_data="taxopark_menu")])
     kb.append([InlineKeyboardButton(text="🔙 В АВТОСАЛОН", callback_data="cars_menu")])
     kb.append([InlineKeyboardButton(text="🔙 В МЕНЮ", callback_data="back_to_menu")])
-    
-    # Отправляем фото или текст
     if full_car.get("image_url"):
         try:
             await callback.message.delete()
@@ -2063,7 +2021,6 @@ async def garage_menu_callback(callback: CallbackQuery):
             await send_msg(user_id, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     else:
         await send_msg(user_id, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-    
     garage_menu_callback.page[user_id] = page
     await callback.answer()
 
@@ -2085,7 +2042,6 @@ async def set_car_callback(callback: CallbackQuery):
     else:
         await callback.answer(r.get("message", "Ошибка"), show_alert=True)
 
-# ---------- ТАКСОПАРК ----------
 @dp.callback_query(lambda c: c.data == "taxopark_menu")
 async def taxopark_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2154,7 +2110,6 @@ async def add_taxopark_callback(callback: CallbackQuery):
     else:
         await callback.answer(r.get("message", "Ошибка"), show_alert=True)
 
-# ---------- НЕДВИЖИМОСТЬ ----------
 @dp.callback_query(lambda c: c.data == "houses_menu")
 async def houses_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2188,7 +2143,6 @@ async def houses_menu_callback(callback: CallbackQuery):
         txt += f"\n❌ Нужно {house['price']:,}₽ (не хватает {house['price'] - balance:,}₽)"
         act = None
     txt += f"\n\n💼 Баланс: {balance:,}₽"
-    
     nav = []
     if page > 0:
         nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"house_page_{page-1}"))
@@ -2200,7 +2154,6 @@ async def houses_menu_callback(callback: CallbackQuery):
     if act:
         kb.append([act])
     kb.append([InlineKeyboardButton(text="🔙 В МЕНЮ", callback_data="back_to_menu")])
-    
     if house.get("image_url"):
         try:
             await callback.message.delete()
@@ -2231,7 +2184,6 @@ async def buy_house_callback(callback: CallbackQuery):
     else:
         await callback.answer(r.get("message", "Ошибка"), show_alert=True)
 
-# ---------- МАГАЗИН ----------
 @dp.callback_query(lambda c: c.data == "shop_menu")
 async def shop_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2268,16 +2220,12 @@ async def buy_shop_callback(callback: CallbackQuery):
     else:
         await callback.answer(r.get("message", "Ошибка"), show_alert=True)
 
-# ---------- СКИНЫ ----------
 @dp.callback_query(lambda c: c.data == "skins_menu")
 async def skins_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     skins = SKINS
-    # Сортируем по редкости (обычные → редкие → эпические → легендарные → мифические)
     rarity_order = {"обычный": 0, "редкий": 1, "эпический": 2, "легендарный": 3, "мифический": 4}
     skins.sort(key=lambda x: rarity_order.get(x.get("rarity", "обычный"), 0))
-    
-    # Сохраняем текущую страницу в памяти (для простоты – глобальный словарь)
     if not hasattr(skins_menu_callback, "page"):
         skins_menu_callback.page = {}
     page = skins_menu_callback.page.get(user_id, 0)
@@ -2296,7 +2244,6 @@ async def skins_menu_callback(callback: CallbackQuery):
     balance = p.get("stats", {}).get("balance", 0) if p.get("success") else 0
     rep = await api_call(user_id, "get_reputation")
     total_sales = rep.get("total_sales", 0) if rep.get("success") else 0
-    
     txt = f"👤 <b>МАГАЗИН СКИНОВ</b>\n📄 {page+1}/{total}\n\n{skin['emoji']} <b>{skin['name']}</b>\n⭐ {skin['rarity'].upper()}\n📝 {skin['description']}\n"
     if skin["id"] == current:
         txt += "\n✅ <b>НАДЕТ</b>"
@@ -2313,7 +2260,6 @@ async def skins_menu_callback(callback: CallbackQuery):
             act = None
     else:
         if skin.get("limited"):
-            # лимитированные – только по выдаче
             txt += f"\n🔒 <b>ТОЛЬКО ПО ВЫДАЧЕ</b>"
             act = None
         else:
@@ -2324,7 +2270,6 @@ async def skins_menu_callback(callback: CallbackQuery):
                 txt += f"\n❌ {skin['price']:,}₽ (не хватает {skin['price'] - balance:,}₽)"
                 act = None
     txt += f"\n\n💼 Баланс: {balance:,}₽ | ⭐ Продано: {total_sales}"
-    
     nav = []
     if page > 0:
         nav.append(InlineKeyboardButton(text="⬅️", callback_data=f"skin_page_{page-1}"))
@@ -2337,7 +2282,6 @@ async def skins_menu_callback(callback: CallbackQuery):
         kb.append([act])
     kb.append([InlineKeyboardButton(text="🎒 ИНВЕНТАРЬ СКИНОВ", callback_data="skin_inventory")])
     kb.append([InlineKeyboardButton(text="🔙 В МЕНЮ", callback_data="back_to_menu")])
-    
     if skin.get("image_url"):
         try:
             await callback.message.delete()
@@ -2404,7 +2348,6 @@ async def skin_inventory_callback(callback: CallbackQuery):
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     await callback.answer()
 
-# ---------- ПОДРАБОТКИ ----------
 @dp.callback_query(lambda c: c.data == "jobs_menu")
 async def jobs_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2447,7 +2390,6 @@ async def check_job_completion(msg: types.Message, user_id: int):
         else:
             break
 
-# ---------- ТРЕЙДИНГ ----------
 @dp.callback_query(lambda c: c.data == "trading_menu")
 async def trading_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2486,7 +2428,6 @@ async def trade_sell_callback(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Form.waiting_for_custom_amount)
     await callback.answer()
 
-# ---------- РАЗБОР ПОСТАВКИ (МИНИ-ИГРЫ) ----------
 @dp.callback_query(lambda c: c.data == "minigames_menu")
 async def minigames_menu_callback(callback: CallbackQuery):
     text = ("🎮 <b>МИНИ-ИГРЫ</b>\n\n📦 <b>РАЗБЕРИ ПОСТАВКУ</b>\n💰 Цена: 10 000₽\n"
@@ -2537,7 +2478,6 @@ async def supply_click_callback(callback: CallbackQuery):
         await callback.message.edit_text(msg, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"📦 РАЗОБРАТЬ (ещё {remaining})", callback_data="supply_click")], [InlineKeyboardButton(text="🔙 В МЕНЮ", callback_data="back_to_menu")]]))
         await callback.answer()
 
-# ---------- ГОНКИ ----------
 @dp.callback_query(lambda c: c.data == "race_menu")
 async def race_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2653,7 +2593,6 @@ async def race_action_callback(callback: CallbackQuery):
         await race_phase_menu(callback.message, race_id, user_id)
         await callback.answer()
 
-# ---------- АУКЦИОН ----------
 @dp.callback_query(lambda c: c.data == "auction_menu")
 async def auction_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2740,7 +2679,6 @@ async def handle_trade_or_auction_amount(message: Message, state: FSMContext):
         await message.answer("❌ Введи положительное число.")
         return
     data = await state.get_data()
-    # Проверяем, что это: трейдинг или аукцион
     if "trade_category" in data:
         cat = data.get("trade_category")
         action = data.get("trade_action")
@@ -2767,7 +2705,6 @@ async def handle_trade_or_auction_amount(message: Message, state: FSMContext):
         await state.clear()
         await message.answer("❌ Неизвестная операция.")
 
-# ---------- ДРУЗЬЯ ----------
 @dp.callback_query(lambda c: c.data == "friends_menu")
 async def friends_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2810,7 +2747,6 @@ async def friend_cmd(message: Message):
         await message.answer(r.get("message", "Ошибка"))
     elif action == "remove" and len(args) >= 3:
         friend_name = args[2]
-        # Нужно получить friend_id по нику
         user_info = await api_call(message.from_user.id, "get_player_by_nickname", {"nickname": friend_name})
         if user_info.get("success"):
             friend_id = user_info.get("player", {}).get("id")
@@ -2824,7 +2760,6 @@ async def friend_cmd(message: Message):
     else:
         await message.answer("Неверная команда. Пример: /friend add Барыга")
 
-# ---------- РЕФЕРАЛЫ ----------
 @dp.callback_query(lambda c: c.data == "referral_menu")
 async def referral_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2847,7 +2782,6 @@ async def referral_menu_callback(callback: CallbackQuery):
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     await callback.answer()
 
-# ---------- ОБУЧЕНИЕ ----------
 @dp.callback_query(lambda c: c.data == "learning_menu")
 async def learning_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2881,7 +2815,6 @@ async def complete_lesson_callback(callback: CallbackQuery):
     else:
         await callback.answer(r.get("message", "Ошибка"), show_alert=True)
 
-# ---------- ЛИДЕРБОРД ----------
 @dp.callback_query(lambda c: c.data == "leaderboard_menu")
 async def leaderboard_menu_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -2903,22 +2836,18 @@ async def leaderboard_menu_callback(callback: CallbackQuery):
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     await callback.answer()
 
-# ---------- ПЕРЕВОДЫ (уже есть /pay) ----------
 @dp.callback_query(lambda c: c.data == "transfer_menu")
 async def transfer_menu_callback(callback: CallbackQuery):
     await callback.message.answer("💸 <b>ПЕРЕВОД ДЕНЕГ</b>\n\nВведите команду:\n<code>/pay ник сумма</code>\n\nПример: /pay Барыга 5000", parse_mode="HTML")
     await callback.answer()
 
-# ---------- ЗАПУСК БОТА И СЕРВЕРА В ОДНОМ ПРОЦЕССЕ ----------
 def run_fastapi():
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 async def main():
-    # Запускаем FastAPI сервер в отдельном потоке
     thread = threading.Thread(target=run_fastapi, daemon=True)
     thread.start()
     print("🚀 FastAPI сервер запущен на http://0.0.0.0:8000")
-    # Запускаем Telegram бота
     print("🤖 Telegram бот запущен")
     await dp.start_polling(bot)
 
